@@ -1,0 +1,108 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+	<main class="col-md-9 col-lg-10 p-2">
+		<div class="container mt-5">
+			<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Ajouter une nouvelle entreprise</h1>
+
+			<div class="mb-4">
+				<form method="get" action="">
+					<label for="siret" class="form-label">Rechercher par SIRET</label>
+					<div class="input-group">
+						<input type="text" name="siret" id="siret" class="form-control" placeholder="Ex: 309634954" required>
+						<button type="submit" class="btn btn-outline-primary">Charger les données INSEE</button>
+					</div>
+				</form>
+			</div>
+
+			{{ form_start(form) }}
+
+			{# Chaque champ avec un id explicite #}
+			<div class="mb-3">
+				{{ form_label(form.legalName, 'Nom légal', {'label_attr': {'for': 'legalName'}}) }}
+				{{ form_widget(form.legalName, {'attr': {'id': 'legalName', 'class': 'form-control'}}) }}
+			</div>
+
+			<div class="mb-3">
+    {{ form_label(form.logo, 'Logo', {'label_attr': {'for': form.logo.vars.id}}) }}
+    {{ form_widget(form.logo, {
+        'attr': {
+            'id': form.logo.vars.id,
+            'class': 'form-control',
+            'accept': 'image/*'
+        }
+    }) }}
+    {{ form_errors(form.logo) }}
+</div>
+
+
+			<div class="mb-3">
+				{{ form_label(form.siren, 'SIREN', {'label_attr': {'for': 'sirenField'}}) }}
+				{{ form_widget(form.siren, {'attr': {'id': 'sirenField', 'class': 'form-control'}}) }}
+			</div>
+
+			<div class="mb-3">
+				{{ form_label(form.sector, 'Secteur', {'label_attr': {'for': 'sector'}}) }}
+				{{ form_widget(form.sector, {'attr': {'id': 'sector', 'class': 'form-control'}}) }}
+			</div>
+
+			<div class="mb-3">
+				{{ form_label(form.adress, 'Adresse', {'label_attr': {'for': 'adress'}}) }}
+				{{ form_widget(form.adress, {'attr': {'id': 'adress', 'class': 'form-control'}}) }}
+			</div>
+
+			<div class="mb-3">
+				{{ form_label(form.stage, 'Stage', {'label_attr': {'for': 'stage'}}) }}
+				{{ form_widget(form.stage, {'attr': {'id': 'stage', 'class': 'form-control'}}) }}
+			</div>
+
+			<div class="mb-3">
+				{{ form_label(form.creationDate, 'Date de création', {'label_attr': {'for': 'creationDate'}}) }}
+				{{ form_widget(form.creationDate, {'attr': {'id': 'creationDate', 'class': 'form-control'}}) }}
+			</div>
+
+			<button type="submit" class="btn btn-warning mt-3">
+				<i class="bi bi-check2-circle me-1"></i>
+				Save
+			</button>
+
+			{{ form_end(form) }}
+		</div>
+	</main>
+
+	<script>
+		document.getElementById('siret').addEventListener('change', function () {
+const siret = this.value.trim();
+
+if (siret.length !== 14 || isNaN(siret)) {
+alert("Veuillez entrer un SIRET valide (14 chiffres)");
+return;
+}
+
+fetch (`/api/company/insee?siret=${siret}`).then(response => {
+if (!response.ok) {
+throw new Error("Entreprise introuvable");
+}
+return response.json();
+}).then(data => {
+const setFieldValue = (id, value) => {
+const field = document.getElementById(id);
+if (field) {
+field.value = value || '';
+} else {
+console.warn (`Champ introuvable : #${id}`);
+}
+};
+
+setFieldValue('campany_legalName', data.legalName);
+setFieldValue('campany_siren', data.siren);
+setFieldValue('campany_sector', data.sector);
+setFieldValue('campany_adress', data.adress);
+setFieldValue('campany_stage', data.stage);
+setFieldValue('campany_creationDate', data.creationDate);
+}).catch(err => {
+alert(err.message);
+});
+});
+	</script>
+{% endblock %}

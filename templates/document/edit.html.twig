@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+  <main class="col-md-9 col-lg-10 p-2">
+<div class="container mt-5">
+    <h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Modifier le document personnalisé : {{ document.title }}</h1>
+
+    {{ form_start(form) }}
+        {{ form_row(form.title) }}
+        {{ form_row(form.description) }}
+         {{ form_row(form.comment) }}
+        <button class="btn btn-primary">Enregistrer</button>
+        <a href="{{ path('app_document_index', { id: document.fundingRequest.id }) }}" 
+           class="btn btn-secondary">Annuler</a>
+    {{ form_end(form) }}
+</div>
+</main>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Roadmaps{% endblock %}
+
+{% block body %}
+<main class="col-md-9 col-lg-10 p-2">
+<h1 class="mb-4">Créer plusieurs Roadmaps</h1>
+
+{{ form_start(form) }}
+
+<div id="roadmap-collection"
+     data-prototype="{{ form_widget(form.roadmaps.vars.prototype)|e('html_attr') }}"
+     data-index="{{ form.roadmaps|length }}"
+>
+    {% for roadmapForm in form.roadmaps %}
+        <div class="roadmap-item border rounded p-3 mb-3">
+            {{ form_row(roadmapForm) }}
+        </div>
+    {% endfor %}
+</div>
+
+<button type="button" id="add-roadmap" class="btn btn-primary mt-3">
+    Ajouter une roadmap
+</button>
+
+<button type="submit" class="btn btn-success mt-3">
+    Enregistrer
+</button>
+
+{{ form_end(form) }}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const container = document.getElementById('roadmap-collection');
+        const addBtn = document.getElementById('add-roadmap');
+
+        addBtn.addEventListener('click', () => {
+            let index = parseInt(container.dataset.index);
+
+            // Récupérer le prototype
+            let prototype = container.dataset.prototype;
+            let newForm = prototype.replace(/__name__/g, index);
+
+            // Création du conteneur
+            let div = document.createElement('div');
+            div.classList.add('roadmap-item', 'border', 'rounded', 'p-3', 'mb-3');
+            div.innerHTML = newForm;
+
+            // Ajout dans le DOM
+            container.appendChild(div);
+
+            // Incrémentation index
+            container.dataset.index = index + 1;
+        });
+    });
+</script>
+
+{% endblock %}

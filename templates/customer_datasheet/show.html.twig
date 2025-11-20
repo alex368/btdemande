@@ -1,0 +1,15 @@
+<h1>Fiche entreprise</h1>
+
+<ul class="list-group">
+    <li class="list-group-item"><strong>SIREN :</strong> {{ siren }}</li>
+    <li class="list-group-item"><strong>SIRET :</strong> {{ siret }}</li>
+    <li class="list-group-item"><strong>Nom :</strong> {{ denomination }}</li>
+    <li class="list-group-item">
+        <strong>Date de création :</strong>
+        {{ creationDate ? creationDate|date('d/m/Y') : 'N/A' }}
+    </li>
+    <li class="list-group-item">
+        <strong>Adresse :</strong>
+        {{ typeVoie ~ ' ' ~ libelleVoie }}, {{ codePostal }} {{ commune }}
+    </li>
+</ul>

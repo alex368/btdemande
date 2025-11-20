@@ -1,0 +1,95 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+	<main class="col-md-9 col-lg-10 p-5">
+		<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Complétude du dossier</h1>
+
+		<div class="container">
+			<form method="post" enctype="multipart/form-data">
+				{% for document in documents %}
+					<div class="mb-4">
+						<label class="form-label fw-bold bebas" for="document_{{ document.id }}">
+							{{ document.documentDefinition ? document.documentDefinition.title : document.title }}
+						</label>
+
+						{# Template #}
+						{% if document.documentDefinition and document.documentDefinition.template %}
+							<p class="text-muted mb-2">
+								📄 Modèle à remplir :
+								<a href="{{ asset('uploads/documents/' ~ document.documentDefinition.template) }}" target="_blank">
+									{{ document.documentDefinition.template }}
+								</a>
+							</p>
+						{% else %}
+							<p class="text-muted mb-2">❌ Aucun modèle disponible</p>
+						{% endif %}
+
+						<div class="d-flex gap-2 align-items-center">
+							{% if document.filename %}
+								<input
+								class="form-control border-0 rounded-0 shadow-sm py-3 px-4 fs-6 bg-light" type="text" value="{{ document.filename }}" readonly>
+
+								{# Bouton voir #}
+								<a href="{{ asset('uploads/documents/' ~ document.filename) }}" target="_blank" class="btn button-custom-yellow rounded-0 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+									<i class="bi bi-eye"></i>
+								</a>
+
+								{# Bouton modifier #}
+								<label class="btn button-custom rounded-0 d-flex align-items-center justify-content-center m-0" style="width: 48px; height: 48px;">
+									<i class="bi bi-pencil"></i>
+									<input type="file" name="files[{{ document.id }}]" class="d-none"/>
+								</label>
+
+								{# Bouton supprimer #}
+								<button type="submit" name="delete_file[{{ document.id }}]" value="1" class="btn btn-danger rounded-0 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+									<i class="bi bi-trash"></i>
+								</button>
+							{% else %}
+								<input
+								class="form-control border-0 rounded-0 shadow-sm py-3 px-4 fs-6 bg-light" type="text" placeholder="Aucun document téléchargé" value="{{ document.filename }}" readonly>
+
+								{# Bouton upload #}
+
+								<a href="{{ path('client_document_upload', { id: document.id }) }}" class="d-inline-flex align-items-center justify-content-center bg-secondary text-white rounded-0 shadow-sm" style="width: 48px; height: 48px;">
+									<i class="bi bi-cloud-upload"></i>
+								</a>
+							{% endif %}
+
+						</div>
+
+					</div>
+					{% if document.comment %}
+						<div class="d-flex align-items-center border rounded-0 overflow-hidden bg-white shadow-sm border-0 mb-4">
+							<div class="bg-danger text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+								<i class="bi bi-x-lg" style="font-size: 2rem;"></i>
+							</div>
+							<div class="px-4 py-3 text-muted">
+								{{document.comment}}
+							</div>
+						</div>
+					{% endif %}
+				{% else %}
+					<p class="text-muted">Aucun document à fournir.</p>
+				{% endfor %}
+
+				<!-- Buttons -->
+				<div class="row justify-content-center mt-5">
+					<div class="col-auto">
+						<button type="submit" class="btn rounded-0 button-custom me-2">
+							Enregistrer
+						</button>
+					</div>
+					<div class="col-auto">
+						<form method="post" class="mt-3">
+							<button type="submit" name="action" value="validate" class="btn button-custom-true rounded-0" onclick="return confirm('Confirmez-vous l\'envoi de vos documents ?')">
+								Valider la demande
+							</button>
+						</form>
+					</div>
+
+				</div>
+
+			</form>
+		</div>
+	</main>
+
+{% endblock %}

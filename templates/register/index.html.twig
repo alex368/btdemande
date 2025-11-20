@@ -1,0 +1,85 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello RegisterController!{% endblock %}
+
+{% block body %}
+ {% block sidebar '' %}
+<body>
+    <!-- Navbar -->
+
+
+    <!-- Contenu principal -->
+    <div class="container-fluid">
+        <div class="row h-100">
+            <!-- Colonne gauche : formulaire -->
+
+
+            <div class="col-md-6 mb-5 d-flex flex-column justify-content-center px-8 ">
+
+                <!-- Logo -->
+                <div class="text-center my-2">
+                     <img src="{{asset('image/logo.png')}}" alt="Logo" width="80">
+                </div>
+
+                <!-- Connexion -->
+                <h1 class="form-label text-center bebas" style="color: #FBBB3B;">Inscription</h1>
+
+
+                <!-- Formulaire de connexion -->
+                {{ form_start(form, {'attr': {'data-turbo': 'false'}}) }}
+
+<div class="mb-1 mt-1">
+    {{ form_label(form.name, null, {'label_attr': {'class': 'form-label fw-bold bebas'}}) }}
+    {{ form_widget(form.name) }}
+    {{ form_errors(form.name) }}
+</div>
+
+<div class="mb-2 mt-1">
+    {{ form_label(form.lastname, null, {'label_attr': {'class': 'form-label fw-bold bebas'}}) }}
+    {{ form_widget(form.lastname) }}
+    {{ form_errors(form.lastname) }}
+</div>
+
+<div class="mb-2 mt-1">
+    {{ form_label(form.email, null, {'label_attr': {'class': 'form-label fw-bold bebas'}}) }}
+    {{ form_widget(form.email) }}
+    {{ form_errors(form.email) }}
+</div>
+
+<div class="mb-2 mt-1">
+    {{ form_label(form.number, null, {'label_attr': {'class': 'form-label fw-bold bebas'}}) }}
+    {{ form_widget(form.number) }}
+    {{ form_errors(form.number) }}
+</div>
+
+<div class="mb-2 mt-1">
+    {{ form_label(form.password, null, {'label_attr': {'class': 'form-label fw-bold bebas'}}) }}
+    {{ form_widget(form.password) }}
+    {{ form_errors(form.password) }}
+</div>
+
+<div class="d-grid gap-4 mt-4">
+    <button class="btn btn-lg bebas button-custom btn-custom-login rounded-0 py-3 px-4 fs-5" type="submit" style="color: #FFF;">
+        Inscription
+    </button>
+</div>
+
+{{ form_end(form) }}
+
+            </div>
+
+            <!-- Colonne droite : carte -->
+            <div class="col-md-6 d-none d-md-block"
+                 style=" background-image: url('{{asset('image/register.png')}}');  background-size: cover; background-position: center; background-repeat: no-repeat; height: 100%; ">
+            </div>
+
+
+
+
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+{% endblock %}

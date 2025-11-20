@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+  <main class="col-md-9 col-lg-10 p-2">
+<div class="container mt-5">
+      <h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Ajouter un document personnalisé pour la demande</h1>
+
+    {{ form_start(form) }}
+        {{ form_row(form.title) }}
+        {{ form_row(form.description) }}
+         {{ form_row(form.comment) }}
+        <button class="btn btn-primary">Ajouter</button>
+    {{ form_end(form) }}
+</div>
+</main>
+{% endblock %}

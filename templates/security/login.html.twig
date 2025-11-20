@@ -1,0 +1,103 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Log in!{% endblock %}
+
+{% block body %}
+
+ {% block sidebar '' %}
+
+
+
+
+
+
+
+
+    <div class="container-fluid">
+        <div class="row h-100">
+            <!-- Colonne gauche : formulaire -->
+
+
+            <div class="col-md-6 mb-5 d-flex flex-column justify-content-center px-8 ">
+
+                <!-- Logo -->
+                <div class="text-center my-4">
+                    <img src="{{asset('image/logo.png')}}" alt="Logo" width="80">
+                </div>
+
+                <!-- Connexion -->
+                <h1 class="form-label text-center bebas" style="color: #FBBB3B;">Connexion</h1>
+
+
+                <!-- Formulaire de connexion -->
+                 <form method="post">
+    {% if error %}
+        <div class="alert alert-danger">
+            {{ error.messageKey|trans(error.messageData, 'security') }}
+        </div>
+    {% endif %}
+
+    {% if app.user %}
+        <div class="mb-3">
+            Vous êtes connecté en tant que {{ app.user.userIdentifier }},
+            <a href="{{ path('app_logout') }}">Déconnexion</a>
+        </div>
+    {% endif %}
+
+    <div class="mb-2 mt-3">
+        <label for="username" class="form-label fw-bold bebas">Email</label>
+        <input type="email" name="_username" id="username"
+            class="form-control border-0 rounded-0 shadow py-3 px-4 fs-5 mb-3"
+            autocomplete="email" required autofocus
+            value="{{ last_username }}">
+    </div>
+
+    <div class="mb-2 mt-1">
+        <label for="password" class="form-label fw-bold bebas">Mot de passe</label>
+        <input type="password" name="_password" id="password"
+            class="form-control border-0 rounded-0 shadow py-3 px-4 fs-5"
+            autocomplete="current-password" required>
+    </div>
+
+    <input type="hidden" name="_csrf_token"
+        data-controller="csrf-protection"
+        value="{{ csrf_token('authenticate') }}">
+
+    <div class="form-check mb-3">
+        <input type="checkbox" name="_remember_me" id="remember" class="form-check-input bebas">
+        <label for="remember" class="form-check-label">Se souvenir</label>
+    </div>
+
+    <div class="d-grid gap-4 mt-4">
+        <button type="submit"
+            class="btn btn-lg bebas button-custom btn-custom-login rounded-0 py-3 px-4 fs-5"
+            style="color: #FFF;">
+            Connexion
+        </button>
+
+        <a href="#" class="fs-5 text-center bebas" style="color: #000;">
+            Mot de passe oublié ?
+        </a>
+
+        <p class="fs-6 text-center bebas" style="color: #000;">
+            Vous n'avez pas de compte ?
+            <a href="{{ path('app_register') }}" class="fs-6 text-center" style="color: #FBBB3B;">
+                Inscrivez-vous
+            </a>
+        </p>
+    </div>
+</form>
+
+            </div>
+
+            <!-- Colonne droite : carte -->
+            <div class="col-md-6 d-none d-md-block"
+                style=" background-image: url('{{asset('image/imageLogin.png')}}');  background-size: cover; background-position: center; background-repeat: no-repeat; height: 100%; ">
+            </div>
+
+
+
+
+        </div>
+    </div>
+{% endblock %}

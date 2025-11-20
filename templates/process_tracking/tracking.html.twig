@@ -1,0 +1,116 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Suivi de ma demande{% endblock %}
+
+{% block body %}
+
+<style>
+
+
+.card {
+    z-index: 0;
+    background-color: #fff;
+    padding-bottom: 20px;
+    margin-bottom: 90px;
+    border-radius: 10px;
+}
+
+/* Progressbar */
+#progressbar {
+    margin-bottom: 30px;
+    overflow: hidden;
+    color: #455A64;
+    padding-left: 0;
+    margin-top: 30px;
+    display: flex;
+    justify-content: space-between;
+}
+
+#progressbar li {
+    list-style-type: none;
+    font-size: 13px;
+    flex: 1;
+    position: relative;
+    font-weight: 400;
+    text-align: center;
+}
+
+#progressbar li:before {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    content: "\f111"; /* cercle vide */
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    display: block;
+    font-size: 20px;
+    background: #C5CAE9;
+    border-radius: 50%;
+    margin: 0 auto 10px auto;
+    color: white;
+}
+
+/* Connecteurs */
+#progressbar li:after {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: -50%;
+    width: 100%;
+    height: 12px;
+    background: #C5CAE9;
+    z-index: -1;
+}
+
+#progressbar li:first-child:after {
+    content: none;
+}
+
+/* Actives */
+#progressbar li.active:before,
+#progressbar li.active:after {
+    background: #FBBB3B;
+}
+
+#progressbar li.active:before {
+    content: "\f00c"; /* check */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+}
+</style>
+
+<main class="col-md-9 col-lg-10 p-2">
+    <h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Suivi de ma demande</h1>
+
+    <div class="container px-1 px-md-4 py-5 mx-auto">
+        <div class="card shadow-sm border-0">
+            {# Liste des étapes #}
+
+            {% set steps = [
+                'En cours',
+                'Attente client',
+                'Retour client',
+                'Traitement du dossier',
+                "Attente chargé d'affaires",
+                'Dossier cloturé'
+            ] %}
+
+            {# Trouver l’index du statut actuel #}
+            {% set currentIndex = -1 %}
+            {% for s in steps %}
+                {% if s == request.status %}
+                    {% set currentIndex = loop.index0 %}
+                {% endif %}
+            {% endfor %}
+
+            <ul id="progressbar">
+                {% for step in steps %}
+                    <li class="{% if loop.index0 <= currentIndex %}active{% endif %}">
+                        <b class="font-weight-bold  mt-2">{{ step }}</b>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,361 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello DashboardController!{% endblock %}
+
+{% block body %}
+<body>
+   
+
+
+
+                    <!-- Contenu principal à droite -->
+                    <main class="col-md-9 col-lg-10 p-2">
+                        <!-- Contenu principal à gauche -->
+                        <div class="container">
+                            <div class="row align-items-start">
+                                <div class="col">
+                                    <!-- Econnomie -->
+                                    <div class="card border-0 shadow p-3 mb-2 text-center">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <i class="bi-credit-card-fill icon-blue"></i>
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </div>
+                                        <div class="amount text-color-yellow bebas">250k€</div>
+                                        <div class="text-color-blue mt-2 bebas"> accordé</div>
+                                    </div>
+                                    <!-- Econnomie -->
+                                </div>
+                                <div class="col">
+                                    <!-- Charge variable -->
+                                    <div class="card border-0 shadow p-3 text-center">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <i class="bi bi-pie-chart-fill icon-blue"></i>
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </div>
+
+                                        <div class="amount text-color-yellow bebas">55k€</div>
+                                        <div class="text-color-blue mt-2 bebas">Subvention</div>
+                                    </div>
+                                    <!-- Charge variable -->
+                                </div>
+                                <div class="col">
+                                    <!-- Charge fixe -->
+                                    <div class="card border-0 shadow p-3 text-center">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <i class="bi bi-cart-fill icon-blue"></i>
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </div>
+
+                                        <div class="amount text-color-yellow bebas">55k€</div>
+                                        <div class="text-color-blue mt-2 bebas">Prêt</div>
+                                    </div>
+                                    <!-- Charge fixe -->
+                                </div>
+                                <div class="col mb-2">
+                                    <!-- Argent disponible -->
+                                    <div class="card border-0 shadow p-3 text-center">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <i class="bi bi-piggy-bank-fill icon-blue"></i>
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </div>
+
+                                        <div class="amount text-color-yellow bebas">55k€</div>
+                                        <div class="text-color-blue mt-2 bebas">Prêt d'honneur</div>
+                                    </div>
+                                    <!-- Argent disponible -->
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+
+
+                        <div class="container text-center mt-1">
+                            <div class="row g-4 justify-content-center">
+                                <div class="col-lg-6">
+  <!-- Dépense / Revenu -->
+  <div class="card p-4 shadow border-0">
+    <h5 class="text-start text-color-blue mb-2">Btd actu</h5>
+
+    <div id="carouselExampleDark" class="carousel carousel-dark slide" data-bs-ride="carousel">
+      <!-- Les indicateurs -->
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="2" aria-label="Slide 3"></button>
+      </div>
+
+      <!-- Slides -->
+      <div class="carousel-inner">
+  <div class="carousel-item active" data-bs-interval="10000">
+    <img src="https://www.btdconsulting.fr/wp-content/uploads/go-x/u/3f719f41-a8b7-4e0f-aaa3-bf015a0d9fd5/l0,t14,w474,h238/image.webp" class="d-block w-100" alt="...">
+    <div class="carousel-caption d-none d-md-block text-white bg-dark bg-opacity-50 p-3 rounded">
+      <h5>First slide label</h5>
+      <p>Some representative placeholder content for the first slide.</p>
+    </div>
+  </div>
+
+  <div class="carousel-item" data-bs-interval="2000">
+    <img src="https://www.btdconsulting.fr/wp-content/uploads/go-x/u/23335c42-99a0-4681-912c-7de526f60d92/l80,t0,w314,h197/image.webp" class="d-block w-100" alt="...">
+    <div class="carousel-caption d-none d-md-block text-white bg-dark bg-opacity-50 p-3 rounded">
+      <h5>Second slide label</h5>
+      <p>Some representative placeholder content for the second slide.</p>
+    </div>
+  </div>
+
+  <div class="carousel-item">
+    <img src="https://www.btdconsulting.fr/wp-content/uploads/go-x/u/009894c3-0b26-40c7-8043-cef3f7c80e1b/l0,t29,w474,h298/image.webp" class="d-block w-100" alt="...">
+    <div class="carousel-caption d-none d-md-block text-white bg-dark bg-opacity-50 p-3 rounded">
+      <h5>Third slide label</h5>
+      <p>Some representative placeholder content for the third slide.</p>
+    </div>
+  </div>
+</div>
+
+
+      <!-- Contrôles -->
+      <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleDark" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleDark" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+                                <div class="col-lg-6">
+  <!-- Répartition -->
+  <div class="card p-3 shadow border-0">
+    <h5 class="text-start mb-3 text-color-blue">Répartition des financeurs</h5>
+    <div style="height: 260px;" class="d-flex justify-content-center align-items-center">
+      <canvas id="pieChart"></canvas>
+    </div>
+  </div>
+  <!-- Répartition -->
+</div>
+
+                            </div>
+                        </div>
+
+
+
+
+
+
+
+                        <div class="container text-center mt-2">
+                            <div class="row g-4 align-items-stretch">
+                                <!-- Dépense -->
+                                <div class="col-lg-3">
+                                    <div class="card border-0 shadow p-3 text-center">
+                                        <div class="d-flex align-items-start text-center mb-2">
+                                            <img src="https://upload.wikimedia.org/wikipedia/fr/9/91/Logo_CIC_2006.svg"
+                                                alt="Logo CIC" width="40" class="me-2">
+                                            <div>
+                                            </div>
+                                        </div>
+                                        <div class="text-center">Prêt bancaire</div>
+                                        <div>
+                                            <span class="badge badge-custom fw-bold">En cours</span>
+                                        </div>
+                                        <p class="mb-2">Etat d’avancement</p>
+                                        <div class="card border-0 p-2 mb-3  text-center"
+                                            style="background-color: #214995;">
+                                            <div class="timeline">
+                                                <div class="timeline-step">
+                                                    <div class="fw-bold small text-start">Complétude du dossier</div>
+                                                    <div class="small text-start">04/04/2025</div>
+                                                </div>
+                                                <div class="timeline-step">
+                                                    <div class="fw-bold small text-start">En cours</div>
+                                                    <div class="small text-start">04/04/2025</div>
+                                                </div>
+                                                <div class="timeline-step">
+                                                    <div class="fw-bold small text-start">En attente de décision</div>
+                                                    <div class="small text-start">04/04/2025</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button class="btn btn-custom w-100">Voir le détail</button>
+                                    </div>
+                                </div>
+
+
+                                <div class="col-lg-3">
+                                    <div class="card border-0 shadow p-3 text-center">
+                                        <div class="d-flex align-items-start text-center mb-2">
+                                            <img src="https://upload.wikimedia.org/wikipedia/fr/9/91/Logo_CIC_2006.svg"
+                                                alt="Logo CIC" width="40" class="me-2">
+                                            <div>
+                                            </div>
+                                        </div>
+                                        <div class="text-center">Prêt bancaire</div>
+                                        <div>
+                                            <span class="badge badge-custom fw-bold">En cours</span>
+                                        </div>
+                                        <p class="mb-2">Etat d’avancement</p>
+                                        <div class="card border-0 p-2 mb-3  text-center"
+                                            style="background-color: #214995;">
+                                            <div class="timeline">
+                                                <div class="timeline-step">
+                                                    <div class="fw-bold small text-start">Complétude du dossier</div>
+                                                    <div class="small text-start">04/04/2025</div>
+                                                </div>
+                                                <div class="timeline-step">
+                                                    <div class="fw-bold small text-start">En cours</div>
+                                                    <div class="small text-start">04/04/2025</div>
+                                                </div>
+                                                <div class="timeline-step">
+                                                    <div class="fw-bold small text-start">En attente de décision</div>
+                                                    <div class="small text-start">04/04/2025</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button class="btn btn-custom w-100">Voir le détail</button>
+                                    </div>
+                                </div>
+
+
+
+
+
+
+                                <div class="col-lg-3">
+                                    <div class="card border-0 shadow p-3 h-100 text-start">
+                                        <div class="d-flex justify-content-between text-color-blue mb-2">
+                                            <span class="small">Dossier</span>
+                                            <span class="small fw-semibold">Voir Tout</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <div><img
+                                                    src="https://hellowilla.co/wp-content/uploads/2020/06/BPIFrance-logo.png"
+                                                    class="category-icon me-2">Bourse french tech</div>
+                                            <div><strong>10K€</strong></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <div><img
+                                                    src="https://hellowilla.co/wp-content/uploads/2020/06/BPIFrance-logo.png"
+                                                    class="category-icon me-2">Prêt Innovation</div>
+                                            <div><strong>100K€</strong></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <div><img
+                                                    src="https://hellowilla.co/wp-content/uploads/2020/06/BPIFrance-logo.png"
+                                                    class="category-icon me-2">Prêt d'amorçage</div>
+                                            <div><strong>200K€</strong></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <div><img
+                                                    src="https://upload.wikimedia.org/wikipedia/commons/9/94/LOGO-INITIATIVEFRANCE-2022.png"
+                                                    class="category-icon me-2">Prêt d'honneur</div>
+                                            <div><strong>15K€</strong></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <div><img src="https://upload.wikimedia.org/wikipedia/fr/0/0b/Lcl_logo.svg"
+                                                    class="category-icon me-2">Prêt lcl</div>
+                                            <div><strong>300K€</strong></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <div><img
+                                                    src="https://upload.wikimedia.org/wikipedia/fr/9/91/Logo_CIC_2006.svg"
+                                                    class="category-icon me-2">Prêt cic</div>
+                                            <div><strong>300K€</strong></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <div><img
+                                                    src="https://crealia.org/wp-content/uploads/2023/04/logo-crealia-sans-baseline.png.webp"
+                                                    class="category-icon me-2">Créalia</div>
+                                            <div><strong>15K€</strong></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+
+
+
+                                <!-- Prochaine facture -->
+                                <div class="col-lg-3">
+                                    <div class="card border-0 shadow p-3 h-100 text-start">
+                                        <div class="d-flex justify-content-between text-color-blue  mb-2">
+                                            <span class="small">Evénement</span>
+                                            <span class="small fw-semibold">Voir Tout</span>
+                                        </div>
+                                        <div class="my-3 text-center">
+                                            <h1 class="fw-bold">19</h1>
+                                            <h5 class="text-muted">Juillet</h5>
+                                            <h6 class="fw-semibold text-muted">2025</h6>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Concours pépite</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Pitch & win</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>French tech tremplin</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+
+
+
+
+
+                    </main>
+                </div>
+            </div>
+
+
+
+
+
+
+            <!-- Script Bootstrap JS (avec Popper inclus) -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+                // Bar Chart - Dépense/Revenue
+               
+
+                // Pie Chart - Répartition
+                const pieCtx = document.getElementById('pieChart').getContext('2d');
+                new Chart(pieCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['bpifrance', 'lcl', 'cic', 'créalia', 'Iniative'],
+                        datasets: [{
+                            data: [15, 30, 20, 15, 20],
+                            backgroundColor: ['#FBBB3B', '#272E80', '#038B92', '#038BC2', '#E7226F']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: 'circle'
+                                }
+                            }
+                        }
+                    }
+
+                });
+            </script>
+</body>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello ProcessTrackingController!
+{% endblock %}
+
+{% block body %}
+	<!-- Contenu principal à droite -->
+	<main class="col-md-9 col-lg-10 p-2">
+
+
+		<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Suivi des dossiers</h1>
+
+
+		<div class="container text-center mt-2">
+			<div class="row g-4 align-items-stretch">
+
+
+				<div class="row">
+					{% for tracking in trackingData %}
+						{% set campany = tracking.campany %}
+						{% set requests = tracking.requests %}
+
+						<div class="col-lg-3">
+							<div class="card border-0 shadow p-3 text-center">
+								<div class="d-flex align-items-start text-center mb-2">
+									<img src="https://upload.wikimedia.org/wikipedia/fr/9/91/Logo_CIC_2006.svg" alt="Logo CIC" width="40" class="me-2">
+								</div>
+
+								<div class="text-center fw-bold">{{ campany.legalName }}</div>
+
+								<div>
+									<span class="badge badge-custom fw-bold">En cours</span>
+								</div>
+								<p class="mb-2">État d’avancement</p>
+
+								<div class="card border-0 p-2 mb-3 text-center" style="background-color: #214995;">
+									<div class="timeline">
+										{% if requests is not empty %}
+											{# on prend juste la première demande pour la timeline #}
+											{% set request = requests|first %}
+
+											<div class="timeline-step">
+												<div class="fw-bold small text-start">Complétude du dossier</div>
+												<div class="small text-start">12/02/2025</div>
+											</div>
+											<div class="timeline-step">
+												<div class="fw-bold small text-start">En cours</div>
+												<div class="small text-start">18/02/2025</div>
+											</div>
+											<div class="timeline-step">
+												<div class="fw-bold small text-start">En attente de décision</div>
+												<div class="small text-start">25/02/2025</div>
+											</div>
+										{% else %}
+											<div class="timeline-step">
+												<div class="small text-center text-white">Aucune demande trouvée</div>
+											</div>
+										{% endif %}
+									</div>
+								</div>
+
+								{# bouton bien en dehors de la timeline #}
+								{% if requests is not empty and request.status == 'Attente client' %}
+									<a class="btn btn-custom w-100" href="{{ path('client_documents', { id: request.id }) }}">
+										Faire ma demande
+									</a>
+								{% elseif requests is not empty and request.status == 'Retour client' %}
+									<a class="btn btn-custom w-100" href="{{ path('client_request_tracking', { id: request.id }) }}">
+    Suivre ma demande
+</a>
+
+								{% endif %}
+
+
+							</div>
+						</div>
+					{% endfor %}
+
+				</div>
+
+
+			</main>
+		{% endblock %}

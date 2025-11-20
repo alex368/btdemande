@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<main class="col-md-9 col-lg-10 p-2">
+    <h1 class="mb-4">Créer un produit</h1>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">{{ message }}</div>
+    {% endfor %}
+
+    {{ form_start(form) }}
+        {{ form_row(form.name) }}
+        {{ form_row(form.productDescription) }}
+
+        <h5>Documents requis</h5>
+        <div id="document-collection-wrapper"
+             data-prototype="{{ form_widget(form.documentTemplates.vars.prototype)|e('html_attr') }}">
+            {% for docForm in form.documentTemplates %}
+                <div class="document-entry mb-3 border p-3 bg-light rounded">
+                    {{ form_row(docForm.title) }}
+                    {{ form_row(docForm.description) }}
+                    {{ form_row(docForm.filename) }}
+                    <button type="button" class="btn btn-sm btn-danger remove-document mt-2">
+                        <i class="bi bi-trash"></i> Supprimer
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" id="add-document" class="btn btn-outline-secondary mt-2">
+            <i class="bi bi-plus-lg"></i> Ajouter un document
+        </button>
+
+        <div class="mt-4">
+            <button class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Ajouter le produit
+            </button>
+        </div>
+    {{ form_end(form) }}
+</main>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    const wrapper = document.getElementById('document-collection-wrapper');
+    const addButton = document.getElementById('add-document');
+    let index = wrapper.querySelectorAll('.document-entry').length;
+
+    function addRemoveHandler(removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            removeBtn.closest('.document-entry').remove();
+        });
+    }
+
+    addButton.addEventListener('click', () => {
+        const prototype = wrapper.dataset.prototype;
+        const newFormHtml = prototype.replace(/__name__/g, index);
+
+        const container = document.createElement('div');
+        container.classList.add('document-entry', 'mb-3', 'border', 'p-3', 'bg-light', 'rounded');
+        container.innerHTML = newFormHtml;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn btn-sm btn-danger mt-2 remove-document';
+        removeBtn.innerHTML = '<i class="bi bi-trash"></i> Supprimer';
+        addRemoveHandler(removeBtn);
+
+        container.appendChild(removeBtn);
+        wrapper.appendChild(container);
+        index++;
+
+        // Optionnel : afficher le nom du fichier sélectionné
+        const fileInputs = container.querySelectorAll('input[type="file"]');
+        fileInputs.forEach((input) => {
+            input.addEventListener('change', (e) => {
+                const label = document.createElement('div');
+                label.className = 'form-text';
+                label.textContent = e.target.files.length > 0 ? `Fichier sélectionné : ${e.target.files[0].name}` : '';
+                input.parentElement.appendChild(label);
+            });
+        });
+    });
+
+    // Appliquer les gestionnaires de suppression existants (si déjà présents dans le DOM)
+    wrapper.querySelectorAll('.remove-document').forEach(addRemoveHandler);
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+	<main class="col-md-9 col-lg-10 p-2">
+		<div class="container mt-5">
+			<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Documents à fournir pour la demande</h1>
+			<!-- Table des documents basés sur les modèles -->
+			<div class="d-flex justify-content-between align-items-center mb-3">
+				<h4 class="mb-0">Documents issus de modèles</h4>
+				<a href="{{ path('document_assign', { id: request.id }) }}" class="btn btn-outline-primary">
+					Modifier la sélection
+				</a>
+			</div>
+			<table class="table table-bordered">
+				<thead>
+					<tr>
+						<th>Type</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for template in templates %}
+						{% set doc = submitted[template.id] ?? null %}
+						<tr>
+							<td>{{ template.title }}</td>
+							<td>{{ template.description }}</td>
+
+						</tr>
+					{% else %}
+						<tr>
+							<td colspan="4" class="text-muted">Aucun document de modèle assigné</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+
+			<!-- Table des documents personnalisés -->
+			<div class="d-flex justify-content-between align-items-center mb-3">
+				<h4 class="mb-0">Documents personnalisés ajoutés</h4>
+				<a href="{{ path('document_add_custom', { id: request.id }) }}" class="btn btn-outline-success">
+					Ajouter un document personnalisé
+				</a>
+			</div>
+
+			<table class="table table-bordered text-center">
+				<thead>
+					<tr>
+						<th>Nom</th>
+						<th>Description</th>
+						<th>Commentaire</th>
+						<th>Fichier</th>				
+						<th>Actions</th>
+						<th>Statut</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for doc in test %}
+						<tr>
+							<td class="col-2">
+								{% if doc.title%}
+									{{doc.title}}
+									{%else%}{{doc.documentDefinition.title}}
+								{% endif %}
+							</td>
+							<td class="col-2">{{ doc.description }}</td>
+							<td class="col-2">{% if doc.comment%} {{doc.comment}} {% else %}  <p>Aucun commentaire</p>{% endif %}</td>
+							<td class="col-2">
+								{% if doc.filename %}
+									<a href="{{ asset('uploads/documents/' ~ doc.filename) }}" target="_blank">
+										{{ doc.filename }}
+									</a>
+								{% else %}
+									<span class="text-muted">Non fourni</span>
+								{% endif %}
+							</td>
+							<td class="justify-content-end align-items-end gap-2 col-2">
+								<div class="d-flex justify-content-center gap-2">
+									<a href="{{ path('document_refuse', { id: doc.id }) }}" class="btn btn-sm btn-outline-danger" title="Refuser">
+										<i class="bi bi-x-circle"></i>
+									</a>
+
+									<a href="{{ path('document_validate', { id: doc.id }) }}" class="btn btn-sm btn-outline-success" title="Valider">
+										<i class="bi bi-check-circle"></i>
+									</a>
+
+									<a href="{{ path('document_delete', { id: doc.id }) }}" onclick="return confirm('Supprimer ce document ?')" class="btn btn-sm btn-outline-danger" title="Supprimer">
+										<i class="bi bi-trash"></i>
+									</a>
+
+									<a href="{{ path('document_edit', { id: doc.id }) }}" class="btn btn-sm btn-outline-primary" title="Modifier">
+										<i class="bi bi-pencil-square"></i>
+									</a>
+								</div>
+							</td>
+							<td class="justify-content-end align-items-end gap-2">
+								<div class="d-flex justify-content-center gap-2">
+								{% if doc.status %}
+									<span class="badge bg-success">Validé</span>
+								{% else %}
+									<span class="badge bg-warning text-dark">Refuser</span>
+								{% endif %}
+								</div>
+							</td>
+						</tr>
+					{% else %}
+						<tr>
+							<td colspan="6" class="text-muted">Aucun document personnalisé ajouté</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+			<form method="post" class="d-flex justify-content-end gap-2 mt-4">
+				<button type="submit" name="action" value="save" class="btn btn-primary rounded-0">
+					Enregistrer
+				</button>
+				<button type="submit" name="action" value="cancel" class="btn btn-secondary rounded-0">
+					Annuler
+				</button>
+				<button type="submit" name="action" value="validate" class="btn btn-success rounded-0">
+					Valider
+				</button>
+			</form>
+		</div>
+	</main>
+{% endblock %}

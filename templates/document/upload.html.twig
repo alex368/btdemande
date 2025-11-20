@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<main class="col-md-9 col-lg-10 p-2">
+<div class="container mt-5">
+    <h2>Envoyer le document : 
+        {% if document.documentDefinition %}
+            {{ document.documentDefinition.title }}
+        {% else %}
+            {{ document.title }}
+        {% endif %}
+    </h2>
+
+    {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+        {{ form_row(form.file) }}
+        <button class="btn btn-primary">Envoyer</button>
+        <a href="{{ path('client_documents', { id: document.fundingRequest.id }) }}" class="btn btn-secondary">Annuler</a>
+    {{ form_end(form) }}
+</div>
+</main>
+{% endblock %}

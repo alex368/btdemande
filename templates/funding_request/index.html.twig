@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello FundingRequestController!{% endblock %}
+
+{% block body %}
+          <!-- Contenu principal à droite -->
+                    <main class="col-md-9 col-lg-10 p-2">
+ <div class="container mt-5">
+        <h1 class="mb-4">Nouvelle demande de financement</h1>
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+
+        {{ form_start(form) }}
+
+            {{ form_row(form.amount) }}
+            {{ form_row(form.product) }}
+             {{ form_row(form.user) }}
+
+            <button type="submit" class="btn btn-primary mt-3">
+                <i class="bi bi-check-circle me-1"></i> Soumettre la demande
+            </button>
+
+        {{ form_end(form) }}
+    </div>
+           </main>
+{% endblock %}
