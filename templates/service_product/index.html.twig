@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello ServiceProductController!{% endblock %}
+
+{% block body %}
+<main
+		class="col-md-12 col-lg-12 p-2">
+		<!-- Contenu principal à gauche -->
+
+		<h1 class="form-label text-center bebas text-color-yellow mb-5 mt-5">Nos prestations</h1>
+
+		<div class="container ">
+			<div class="text-end mb-3">
+				{% if is_granted('ROLE_ADMIN') %}
+					<a href="{{path('app_service_product_add')}}" class="btn btn-warning rounded-0">
+						Nouveau service
+					</a>
+				{% endif %}
+			</div>
+			<div class="d-flex justify-content-between align-items-center mb-4 mt-5"></div>
+			<div class="card shadow-sm rounded-0 border-0 mt-5">
+				<div class="card-header bg-white fw-bold">
+					Liste des produits
+				</div>
+				<div class="table-responsive">
+					<table class="table  align-middle mb-0">
+						<thead class="table-primary text-white">
+
+							<tr>
+								<th>Nom</th>
+								<th>Description</th>
+								<th>Prix</th>
+								<th class="text-center">Détail</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for service in services %}
+								<tr>
+									<td>{{service.title}}</td>
+									<td>{{service.description}}</td>
+                                    <td>{{service.price}}€</td>
+
+
+									<td class="text-center">
+										{% if is_granted('ROLE_ADMIN') %}
+											<a href="{{ path('app_service_product_edit', { id: service.id }) }}" class="btn btn-sm btn-outline-primary me-1" title="Modifier">
+												<i class="bi bi-pencil-square"></i>
+											</a>
+											<a href="{{ path('app_service_product_delete', { id: service.id }) }}" class="btn btn-sm btn-outline-danger me-1" title="Supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?');">
+												<i class="bi bi-trash"></i>
+											</a>
+											<a href="{{ path('app_service_product_show', { id: service.id }) }}" class="btn btn-sm btn-outline-secondary" title="Voir">
+												<i class="bi bi-chevron-right"></i>
+											</a>
+										{% elseif is_granted('ROLE_COLLABORATOR') %}
+											<a href="{{ path('app_service_product_show', { id: service.id }) }}" class="btn btn-sm btn-outline-secondary" title="Voir">
+												<i class="bi bi-chevron-right"></i>
+											</a>
+
+										{% elseif is_granted('ROLE_CUSTOMER')   %}
+											<a href="{{ path('app_service_product_show', { id: service.id }) }}" class="btn btn-sm btn-outline-secondary" title="Voir">
+												<i class="bi bi-chevron-right"></i>
+											</a>
+										{% endif %}
+									</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+
+</main>
+{% endblock %}

@@ -56,16 +56,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $fundingRequests;
 
     /**
-     * @var Collection<int, Roadmap>
+     * @var Collection<int, Opportunity>
      */
-    #[ORM\OneToMany(targetEntity: Roadmap::class, mappedBy: 'user')]
-    private Collection $roadmaps;
+    #[ORM\OneToMany(targetEntity: Opportunity::class, mappedBy: 'user')]
+    private Collection $opportunities;
+
 
     public function __construct()
     {
         $this->campanies = new ArrayCollection();
         $this->fundingRequests = new ArrayCollection();
-        $this->roadmaps = new ArrayCollection();
+        $this->opportunities = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -243,32 +244,34 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * @return Collection<int, Roadmap>
+     * @return Collection<int, Opportunity>
      */
-    public function getRoadmaps(): Collection
+    public function getOpportunities(): Collection
     {
-        return $this->roadmaps;
+        return $this->opportunities;
     }
 
-    public function addRoadmap(Roadmap $roadmap): static
+    public function addOpportunity(Opportunity $opportunity): static
     {
-        if (!$this->roadmaps->contains($roadmap)) {
-            $this->roadmaps->add($roadmap);
-            $roadmap->setUser($this);
+        if (!$this->opportunities->contains($opportunity)) {
+            $this->opportunities->add($opportunity);
+            $opportunity->setUser($this);
         }
 
         return $this;
     }
 
-    public function removeRoadmap(Roadmap $roadmap): static
+    public function removeOpportunity(Opportunity $opportunity): static
     {
-        if ($this->roadmaps->removeElement($roadmap)) {
+        if ($this->opportunities->removeElement($opportunity)) {
             // set the owning side to null (unless already changed)
-            if ($roadmap->getUser() === $this) {
-                $roadmap->setUser(null);
+            if ($opportunity->getUser() === $this) {
+                $opportunity->setUser(null);
             }
         }
 
         return $this;
     }
+
+
 }

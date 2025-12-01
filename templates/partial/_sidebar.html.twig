@@ -1,6 +1,6 @@
-<body>
-	<!-- Barre mobile avec logo à gauche et bouton menu à droite -->
-	<nav class="navbar bg-black text-white d-md-none px-3">
+{# <body> #}
+<!-- Barre mobile avec logo à gauche et bouton menu à droite -->
+{# <nav class="navbar bg-black text-white d-md-none px-3">
 		<div class="d-flex justify-content-between align-items-center w-100">
 			<div class="d-flex align-items-center">
 				<span class="fw-bold  text-white">M</span>
@@ -10,10 +10,10 @@
 				<i class="bi bi-list"></i>
 			</button>
 		</div>
-	</nav>
+	</nav> #}
 
-	<!-- Offcanvas (menu mobile à droite) -->
-	<div class="offcanvas offcanvas-end bg-black text-white" tabindex="-1" id="sidebarMobile">
+<!-- Offcanvas (menu mobile à droite) -->
+{# <div class="offcanvas offcanvas-end bg-black text-white" tabindex="-1" id="sidebarMobile">
 		<div class="offcanvas-header">
 			<h5 class="offcanvas-title fw-bold">M
 				<span class="fs-6">Money</span>
@@ -75,68 +75,139 @@
 				</a>
 			</div>
 		</div>
-	</div>
+	</div> #}
+{# </body> #}
 
-	<div class="container-fluid">
-		<div
-			class="row">
-			<!-- Sidebar desktop -->
-			<div class="d-none d-md-flex col-md-4 col-lg-2 flex-column flex-shrink-0 p-3  text-white min-vh-100" style="background-color:#214995;">
-				<a
-					href="#" class="d-flex align-items-center mb-4 text-white text-center text-decoration-none">
-					<!-- Logo -->
-					<a
-						href="#" class="d-flex justify-content-center align-items-center mb-4 text-white text-decoration-none">
-						<!-- Logo -->
-						<img src="{{asset('image/logoV2.png')}}" alt="Logo" width="80">
-					</a>
-				</a>
+<style>	
+    .sidebar {
+        background-color: #166a5d;
+        color: white;
+        padding: 2rem 1rem;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 240px;
+        height: 100vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
 
-				<ul class="nav nav-pills flex-column mb-auto">
-					<li class="nav-item mb-2">
-						<a href="{{path('app_dashboard')}}" class="nav-link text-white ">
-							<i class="bi bi-grid m
-							e-3 "></i>Dashboard</a>
-					</li>
+    .sidebar a {
+        color: white;
+        text-decoration: none;
+        margin-bottom: 0.7rem;
+        display: flex;
+        align-items: center;
+    }
 
-					<li class="nav-item mb-2">
-						{% if is_granted('ROLE_CUSTOMER') %}
-							<a href="{{path('app_process_tracking',{id: app.user.id})}}" class="nav-link text-white ">
-								<i class="bi bi-calendar-check me-2 "></i>Suivi</a>
-						</li>
-					{% endif %}
+    .sidebar a:hover {
+        color: #cfd8dc;
+    }
 
-					{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
-						<li class="nav-item mb-2">
-							<a href="{{path('app_customer_folder')}}" class="nav-link text-white ">
-								<i class="bi bi-wallet2 me-2"></i>Mes dossiers</a>
-						</li>
-						<li class="nav-item mb-2 ">
-							<a href="{{path('app_customer_portal')}}" class="nav-link text-white">
-								<i class="bi bi-person me-2"></i>Portail Client
-							</a>
-						</li>
-					{% endif %}
-					<li class="nav-item mb-2">
-						<a href="#" class="nav-link text-white ">
-							<i class="bi bi-gear me-2 "></i>Profil</a>
-					</li>
+    .sidebar .logout {
+        margin-top: auto;
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
 
-					<li class="nav-item mb-2">
-						<a href="{{ path('app_product') }}" class="nav-link text-white">
-							<i class="bi bi-box-seam me-2"></i>
-							Produit
-						</a>
-					</li>
-				</li>
-			</ul>
+    .content-wrapper {
+        margin-left: 240px; /* largeur de la sidebar */
+        padding: 2rem;
+    }
 
-			<div class="mt-auto pt-4">
-				<a href="{{path('app_logout')}}" class="text-white d-flex align-items-center">
-					<i class="bi bi-box-arrow-right me-2"></i>
-					Déconnexion
-				</a>
-			</div>
-		</div>
-	</body>
-</body>
+    @media (max-width: 768px) {
+        .sidebar {
+            position: relative;
+            width: 100%;
+            height: auto;
+        }
+
+        .content-wrapper {
+            margin-left: 0;
+        }
+    }
+</style>
+
+<div class="sidebar">
+
+    <a href="#" class="justify-content-center mb-4">
+        <img src="{{ asset('image/logoV2.png') }}" alt="Logo" width="80">
+    </a>
+
+    <ul class="nav flex-column">
+        <li class="nav-item mb-2">
+            <a href="{{ path('app_dashboard') }}">
+                <i class="bi bi-grid me-2"></i>Dashboard
+            </a>
+        </li>
+
+        {% if is_granted('ROLE_CUSTOMER') %}
+            <li class="nav-item mb-2">
+                <a href="{{ path('app_process_tracking', {id: app.user.id}) }}">
+                    <i class="bi bi-calendar-check me-2"></i>Suivi
+                </a>
+            </li>
+        {% endif %}
+
+        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
+            <li class="nav-item mb-2">
+                <a href="{{ path('app_customer_folder') }}">
+                    <i class="bi bi-wallet2 me-2"></i>Mes dossiers
+                </a>
+            </li>
+
+            <li class="nav-item mb-2">
+                <a href="{{ path('app_customer_portal') }}">
+                    <i class="bi bi-person me-2"></i>Portail Client
+                </a>
+            </li>
+        {% endif %}
+
+        <li class="nav-item mb-2">
+            <a href="#">
+                <i class="bi bi-gear me-2"></i>Profil
+            </a>
+        </li>
+
+        <li class="nav-item mb-2">
+            <a href="{{ path('app_product') }}">
+                <i class="bi bi-box-seam me-2"></i>Produit
+            </a>
+        </li>
+
+<li class="nav-item mb-2">
+    <a href="{{ path('app_funder') }}">
+        <i class="bi bi-cash-stack me-2"></i>Financeur
+    </a>
+</li>
+
+<li class="nav-item mb-2">
+    <a href="{{ path('app_contact') }}">
+        <i class="bi bi-person-lines-fill me-2"></i>Contact
+    </a>
+</li>
+
+<li class="nav-item mb-2">
+    <a href="{{ path('app_prospect_kanban') }}">
+        <i class="bi bi-kanban me-2"></i>Prospect
+    </a>
+</li>
+
+
+        {% if is_granted('ROLE_CUSTOMER') %}
+            <li class="nav-item mb-2">
+                <a href="{{ path('app_me_campany', {id: app.user.id}) }}">
+                    <i class="bi bi-building me-2"></i>Entreprise
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+
+    <a href="{{ path('app_logout') }}" class="logout mt-auto">
+        <i class="bi bi-box-arrow-right me-2"></i>Déconnexion
+    </a>
+</div>
+
+<div class="content-wrapper">
+    {# ICI ton contenu principal (timeline, fiches, etc.) #}

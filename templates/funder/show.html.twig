@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Funder Details{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+
+
+    <h1 class="mb-4">Funder Details</h1>
+
+    <div class="card">
+        <div class="card-body">
+
+            <table class="table table-bordered">
+                <tr>
+                    <th>Name</th>
+                    <td>{{ funders.name }}</td>
+                </tr>
+
+                <tr>
+                    <th>Sector</th>
+                    <td>{{ funders.sector }}</td>
+                </tr>
+
+                <tr>
+                    <th>Type</th>
+                    <td>{{ funders.type }}</td>
+                </tr>
+
+                <tr>
+                    <th>Description</th>
+                    <td>{{ funders.description }}</td>
+                </tr>
+
+                <tr>
+                    <th>Logo</th>
+                    <td>
+                        {% if funders.logo %}
+                            <img src="/uploads/logos/{{ funders.logo }}" 
+                                 alt="Logo" 
+                                 class="img-fluid" 
+                                 style="max-width: 150px;">
+                        {% else %}
+                            <em>No logo uploaded.</em>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+
+            <div class="d-flex gap-2 mt-3">
+                <a href="{{ path('app_funder') }}" class="btn btn-secondary">Back</a>
+                <a href="{{ path('app_funder_edit', { id: funders.id }) }}" class="btn btn-warning">Edit</a>
+
+                <form method="post"
+                      action="{{ path('app_funder_delete', { id: funders.id }) }}"
+                      onsubmit="return confirm('Are you sure you want to delete this funder ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ funders.id) }}">
+                    <button class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

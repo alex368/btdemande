@@ -1,0 +1,91 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Contacts
+{% endblock %}
+
+{% block body %}
+	<div class="container mt-4">
+		<div class="text-end mb-3">
+			<a href="{{path('app_contact_add')}}" class="btn btn-warning rounded-0">
+				Nouveau contact
+			</a>
+
+			<a href="{{path('app_contact_import')}}" class="btn btn-warning rounded-0">
+				Import excel
+			</a>
+			<h1 class="mb-4">Liste des contacts</h1>
+
+			<table class="table table-bordered table-striped">
+				<thead class="table-dark">
+					<tr>
+						<th>Civilité</th>
+						<th>Nom</th>
+						<th>Prénom</th>
+						<th>Email(s)</th>
+						<th>Téléphone(s)</th>
+						<th>Mobile(s)</th>
+						<th>Entreprise</th>
+						<th>Outil</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					{% for c in contacts %}
+						<tr>
+							<td>{{ c.salutation }}</td>
+							<td>{{ c.lastName }}</td>
+							<td>{{ c.firstName }}</td>
+							<td>
+								{% if c.email is iterable %}
+									{% for e in c.email %}
+										<div>{{ e }}</div>
+									{% endfor %}
+								{% else %}
+									{{ c.email }}
+								{% endif %}
+							</td>
+							<td>
+								{% for p in c.phone %}
+									<div>{{ p }}</div>
+								{% endfor %}
+							</td>
+							<td>
+								{% for m in c.mobilePhone %}
+									<div>{{ m }}</div>
+								{% endfor %}
+							</td>
+							<td>
+								{{ c.campany ? c.campany.legalName : '-' }}
+							</td>
+							<td class="text-center">
+
+								<a href="{{ path('app_contact_edit', { id: c.id }) }}" class="btn btn-sm btn-outline-warning">
+									<i class="bi bi-pencil-square"></i>
+								</a>
+								<a href="{{ path('app_contact_show', { id: c.id }) }}" class="btn btn-sm btn-info">
+									<i class="bi bi-eye"></i>
+
+								</a>
+								<form method="post" action="{{ path('app_contact_delete', { id: c.id }) }}" style="display:inline-block" onsubmit="return confirm('Supprimer ce contact ?');">
+									<input type="hidden" name="_token" value="{{ csrf_token('delete-contact-' ~ c.id) }}">
+									<button class="btn btn-sm btn-outline-danger">
+										<i class="bi bi-trash"></i>
+									</button>
+								</form>
+							</td>
+						</tr>
+					{% else %}
+						<tr>
+							<td colspan="8" class="text-center text-muted">Aucun contact trouvé</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+
+			</table>
+
+			<div class="navigation d-flex justify-content-center">
+				{{ knp_pagination_render(contacts) }}
+			</div>
+
+		</div>
+	{% endblock %}

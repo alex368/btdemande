@@ -2,78 +2,152 @@
 
 namespace App\Controller;
 
+use App\Entity\Campany;
 use App\Entity\Roadmap;
 use App\Entity\User;
 use App\Form\MultiroadmapType;
+use App\Form\RoadmapType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Service\QuarterService;
 
 final class RoadmapController extends AbstractController
 {
+
+
     #[Route('/roadmap/{id}', name: 'app_roadmap')]
-    public function index(EntityManagerInterface $em,$id): Response
+    public function index(EntityManagerInterface $em, QuarterService $quarterService, int $id): Response
     {
-        $user = $em->getRepository(User::class)->findOneById($id);
 
-        $roadmaps = $em->getRepository(Roadmap::class)->findByUser($user);
+      
+        $campany = $em->getRepository(Campany::class)->findOneById($id);
 
-       
+        $roadmaps = $em->getRepository(Roadmap::class)->findBy(
+            ['campany' => $campany],
+            ['date' => 'ASC'] // tri croissant
+        );
+
+
+        // On prépare un tableau enrichi avec trimestre
+        $roadmapsWithQuarter = [];
+
+        foreach ($roadmaps as $roadmap) {
+            $roadmapsWithQuarter[] = [
+                'entity'   => $roadmap,
+                'quarter'  => $quarterService->getQuarter($roadmap->getDate()),
+            ];
+        }
+
 
         return $this->render('roadmap/index.html.twig', [
-            'user' => $user,
-            'roadmaps' => $roadmaps,
+            'user' => $campany,
+            'roadmaps' => $roadmapsWithQuarter,
         ]);
     }
 
- 
+
 
     #[Route('/roadmap/new/{id}', name: 'app_new_roadmap')]
-public function multiRoadmap(Request $request, EntityManagerInterface $em, int $id): Response
-{
-    // Récupère l'utilisateur par l'ID
-    $user = $em->getRepository(User::class)->find($id);
+    public function multiRoadmap(Request $request, EntityManagerInterface $em, int $id): Response
+    {
+        // Récupère l'utilisateur par l'ID
+        $campany = $em->getRepository(Campany::class)->find($id);
 
-    if (!$user) {
-        throw $this->createNotFoundException("Utilisateur introuvable.");
+        
+
+        // Tableau contenant des Roadmap vides
+        $data = ['roadmaps' => []];
+
+        // Une roadmap par défaut
+        $data['roadmaps'][] = new Roadmap();
+
+        $form = $this->createForm(MultiroadmapType::class, $data);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+
+            /** @var array $submittedRoadmaps */
+            $submittedRoadmaps = $form->get('roadmaps')->getData();
+
+            foreach ($submittedRoadmaps as $roadmap) {
+                if ($roadmap instanceof Roadmap) {
+                    // 🔥 On lie la roadmap à l'utilisateur
+                    $roadmap->setCampany($campany);
+
+                    $em->persist($roadmap);
+                }
+            }
+
+            $em->flush();
+
+            $this->addFlash('success', 'Les roadmaps ont été enregistrées avec succès !');
+
+            return $this->redirectToRoute('app_roadmap', ['id' => $campany->getId()]);
+        }
+
+        return $this->render('roadmap/add.html.twig', [
+            'form' => $form->createView(),
+            'user' => $campany
+        ]);
     }
 
-    // Tableau contenant des Roadmap vides
-    $data = ['roadmaps' => []];
+    #[Route('/roadmap/edit/{id}', name: 'app_edit_roadmap')]
+public function edit(
+    int $id,
+    Request $request,
+    EntityManagerInterface $em
+): Response
+{
+    $roadmap = $em->getRepository(Roadmap::class)->find($id);
 
-    // Une roadmap par défaut
-    $data['roadmaps'][] = new Roadmap();
+    if (!$roadmap) {
+        throw $this->createNotFoundException("Roadmap introuvable");
+    }
 
-    $form = $this->createForm(MultiroadmapType::class, $data);
+    // Création du formulaire RoadmapType
+    $form = $this->createForm(RoadmapType::class, $roadmap);
+
     $form->handleRequest($request);
 
     if ($form->isSubmitted() && $form->isValid()) {
 
-        /** @var array $submittedRoadmaps */
-        $submittedRoadmaps = $form->get('roadmaps')->getData();
-
-        foreach ($submittedRoadmaps as $roadmap) {
-            if ($roadmap instanceof Roadmap) {
-                // 🔥 On lie la roadmap à l'utilisateur
-                $roadmap->setUser($user);
-
-                $em->persist($roadmap);
-            }
-        }
-
         $em->flush();
 
-        $this->addFlash('success', 'Les roadmaps ont été enregistrées avec succès !');
+        $this->addFlash('success', 'Roadmap modifiée avec succès !');
 
-        return $this->redirectToRoute('app_roadmap', ['id' => $user->getId()]);
+        // Redirection vers la fiche entreprise de l'utilisateur
+        return $this->redirectToRoute('app_roadmap', [
+            'id' => $roadmap->getCampany()->getId()
+        ]);
     }
 
-    return $this->render('roadmap/add.html.twig', [
+    return $this->render('roadmap/edit.html.twig', [
         'form' => $form->createView(),
-        'user' => $user
+        'roadmap' => $roadmap,
     ]);
 }
+
+#[Route('/roadmap/delete/{id}', name: 'app_delete_roadmap', methods: ['GET'])]
+public function delete(int $id, EntityManagerInterface $em): Response
+{
+    $roadmap = $em->getRepository(Roadmap::class)->find($id);
+
+    if (!$roadmap) {
+        throw $this->createNotFoundException("Roadmap introuvable.");
+    }
+
+    $userId = $roadmap->getCampany()->getId();
+
+    $em->remove($roadmap);
+    $em->flush();
+
+    $this->addFlash('success', 'Roadmap supprimée avec succès.');
+
+    return $this->redirectToRoute('app_roadmap', ['id' => $userId]);
+}
+
 
 }

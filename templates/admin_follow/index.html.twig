@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard Admin{% endblock %}
+
+{% block body %}
+
+<!-- ✅ Charger ApexCharts AVANT ton script -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <h4>Répartition Globale</h4>
+        <div id="donutChart"></div>
+    </div>
+
+    <div class="col-md-6">
+        <h4>Pipeline par étape</h4>
+        <div id="barChart"></div>
+    </div>
+</div>
+
+<script>
+    const stages = {{ stages|json_encode()|raw }};
+    const pipelineCounts = {{ pipelineCounts|json_encode()|raw }};
+    const stats = {{ stats|json_encode()|raw }};
+
+    // ---------------------------
+    // Donut Chart
+    // ---------------------------
+    const donutChart = new ApexCharts(
+        document.querySelector("#donutChart"),
+        {
+            chart: { type: 'donut' },
+            labels: ['Gagné', 'Perdu', 'En cours'],
+            series: [stats.won, stats.lost, stats.open],
+            colors: ['#28a745', '#dc3545', '#ffc107']
+        }
+    );
+    donutChart.render();
+
+    // ---------------------------
+    // Bar Chart
+    // ---------------------------
+    const barChart = new ApexCharts(
+        document.querySelector("#barChart"),
+        {
+            chart: { type: 'bar' },
+            series: [{
+                name: "Opportunités",
+                data: Object.values(pipelineCounts)
+            }],
+            xaxis: {
+                categories: Object.values(stages)
+            },
+            colors: ['#0d6efd']
+        }
+    );
+    barChart.render();
+</script>
+
+{% endblock %}

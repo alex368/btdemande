@@ -3,14 +3,14 @@
 {% block title %}Produit : {{ product.name }}{% endblock %}
 
 {% block body %}
-<main class="col-md-9 col-lg-10 p-2">
+<main class="col-md-12 col-lg-12 p-2">
 
     <div class="card shadow-sm rounded-0 border-0 p-5 text-center"
          style="max-width: 1200px; width: 100%; min-height: 600px;">
 
         <!-- Logo -->
         <a href="#" class="d-flex justify-content-center align-items-center mb-4 text-decoration-none">
-            <img src="https://hellowilla.co/wp-content/uploads/2020/06/BPIFrance-logo.png"
+            <img src="{{product.fundingMechanism.logo}}}}"
                  alt="Logo" width="150">
         </a>
 

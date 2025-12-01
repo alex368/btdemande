@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+	<div class="container mt-4">
+		<div class="text-end mb-3">
+			<a href="{{path('app_contact')}}" class="btn btn-warning rounded-0">
+				Retour à la liste des contacts
+			</a>
+<h1>Importer des contacts</h1>
+
+{{ form_start(form) }}
+    {{ form_row(form.file) }}
+    <button class="btn btn-primary mt-3">Importer</button>
+{{ form_end(form) }}
+</div>
+</div>
+{% endblock %}
+

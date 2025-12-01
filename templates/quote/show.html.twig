@@ -1,0 +1,250 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Devis
+	{{ quote.quoteNumber }}
+{% endblock %}
+
+{% block body %}
+
+	<div
+		class="container mt-4">
+
+
+		<!-- === HEADER DU DEVIS === -->
+		<div class="card shadow-sm mb-4">
+			<div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+				<span>
+					<i class="bi bi-file-earmark-text me-2"></i>
+					Devis n°
+					{{ quote.quoteNumber }}
+				</span>
+
+				<div class="d-flex gap-2">
+					<a href="{{ path('app_quote_pdf', {id: quote.id}) }}" class="btn btn-warning btn-sm">
+						<i class="bi bi-file-earmark-arrow-down"></i>
+						Télécharger PDF
+					</a>
+					<a href="{{ path('app_quote_edit', {id: quote.id}) }}" class="btn btn-light btn-sm">
+						<i class="bi bi-pencil-square"></i>
+						Modifier
+					</a>
+
+					<form action="{{ path('app_quote_delete', {id: quote.id}) }}" method="post" onsubmit="return confirm('Confirmer la suppression de ce devis ?');">
+						<input type="hidden" name="_token" value="{{ csrf_token('delete-quote-' ~ quote.id) }}">
+						<button class="btn btn-danger btn-sm">
+							<i class="bi bi-trash"></i>
+							Supprimer
+						</button>
+					</form>
+				</div>
+			</div>
+
+			<div
+				class="card-body">
+
+				<!-- === INFOS GÉNÉRALES === -->
+				<h5 class="fw-bold">Informations générales</h5>
+
+				<ul class="list-group mb-4">
+					<li class="list-group-item">
+						<strong>Numéro :</strong>
+						{{ quote.quoteNumber }}
+					</li>
+					<li class="list-group-item">
+						<strong>Date de création :</strong>
+						{{ quote.createdAt|date('d/m/Y') }}
+					</li>
+					<li class="list-group-item">
+						<strong>Expiration :</strong>
+						{{ quote.expirationDate|date('d/m/Y') }}
+
+						{% if quote.expirationDate < 'now'|date %}
+							<span class="badge bg-danger ms-2">Expiré</span>
+						{% else %}
+							<span class="badge bg-success ms-2">Valide</span>
+						{% endif %}
+					</li>
+				</ul>
+
+				<!-- === CLIENT === -->
+				<h5 class="fw-bold">Client</h5>
+
+				<ul class="list-group mb-4">
+					<li class="list-group-item">
+						<strong>Nom :</strong>
+						{{ contact.lastname ?? '-'   }}
+						{{ contact.firstname ?? '-' }}
+					</li>
+					<li class="list-group-item">
+						<strong>Email :</strong>
+						{% if quote.customer.email is iterable and quote.customer.email|length > 0 %}
+							{{ quote.customer.email|join(', ') }}
+						{% else %}
+							-
+						{% endif %}
+					</li>
+
+					<li class="list-group-item">
+						<strong>Téléphone :</strong>
+						{% if quote.customer.phone is iterable and quote.customer.phone|length > 0 %}
+							{{ quote.customer.phone|join(' / ') }}
+						{% else %}
+							-
+						{% endif %}
+					</li>
+
+				</ul>
+
+				<!-- === LIGNES DU DEVIS === -->
+				<h5 class="fw-bold">Lignes du devis</h5>
+
+				{% if quote.quoteItems is empty %}
+					<p class="text-muted">Aucune ligne dans ce devis.</p>
+				{% else %}
+					<table class="table table-striped mt-3">
+						<thead class="table-primary">
+							<tr>
+								<th>Produit</th>
+								<th class="text-center">Quantité</th>
+								<th class="text-end">Prix unitaire HT</th>
+								<th class="text-end">Total HT</th>
+							</tr>
+						</thead>
+						<tbody>
+{% for item in quote.quoteItems %}
+
+    {# ---- CALCULS PRODUIT PRINCIPAL ---- #}
+    {% set productPrice = item.productService.price|default(0) %}
+
+    {# ---- CALCUL ADDONS AVEC POURCENTAGE ---- #}
+    {% set addonsTotalUnit = 0 %}
+    {% for add in item.addOnProducts %}
+
+        {# Pourcentage #}
+        {% set pct = add.percentage|default(100) %}
+
+        {# Prix réel du addOn = price * (pct / 100) #}
+        {% set addRealPrice = add.price|default(0) * (pct / 100) %}
+
+        {# Ajout au total unité #}
+        {% set addonsTotalUnit = addonsTotalUnit + addRealPrice %}
+    {% endfor %}
+
+    {# Quantité #}
+    {% set qty = item.quantity|default(1) %}
+
+    {# Total ligne #}
+    {% set lineTotal = (productPrice + addonsTotalUnit) * qty %}
+
+    <tr>
+        <td>
+            <!-- PRODUIT PRINCIPAL -->
+            <div class="fw-bold text-primary">{{ item.productService.title }}</div>
+
+            {% if item.productService.description %}
+                <div class="text-muted small">{{ item.productService.description }}</div>
+            {% endif %}
+
+            <div class="badge bg-info text-dark mt-1">
+                Prix unitaire : {{ productPrice|number_format(2, ',', ' ') }} € HT
+            </div>
+
+            <!-- ADDONS -->
+            {% if item.addOnProducts is not empty %}
+                <div class="small text-muted mt-2 border-top pt-2">
+
+                    <i class="bi bi-plus-circle"></i> Produits complémentaires :
+
+                    {% for add in item.addOnProducts %}
+
+                        {% set pct = add.percentage|default(100) %}
+                        {% set addRealPrice = add.price|default(0) * (pct / 100) %}
+
+                        <div class="mt-1">
+                            <span class="badge bg-secondary">{{ add.title }}</span>
+
+                            {% if add.description %}
+                                <span class="badge bg-light text-dark">{{ add.description }}</span>
+                            {% endif %}
+
+                            <span class="badge bg-success">
+                                {{ addRealPrice|number_format(2, ',', ' ') }} €
+                                <small>({{ pct }}%)</small>
+                            </span>
+                        </div>
+
+                    {% endfor %}
+
+                    <div class="fw-bold mt-2">
+                        Total AddOns / unité : {{ addonsTotalUnit|number_format(2, ',', ' ') }} €
+                    </div>
+
+                </div>
+            {% endif %}
+        </td>
+
+        <!-- QUANTITÉ -->
+        <td class="text-center">{{ qty }}</td>
+
+        <!-- PRIX UNITAIRE TOTAL -->
+        <td class="text-end fw-bold">
+            {{ (productPrice + addonsTotalUnit)|number_format(2, ',', ' ') }} € HT
+            <br>
+            <small class="text-muted">
+                (Produit : {{ productPrice|number_format(2, ',', ' ') }} €
+                {% if addonsTotalUnit > 0 %}
+                    + AddOns : {{ addonsTotalUnit|number_format(2, ',', ' ') }} €
+                {% endif %}
+                )
+            </small>
+        </td>
+
+        <!-- TOTAL LIGNE -->
+        <td class="text-end fw-bold text-success">
+            {{ lineTotal|number_format(2, ',', ' ') }} € HT
+        </td>
+    </tr>
+
+{% endfor %}
+</tbody>
+
+
+					</table>
+				{% endif %}
+
+				<!-- === TOTAL DU DEVIS === -->
+				{% if quote.totalHt is defined %}
+					<div class="card mt-4 p-3 shadow-sm">
+						<h5 class="fw-bold mb-3">Récapitulatif financier</h5>
+
+						<div class="d-flex justify-content-between">
+							<span>Total HT :</span>
+							<strong>{{ quote.totalHt|number_format(2, ',', ' ') }}
+								€</strong>
+						</div>
+
+						<div class="d-flex justify-content-between">
+							<span>TVA :</span>
+							<strong>{{ (quote.totalTtc - quote.totalHt)|number_format(2, ',', ' ') }}
+								€</strong>
+						</div>
+
+						<div class="d-flex justify-content-between mt-2 pt-2 border-top">
+							<span>Total TTC :</span>
+							<strong class="text-success">{{ quote.totalTtc|number_format(2, ',', ' ') }}
+								€</strong>
+						</div>
+					</div>
+				{% endif %}
+
+			</div>
+		</div>
+
+		<a href="{{ path('app_contact_show', {id: quote.customer.id}) }}" class="btn btn-secondary">
+			<i class="bi bi-arrow-left"></i>
+			Retour au contact
+		</a>
+
+	</div>
+
+{% endblock %}

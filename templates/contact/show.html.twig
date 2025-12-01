@@ -1,0 +1,454 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+	<div class="container mt-4">
+
+		<h1>{{ contact.firstName }}
+			{{ contact.lastName }}</h1>
+
+		{# ===================== INFORMATIONS CONTACT ===================== #}
+		<div class="card mb-4 shadow-sm">
+			<div class="card-header bg-primary text-white fw-bold">
+				<i class="bi bi-person-lines-fill me-2"></i>
+				Informations Contact
+			</div>
+
+			<div class="card-body">
+
+				<table class="table table-borderless align-middle">
+
+					<tr>
+						<th class="text-muted" style="width:25%;">Civilité</th>
+						<td>{{ contact.salutation }}</td>
+					</tr>
+
+					<tr>
+						<th class="text-muted">Emails</th>
+						<td>
+							{% for e in contact.email %}
+								<div>
+									<i class="bi bi-envelope-at me-1"></i>
+									<a href="mailto:{{ e }}">{{ e }}</a>
+								</div>
+							{% else %}
+								<em>Aucun</em>
+							{% endfor %}
+						</td>
+					</tr>
+
+					<tr>
+						<th class="text-muted">Téléphones</th>
+						<td>
+							{% for t in contact.phone %}
+								<div>
+									<i class="bi bi-telephone me-1"></i>
+									{{ t }}</div>
+							{% else %}
+								<em>Aucun</em>
+							{% endfor %}
+						</td>
+					</tr>
+
+					<tr>
+						<th class="text-muted">Mobiles</th>
+						<td>
+							{% for m in contact.mobilePhone %}
+								<div>
+									<i class="bi bi-phone me-1"></i>
+									{{ m }}</div>
+							{% else %}
+								<em>Aucun</em>
+							{% endfor %}
+						</td>
+					</tr>
+
+					<tr>
+						<th class="text-muted">Réseaux sociaux</th>
+						<td>
+							{% for s in contact.socialMedia %}
+								{% set url = s starts with 'http' ? s : 'https://' ~ s %}
+								<div
+									class="mb-1">
+
+									{# Auto-detection icône #}
+									{% set icon = 'bi-link-45deg' %}
+									{% if 'linkedin' in s %}
+										{% set icon = 'bi-linkedin' %}
+									{% endif %}
+									{% if 'facebook' in s %}
+										{% set icon = 'bi-facebook' %}
+									{% endif %}
+									{% if 'instagram' in s %}
+										{% set icon = 'bi-instagram' %}
+									{% endif %}
+									{% if 'twitter' in s or 'x.com' in s %}
+										{% set icon = 'bi-twitter-x' %}
+									{% endif %}
+									{% if 'youtube' in s %}
+										{% set icon = 'bi-youtube' %}
+									{% endif %}
+									{% if 'tiktok' in s %}
+										{% set icon = 'bi-tiktok' %}
+									{% endif %}
+
+									<i class="bi {{ icon }} me-1"></i>
+									<a href="{{ s }}" target="_blank" rel="noopener noreferrer">
+										{{ s }}
+									</a>
+								</div>
+							{% else %}
+								<em>Aucun</em>
+							{% endfor %}
+						</td>
+					</tr>
+
+					<tr>
+						<th class="text-muted">Pays</th>
+						<td>
+							<i class="bi bi-globe-americas me-1"></i>
+							{{ contact.country ?: '-' }}</td>
+					</tr>
+
+					<tr>
+						<th class="text-muted">Adresse</th>
+						<td>
+							<i class="bi bi-geo-alt me-1"></i>
+							{{ contact.adress ?: '-' }}</td>
+					</tr>
+
+					<tr>
+						<th class="text-muted">Ville</th>
+						<td>{{ contact.city ?: '-' }}</td>
+					</tr>
+
+					<tr>
+						<th class="text-muted">Code postal</th>
+						<td>{{ contact.zipCode ?: '-' }}</td>
+					</tr>
+
+					<tr>
+						<th class="text-muted">Site web</th>
+						<td>
+							{% if contact.website %}
+								<i class="bi bi-browser-chrome me-1"></i>
+								<a href="{{ contact.website }}" target="_blank">
+									{{ contact.website }}
+								</a>
+							{% else %}
+								<em>-</em>
+							{% endif %}
+						</td>
+					</tr>
+
+					<tr>
+						<th class="text-muted">Profession</th>
+						<td>{{ contact.occupation ?: '-' }}</td>
+					</tr>
+
+					<tr>
+						<th class="text-muted">Entreprise</th>
+						<td>
+							{% if contact.campany %}
+								<i class="bi bi-building me-1"></i>
+								{{ contact.campany.legalName }}
+							{% else %}
+								<em>-</em>
+							{% endif %}
+						</td>
+					</tr>
+
+				</table>
+
+				<div class="mt-3">
+					<a href="{{ path('app_contact') }}" class="btn btn-secondary">
+						<i class="bi bi-arrow-left"></i>
+						Retour
+					</a>
+
+					<a href="{{ path('app_contact_edit', {id: contact.id}) }}" class="btn btn-warning">
+						<i class="bi bi-pencil-square"></i>
+						Modifier
+					</a>
+
+					<form method="post" action="{{ path('app_contact_delete', {id: contact.id}) }}" class="d-inline" onsubmit="return confirm('Supprimer ce contact ?');">
+
+						<input type="hidden" name="_token" value="{{ csrf_token('delete-contact-' ~ contact.id) }}">
+
+						<button class="btn btn-danger">
+							<i class="bi bi-trash"></i>
+							Supprimer
+						</button>
+					</form>
+				</div>
+
+			</div>
+		</div>
+
+
+		{# ===================== OPPORTUNITÉS ===================== #}
+		<div class="card mb-4 shadow-sm">
+			<div class="card-header d-flex justify-content-between align-items-center bg-success text-white fw-bold">
+				<span>
+					<i class="bi bi-bullseye me-2"></i>
+					Opportunités</span>
+				<a href="{{ path('app_opportunity_add', {id: contact.id}) }}" class="btn btn-light btn-sm">
+					<i class="bi bi-plus-circle"></i>
+					Ajouter
+				</a>
+			</div>
+
+			<div class="card-body">
+
+				{% if opportunities is empty %}
+					<p class="text-muted">Aucune opportunité.</p>
+				{% else %}
+					<ul class="list-group">
+
+						{% for opp in opportunities %}
+
+							{# Détection de couleur badge selon étape #}
+							{% set stageColor =
+                        opp.stage == 'won'      ? 'success' :
+                        opp.stage == 'lost'     ? 'danger'  :
+                        opp.stage == 'proposal' ? 'primary' :
+                        opp.stage == 'qualification' ? 'warning' :
+                        'secondary'
+                    %}
+
+							{# Icône selon la source du lead #}
+							{% set icon =
+                        'phone' in opp.leadSource     ? 'bi-telephone' :
+                        'email' in opp.leadSource     ? 'bi-envelope'  :
+                        'website' in opp.leadSource   ? 'bi-globe2'    :
+                        'social' in opp.leadSource    ? 'bi-share'     :
+                        'referral' in opp.leadSource  ? 'bi-people'    :
+                        'bi-lightning'
+                    %}
+
+							<li class="list-group-item d-flex justify-content-between align-items-center">
+
+								<div>
+									<span class="badge bg-{{ stageColor }} me-2">{{ opp.stage|capitalize }}</span>
+
+									<i class="bi {{ icon }} me-1"></i>
+									{{ opp.leadSource|capitalize }}
+
+									<div class="text-muted small">
+										Créée le
+										{{ opp.createdAt|date('d/m/Y') }}
+									</div>
+								</div>
+
+								<div class="d-flex gap-2">
+
+									<a href="{{ path('app_opportunity_show', {id: opp.id}) }}" class="btn btn-sm btn-outline-info" title="Voir">
+										<i class="bi bi-eye"></i>
+									</a>
+
+									<a href="{{ path('app_opportunity_edit', {id: opp.id}) }}" class="btn btn-sm btn-outline-warning" title="Modifier">
+										<i class="bi bi-pencil-square"></i>
+									</a>
+
+									<form method="post" action="{{ path('app_opportunity_delete', { id: opp.id }) }}" onsubmit="return confirm('Supprimer cette opportunité ?');">
+
+										<input type="hidden" name="_token" value="{{ csrf_token('delete-opportunity-' ~ opp.id) }}">
+
+										<button class="btn btn-outline-danger">
+											<i class="bi bi-trash"></i>
+										</button>
+									</form>
+
+
+								</div>
+
+							</li>
+
+						{% endfor %}
+
+					</ul>
+				{% endif %}
+
+			</div>
+		</div>
+
+
+		{# ===================== ACTIVITÉS ===================== #}
+		<div class="card mb-4 shadow-sm">
+			<div class="card-header d-flex justify-content-between align-items-center bg-info text-white fw-bold">
+				<span>
+					<i class="bi bi-activity me-2"></i>
+					Activités</span>
+
+				<a href="{{ path('app_activity_add', {id: contact.id}) }}" class="btn btn-light btn-sm">
+					<i class="bi bi-plus-circle"></i>
+					Ajouter
+				</a>
+			</div>
+
+			<div class="card-body">
+
+				{% if activities is empty %}
+					<p class="text-muted">Aucune activité.</p>
+
+				{% else %}
+					<ul class="list-group">
+
+						{% for act in activities %}
+
+							{# 🎯 Détection de l’icône selon le type #}
+							{% set icon =
+                        act.type == 'call'      ? 'bi-telephone' :
+                        act.type == 'email'     ? 'bi-envelope' :
+                        act.type == 'meeting'   ? 'bi-people' :
+                        act.type == 'task'      ? 'bi-check2-square' :
+                        act.type == 'reminder'  ? 'bi-alarm' :
+                        'bi-circle'
+                    %}
+
+							{# 🎯 Badge couleur selon statut #}
+							{% set statusColor =
+                        act.status == 'done'        ? 'success' :
+                        act.status == 'in_progress' ? 'warning' :
+                        act.status == 'cancelled'   ? 'danger' :
+                        'secondary'
+                    %}
+
+							<li class="list-group-item d-flex justify-content-between align-items-center">
+
+								<div>
+									<i class="bi {{ icon }} me-1"></i>
+									<strong>{{ act.type|capitalize }}</strong>
+
+									<span class="badge bg-{{ statusColor }} ms-2">
+										{{ act.status|replace({'_':' '})|capitalize }}
+									</span>
+
+									<div class="text-muted small mt-1">
+										Le
+										{{ act.activityDate|date('d/m/Y H:i') }}
+									</div>
+								</div>
+
+								<div class="d-flex gap-2">
+
+									<a href="{{ path('app_activity_show', { id: act.id }) }}" class="btn btn-sm btn-outline-info" title="Voir">
+										<i class="bi bi-eye"></i>
+									</a>
+
+									<a href="{{ path('app_activity_edit', { id: act.id }) }}" class="btn btn-sm btn-outline-warning" title="Modifier">
+										<i class="bi bi-pencil-square"></i>
+									</a>
+
+									<form method="post" action="{{ path('app_activity_delete', { id: act.id }) }}" onsubmit="return confirm('Supprimer cette activité ?');">
+
+										<input type="hidden" name="_token" value="{{ csrf_token('delete-activity-' ~ act.id) }}">
+
+										<button class="btn btn-outline-danger">
+											<i class="bi bi-trash"></i>
+										</button>
+									</form>
+
+								</div>
+
+							</li>
+
+						{% endfor %}
+
+					</ul>
+				{% endif %}
+
+			</div>
+		</div>
+
+
+
+
+
+	{# ===================== DEVIS ===================== #}
+
+		<div class="card mb-4 shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center bg-warning text-white fw-bold">
+        <span>
+            <i class="bi bi-receipt me-2"></i>
+            Devis
+        </span>
+
+        <a href="{{ path('app_quote_add', {id: contact.id}) }}" class="btn btn-light btn-sm">
+            <i class="bi bi-plus-circle"></i>
+            Ajouter
+        </a>
+    </div>
+
+    <div class="card-body">
+
+        {% if quotes is empty %}
+            <p class="text-muted">Aucun devis.</p>
+        {% else %}
+            <ul class="list-group">
+
+                {% for quote in quotes %}
+
+                    {# Badge couleur selon expiration #}
+                    {% set isExpired = quote.expirationDate < 'now'|date %}
+                    {% set badgeColor = isExpired ? 'danger' : 'success' %}
+                    {% set badgeText  = isExpired ? 'Expiré' : 'Valide' %}
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <span class="badge bg-{{ badgeColor }} me-2">{{ badgeText }}</span>
+
+                            <i class="bi bi-receipt me-1"></i>
+                            Devis n° <strong>{{ quote.quoteNumber }}</strong>
+
+                            <div class="text-muted small">
+                                Créé le {{ quote.createdAt|date('d/m/Y') }}  
+                                • expire le {{ quote.expirationDate|date('d/m/Y') }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+
+                            <a href="{{ path('app_quote_show', {id: quote.id}) }}"
+                               class="btn btn-sm btn-outline-info"
+                               title="Voir">
+                                <i class="bi bi-eye"></i>
+                            </a>
+
+                            <a href="{{ path('app_quote_edit', {id: quote.id}) }}"
+                               class="btn btn-sm btn-outline-warning"
+                               title="Modifier">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+
+                            <form method="post"
+                                  action="{{ path('app_quote_delete', {id: quote.id}) }}"
+                                  onsubmit="return confirm('Supprimer ce devis ?');">
+
+                                <input type="hidden" name="_token"
+                                       value="{{ csrf_token('delete-quote-' ~ quote.id) }}">
+
+                                <button class="btn btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+
+                        </div>
+
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+        {% endif %}
+
+    </div>
+</div>
+
+
+
+	</div>
+
+
+	
+{% endblock %}

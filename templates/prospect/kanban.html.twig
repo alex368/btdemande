@@ -1,0 +1,184 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Kanban Prospects{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+
+    <h1 class="mb-3">Kanban Prospects</h1>
+
+    {# --------- STATS --------- #}
+    <div class="d-flex justify-content-end mb-3 gap-2">
+        <span class="badge bg-secondary">Total : {{ stats.total }}</span>
+        <span class="badge bg-success">Gagnés : {{ stats.won }}</span>
+        <span class="badge bg-danger">Perdus : {{ stats.lost }}</span>
+        <span class="badge bg-info">Ouverts : {{ stats.open }}</span>
+    </div>
+
+    {# --------- KANBAN --------- #}
+    <div class="d-flex flex-row gap-3 overflow-auto" style="min-height: 70vh;">
+
+        {% for stageKey, stageLabel in stages %}
+
+            {% set stageColor =
+                stageKey == 'prospect'      ? 'secondary' :
+                stageKey == 'qualification' ? 'info'      :
+                stageKey == 'proposal'      ? 'primary'   :
+                stageKey == 'negotiation'   ? 'warning'   :
+                stageKey == 'won'           ? 'success'   :
+                'danger'
+            %}
+
+            <div class="card flex-shrink-0 kanban-column"
+                 style="width: 18rem;"
+                 data-stage="{{ stageKey }}">
+
+                <div class="card-header bg-{{ stageColor }} text-white fw-bold d-flex justify-content-between align-items-center">
+                    <span>{{ stageLabel }}</span>
+                    <span class="badge bg-dark column-count">
+                        {{ columns[stageKey]|length }}
+                    </span>
+                </div>
+
+                <div class="card-body p-2"
+                     style="background:#f8f9fa; max-height: 65vh; overflow-y:auto;">
+
+                    {% if columns[stageKey] is empty %}
+                        <p class="text-muted small m-2 no-items">Aucune opportunité.</p>
+                    {% else %}
+                        <p class="text-muted small m-2 no-items d-none">Aucune opportunité.</p>
+
+                        {% for opp in columns[stageKey] %}
+                            <div class="card mb-2 shadow-sm kanban-card"
+                                 draggable="true"
+                                 data-id="{{ opp.id }}">
+
+                                <div class="card-body p-2">
+
+                                    <div class="d-flex justify-content-between">
+                                        <strong class="small">
+                                            {{ opp.contact ? opp.contact.firstName ~ ' ' ~ opp.contact.lastName : 'Sans contact' }}
+                                        </strong>
+
+                                        <span class="badge bg-light text-muted border">
+                                            {{ opp.leadSource|capitalize }}
+                                        </span>
+                                    </div>
+
+                                    <div class="text-muted small mt-1">
+                                        Créée le {{ opp.createdAt|date('d/m/Y') }}
+                                    </div>
+
+                                    {% if opp.user %}
+                                        <div class="small mt-1">
+                                            <i class="bi bi-person-badge"></i>
+                                            {{ opp.user.fullName ?? opp.user.email }}
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="mt-2 d-flex justify-content-between">
+
+                                        <a href="{{ path('app_opportunity_show', { id: opp.id }) }}"
+                                           class="btn btn-sm btn-outline-info"
+                                           title="Voir">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+
+                                        <a href="{{ path('app_opportunity_edit', { id: opp.id }) }}"
+                                           class="btn btn-sm btn-outline-warning"
+                                           title="Modifier">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+
+                                        {% if opp.contact %}
+                                            <a href="{{ path('app_contact_show', { id: opp.contact.id }) }}"
+                                               class="btn btn-sm btn-outline-secondary"
+                                               title="Contact">
+                                                <i class="bi bi-person"></i>
+                                            </a>
+                                        {% endif %}
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{# ----------- DRAG & DROP + AJAX ----------- #}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let draggedCard = null;
+
+    document.querySelectorAll('.kanban-card').forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+            draggedCard = card;
+            card.classList.add('opacity-50');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        card.addEventListener('dragend', () => {
+            draggedCard.classList.remove('opacity-50');
+            draggedCard = null;
+        });
+    });
+
+    document.querySelectorAll('.kanban-column').forEach(column => {
+
+        column.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            column.classList.add('border', 'border-primary');
+        });
+
+        column.addEventListener('dragleave', () => {
+            column.classList.remove('border', 'border-primary');
+        });
+
+        column.addEventListener('drop', (e) => {
+            e.preventDefault();
+            column.classList.remove('border', 'border-primary');
+
+            if (!draggedCard) return;
+
+            const stage = column.dataset.stage;
+            const body = column.querySelector('.card-body');
+
+            body.querySelector('.no-items')?.classList.add('d-none');
+            body.appendChild(draggedCard);
+
+            updateColumnCounts();
+
+            fetch('{{ path('app_prospect_kanban_update_stage') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    id: draggedCard.dataset.id,
+                    stage: stage
+                })
+            });
+        });
+    });
+
+    function updateColumnCounts() {
+        document.querySelectorAll('.kanban-column').forEach(col => {
+            const count = col.querySelectorAll('.kanban-card').length;
+            col.querySelector('.column-count').textContent = count;
+            col.querySelector('.no-items')?.classList.toggle('d-none', count > 0);
+        });
+    }
+});
+</script>
+{% endblock %}

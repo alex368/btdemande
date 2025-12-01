@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
+        .title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+        .section-title { font-size: 16px; font-weight: bold; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #aaa; padding: 8px; }
+        th { background: #ddd; }
+        .right { text-align: right; }
+        .bold { font-weight: bold; }
+        .total-box { margin-top: 20px; padding: 10px; border: 1px solid #444; }
+    </style>
+</head>
+
+<body>
+
+    <div class="title">Devis n° {{ quote.quoteNumber }}</div>
+
+    <div class="section-title">Informations générales</div>
+    <p>Date de création : {{ quote.createdAt|date('d/m/Y') }}<br>
+        Expiration : {{ quote.expirationDate|date('d/m/Y') }}</p>
+
+    <div class="section-title">Client</div>
+    <p>
+        <strong>{{ quote.customer.lastname }} {{ quote.customer.firstname }}</strong><br>
+        Email :
+        {% if quote.customer.email is iterable %}
+            {{ quote.customer.email|join(', ') }}
+        {% endif %}
+        <br>
+        Téléphone :
+        {% if quote.customer.phone is iterable %}
+            {{ quote.customer.phone|join(' / ') }}
+        {% endif %}
+    </p>
+
+    <div class="section-title">Lignes du devis</div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Produit</th>
+                <th class="right">Quantité</th>
+                <th class="right">Prix unitaire HT</th>
+                <th class="right">Total HT</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in quote.quoteItems %}
+
+                {% set productPrice = item.productService.price|default(0) %}
+                {% set addonsTotalUnit = 0 %}
+                {% for add in item.addOnProducts %}
+                    {% set addonsTotalUnit = addonsTotalUnit + (add.price|default(0)) %}
+                {% endfor %}
+                {% set qty = item.quantity|default(1) %}
+                {% set lineTotal = (productPrice + addonsTotalUnit) * qty %}
+
+                <tr>
+                    <td>
+                        <strong>{{ item.productService.title }}</strong><br>
+                        <span style="font-size: 11px;">{{ item.productService.description }}</span>
+
+                        {% if item.addOnProducts is not empty %}
+                            <br><em>Produits complémentaires :</em><br>
+                            {% for add in item.addOnProducts %}
+                                - {{ add.title }} ({{ add.price|number_format(2, ',', ' ') }} €)<br>
+                            {% endfor %}
+                        {% endif %}
+                    </td>
+
+                    <td class="right">{{ qty }}</td>
+                    <td class="right">{{ (productPrice + addonsTotalUnit)|number_format(2, ',', ' ') }} €</td>
+                    <td class="right bold">{{ lineTotal|number_format(2, ',', ' ') }} €</td>
+                </tr>
+
+            {% endfor %}
+        </tbody>
+    </table>
+
+   {# === CALCUL TOTAL HT === #}
+{% set totalHT = 0 %}
+
+{% for item in quote.quoteItems %}
+    {% set productPrice = item.productService.price|default(0) %}
+
+    {% set addonsTotalUnit = 0 %}
+    {% for add in item.addOnProducts %}
+        {% set addonsTotalUnit = addonsTotalUnit + (add.price|default(0)) %}
+    {% endfor %}
+
+    {% set qty = item.quantity|default(1) %}
+    {% set lineTotal = (productPrice + addonsTotalUnit) * qty %}
+
+    {% set totalHT = totalHT + lineTotal %}
+{% endfor %}
+
+<div class="total-box">
+    <div class="right bold" style="font-size: 15px;">
+        Total HT : {{ totalHT|number_format(2, ',', ' ') }} €
+    </div>
+</div>
+
+
+</body>
+</html>

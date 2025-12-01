@@ -49,10 +49,24 @@ class Campany
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $logo = null;
 
+    /**
+     * @var Collection<int, Roadmap>
+     */
+    #[ORM\OneToMany(targetEntity: Roadmap::class, mappedBy: 'campany')]
+    private Collection $roadmaps;
+
+    /**
+     * @var Collection<int, Contact>
+     */
+    #[ORM\OneToMany(targetEntity: Contact::class, mappedBy: 'campany')]
+    private Collection $contact;
+
     public function __construct()
     {
         $this->customer = new ArrayCollection();
         $this->fundingRequests = new ArrayCollection();
+        $this->roadmaps = new ArrayCollection();
+        $this->contact = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -197,4 +211,65 @@ class Campany
 
         return $this;
     }
+
+    /**
+     * @return Collection<int, Roadmap>
+     */
+    public function getRoadmaps(): Collection
+    {
+        return $this->roadmaps;
+    }
+
+    public function addRoadmap(Roadmap $roadmap): static
+    {
+        if (!$this->roadmaps->contains($roadmap)) {
+            $this->roadmaps->add($roadmap);
+            $roadmap->setCampany($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRoadmap(Roadmap $roadmap): static
+    {
+        if ($this->roadmaps->removeElement($roadmap)) {
+            // set the owning side to null (unless already changed)
+            if ($roadmap->getCampany() === $this) {
+                $roadmap->setCampany(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Contact>
+     */
+    public function getContact(): Collection
+    {
+        return $this->contact;
+    }
+
+    public function addContact(Contact $contact): static
+    {
+        if (!$this->contact->contains($contact)) {
+            $this->contact->add($contact);
+            $contact->setCampany($this);
+        }
+
+        return $this;
+    }
+
+    public function removeContact(Contact $contact): static
+    {
+        if ($this->contact->removeElement($contact)) {
+            // set the owning side to null (unless already changed)
+            if ($contact->getCampany() === $this) {
+                $contact->setCampany(null);
+            }
+        }
+
+        return $this;
+    }
+
 }

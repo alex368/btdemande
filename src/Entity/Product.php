@@ -40,6 +40,9 @@ class Product
     #[ORM\OneToMany(targetEntity: Roadmap::class, mappedBy: 'product')]
     private Collection $roadmaps;
 
+    #[ORM\ManyToOne(inversedBy: 'product')]
+    private ?FundingMechanism $fundingMechanism = null;
+
     public function __construct()
     {
         $this->documentTemplates = new ArrayCollection();
@@ -162,6 +165,18 @@ class Product
                 $roadmap->setProduct(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getFundingMechanism(): ?FundingMechanism
+    {
+        return $this->fundingMechanism;
+    }
+
+    public function setFundingMechanism(?FundingMechanism $fundingMechanism): static
+    {
+        $this->fundingMechanism = $fundingMechanism;
 
         return $this;
     }

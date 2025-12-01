@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello FunderController!
+{% endblock %}
+
+{% block body %}
+	<div class="container mt-4">
+		<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Liste des financeurs</h1>
+		<div class="text-end mb-3">
+			{% if is_granted('ROLE_ADMIN') %}
+				<a href="{{path('app_funder_add')}}" class="btn btn-warning rounded-0">
+					Nouveau financeur
+				</a>
+			{% endif %}
+		</div>
+		<table class="table align-middle table-striped">
+			<thead class="table-light">
+				<tr>
+					<th style="width: 120px;">Logo</th>
+					<th>Name</th>
+					<th>Sector</th>
+					<th>Type</th>
+					<th style="width: 220px;">Outil</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				{% for f in funders %}
+					<tr>
+						<td>
+							{% if f.logo %}
+								<img src="{{ asset('uploads/logos/' ~ f.logo) }}" alt="Logo" class="img-thumbnail rounded" style="width: 80px; height: 80px; object-fit: cover;">
+							{% else %}
+								<span class="text-muted">Aucun logo</span>
+							{% endif %}
+						</td>
+
+						<td>{{ f.name }}</td>
+						<td>{{ f.sector }}</td>
+						<td>{{ f.type }}</td>
+
+						<td>
+							<div class="d-inline-flex gap-2">
+
+								<a href="{{ path('app_funder_show', { id: f.id }) }}" class="btn btn-sm btn-info">
+									Voir
+								</a>
+
+								<a href="{{ path('app_funder_edit', { id: f.id }) }}" class="btn btn-sm btn-warning">
+									Éditer
+								</a>
+
+								<form method="post" action="{{ path('app_funder_delete', { id: f.id }) }}" onsubmit="return confirm('Voulez-vous vraiment supprimer cet élément ?');">
+
+									<input type="hidden" name="_token" value="{{ csrf_token('delete' ~ f.id) }}">
+
+									<button class="btn btn-sm btn-danger">
+										Supprimer
+									</button>
+								</form>
+
+							</div>
+						</td>
+					</tr>
+
+				{% else %}
+					<tr>
+						<td colspan="5" class="text-center text-muted">
+							Aucun financeur trouvé.
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
+
+		<div class="d-flex justify-content-center">
+			{{ knp_pagination_render(funders) }}
+		</div>
+	</div>
+{% endblock %}

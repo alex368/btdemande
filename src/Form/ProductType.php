@@ -3,7 +3,9 @@
 namespace App\Form;
 
 use App\Entity\DocumentTemplate;
+use App\Entity\FundingMechanism;
 use App\Entity\Product;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -26,6 +28,11 @@ class ProductType extends AbstractType
                 'attr' => ['class' => 'form-control'],
                 'row_attr' => ['class' => 'mb-3']
             ])
+              ->add('fundingMechanism', EntityType::class, [
+    'class' => FundingMechanism::class,
+    'choice_label' => 'name', // ou le champ à afficher
+])
+
            ->add('documentTemplates', CollectionType::class, [
     'entry_type' => DocumentTemplateType::class,
     'allow_add' => true,

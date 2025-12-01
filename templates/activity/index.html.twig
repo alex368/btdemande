@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle Activité{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+
+    <h1 class="mb-4">Ajouter une Activité pour {{ contact.firstName }} {{ contact.lastName }}</h1>
+
+    <div class="card">
+        <div class="card-body">
+
+            {{ form_start(form) }}
+
+                {{ form_widget(form) }}
+
+                <button class="btn btn-primary mt-3">Enregistrer</button>
+
+                <a href="{{ path('app_contact_show', { id: contact.id }) }}"
+                   class="btn btn-secondary mt-3">
+                    Retour au contact
+                </a>
+
+            {{ form_end(form) }}
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

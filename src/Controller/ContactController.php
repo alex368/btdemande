@@ -1,0 +1,233 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Activity;
+use App\Entity\Contact;
+use App\Entity\Opportunity;
+use App\Entity\Quote;
+use App\Form\ActivityType;
+use App\Form\ContactType;
+use App\Form\ImportContactsType;
+use App\Form\OpportunityType;
+use App\Repository\ContactRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+
+final class ContactController extends AbstractController
+{
+
+
+#[Route('/contact', name: 'app_contact')]
+public function index(ContactRepository $contactRepository, PaginatorInterface $paginator, Request $request): Response
+{
+
+    $query = $contactRepository->createQueryBuilder('c')
+        ->orderBy('c.lastName', 'DESC')
+        ->getQuery();
+
+    $contacts = $paginator->paginate(
+        $query,                               // Requête
+        $request->query->getInt('page', 1),   // Numéro de page
+        10                                    // Nombre d'éléments par page
+    );
+
+    return $this->render('contact/index.html.twig', [
+        'contacts' => $contacts,
+    ]);
+}
+       #[Route('/contact/add', name: 'app_contact_add')]
+    public function add(EntityManagerInterface $em, Request $request): Response
+    {
+
+        $contact = new Contact();
+        $form = $this->createForm(ContactType::class, $contact);
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+                /** @var UploadedFile $logoFile */
+            $em->persist($contact);
+            $em->flush();
+
+            $this->addFlash('success', 'contact created successfully.');
+
+            return $this->redirectToRoute('app_contact');
+        }
+        return $this->render('contact/add.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
+
+
+#[Route('/contact/{id}/edit', name: 'app_contact_edit')]
+public function edit(Contact $contact, Request $request, EntityManagerInterface $em): Response
+{
+    // Contact est automatiquement récupéré grâce au ParamConverter
+
+    $form = $this->createForm(ContactType::class, $contact);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+
+        $em->flush();
+
+        $this->addFlash('success', 'Le contact a été mis à jour.');
+
+        return $this->redirectToRoute('app_contact'); // page liste
+    }
+
+    return $this->render('contact/edit.html.twig', [
+        'form' => $form->createView(),
+        'contact' => $contact,
+    ]);
+}
+
+
+#[Route('/contact/{id}/delete', name: 'app_contact_delete', methods: ['POST'])]
+public function delete(Contact $contact, Request $request, EntityManagerInterface $em): Response
+{
+    if ($this->isCsrfTokenValid('delete-contact-' . $contact->getId(), $request->request->get('_token'))) {
+
+        $em->remove($contact);
+        $em->flush();
+
+        $this->addFlash('success', 'Le contact a bien été supprimé.');
+    }
+
+    return $this->redirectToRoute('app_contact');
+}
+
+#[Route('/contact/{id}', name: 'app_contact_show', methods: ['GET'])]
+public function show(Contact $contact): Response
+{
+    
+    return $this->render('contact/show.html.twig', [
+        'contact' => $contact,
+        'opportunities' => $contact->getOpportunity(),
+        'activities' => $contact->getActivities(),
+         'quotes'       => $contact->getQuotes(),
+    ]);
+}
+
+#[Route('/contacts/import', name: 'app_contact_import')]
+public function import(Request $request, EntityManagerInterface $em): Response
+{
+    $form = $this->createForm(ImportContactsType::class);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+
+        $file = $form->get('file')->getData();
+        $spreadsheet = IOFactory::load($file->getPathname());
+        $rows = $spreadsheet->getActiveSheet()->toArray();
+
+        $header = array_shift($rows); // en-têtes
+
+        foreach ($rows as $row) {
+
+            if (!isset($row[0]) || empty(array_filter($row))) {
+                continue;
+            }
+
+            $data = array_combine($header, $row);
+
+            // 🔍 Étape 1 : récupérer toutes les infos utiles
+            $values = array_filter([
+                $data['salutation'] ?? null,
+                $data['lastName'] ?? null,
+                $data['firstName'] ?? null,
+                ...array_filter($data, fn($value, $key) => str_starts_with($key, 'email'), ARRAY_FILTER_USE_BOTH),
+                ...array_filter($data, fn($value, $key) => str_starts_with($key, 'phone'), ARRAY_FILTER_USE_BOTH),
+                ...array_filter($data, fn($value, $key) => str_starts_with($key, 'mobile'), ARRAY_FILTER_USE_BOTH),
+                ...array_filter($data, fn($value, $key) => str_starts_with($key, 'socialMedia'), ARRAY_FILTER_USE_BOTH),
+                $data['country'] ?? null,
+                $data['address'] ?? null,
+                $data['city'] ?? null,
+                $data['website'] ?? null,
+                $data['occupation'] ?? null,
+                $data['zipCode'] ?? null,
+            ]);
+
+            // 🔍 Étape 2 : enlever les valeurs vides
+            $values = array_filter($values, fn($v) => !empty(trim((string)$v)) );
+
+            // 🔍 Étape 3 : vérifier si TOUTES les valeurs sont les mêmes
+            if (count($values) > 1 && count(array_unique($values)) === 1) {
+                // 🛑 Ligne ignorée car entièrement dupliquée
+                continue;
+            }
+
+            // Si on arrive ici → la ligne est valide, on importe
+            $contact = new Contact();
+
+            // Informations de base
+            $contact->setSalutation($data['salutation'] ?? null);
+            $contact->setLastName($data['lastName'] ?? null);
+            $contact->setFirstName($data['firstName'] ?? null);
+
+            // Emails
+            $emails = [];
+            foreach ($data as $key => $value) {
+                if (str_starts_with($key, 'email') && $value) {
+                    $emails[] = $value;
+                }
+            }
+            $contact->setEmail(array_unique($emails));
+
+            // Téléphones
+            $phones = [];
+            foreach ($data as $key => $value) {
+                if (str_starts_with($key, 'phone') && $value) {
+                    $phones[] = $value;
+                }
+            }
+            $contact->setPhone(array_unique($phones));
+
+            // Mobiles
+            $mobiles = [];
+            foreach ($data as $key => $value) {
+                if (str_starts_with($key, 'mobile') && $value) {
+                    $mobiles[] = $value;
+                }
+            }
+            $contact->setMobilePhone(array_unique($mobiles));
+
+            // Réseaux sociaux
+            $socialMedia = [];
+            foreach ($data as $key => $value) {
+                if (str_starts_with($key, 'socialMedia') && $value) {
+                    $socialMedia[] = $value;
+                }
+            }
+            $contact->setSocialMedia(array_unique($socialMedia));
+
+            // Champs simples
+            $contact->setCountry($data['country'] ?? null);
+            $contact->setAdress($data['address'] ?? null);
+            $contact->setCity($data['city'] ?? null);
+            $contact->setWebsite($data['website'] ?? null);
+            $contact->setOccupation($data['occupation'] ?? null);
+            $contact->setZipCode($data['zipCode'] ?? null);
+
+            // Enregistrement
+            $em->persist($contact);
+        }
+
+        $em->flush();
+
+        $this->addFlash('success', 'Import terminé avec succès !');
+        return $this->redirectToRoute('app_contact');
+    }
+
+    return $this->render('contact/import.html.twig', [
+        'form' => $form->createView(),
+    ]);
+}
+
+
+}

@@ -21,7 +21,7 @@ class Roadmap
     private ?\DateTime $date = null;
 
     #[ORM\ManyToOne(inversedBy: 'roadmaps')]
-    private ?User $user = null;
+    private ?Campany $campany = null;
 
     public function getId(): ?int
     {
@@ -52,14 +52,14 @@ class Roadmap
         return $this;
     }
 
-    public function getUser(): ?User
+    public function getCampany(): ?Campany
     {
-        return $this->user;
+        return $this->campany;
     }
 
-    public function setUser(?User $user): static
+    public function setCampany(?Campany $campany): static
     {
-        $this->user = $user;
+        $this->campany = $campany;
 
         return $this;
     }

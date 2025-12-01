@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Activité
+	{{ activity.id }}
+{% endblock %}
+
+{% block body %}
+	<div class="container mt-4">
+
+		<h1>Détails de l'activité</h1>
+
+		<div class="card">
+			<div class="card-body">
+
+				<p>
+					<strong>Type :</strong>
+					{{ activity.type }}</p>
+				<p>
+					<strong>Description :</strong>
+					{{ activity.description }}</p>
+				<p>
+					<strong>Date :</strong>
+					{{ activity.activityDate|date('d/m/Y H:i') }}</p>
+				<p>
+					<strong>Statut :</strong>
+					{{ activity.status }}</p>
+
+				<p>
+					<strong>Contact :</strong>
+					<a href="{{ path('app_contact_show', {id: activity.contact.id}) }}">
+						{{ activity.contact.firstName }}
+						{{ activity.contact.lastName }}
+					</a>
+				</p>
+
+
+				<a href="{{ path('app_contact_show', {id: activity.contact.id}) }}" class="btn btn-secondary">Retour au contact</a>
+
+				<a href="{{ path('app_activity_edit', { id: activity.id }) }}" class="btn btn-warning">
+					Modifier l'activité
+				</a>
+
+			</div>
+		</div>
+
+	</div>
+{% endblock %}

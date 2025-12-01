@@ -1,164 +1,284 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello RoadmapController!{% endblock %}
+{% block title %}Hello RoadmapController!
+{% endblock %}
 
 {% block body %}
-                <!-- Contenu principal à droite -->
-                    <main class="col-md-9 col-lg-10 p-2">
-                        <!-- Contenu principal à gauche -->
-                        <h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">FICHE ENTREPRISE</h1>
-                        <div class="container ">
-                            <nav aria-label="breadcrumb">
-                                <ol class="breadcrumb">
-                                    <li class="breadcrumb-item"><a href="#">Entreprise</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page">Fiche</li>
-                                </ol>
-                            </nav>
+<style>
+.clickable-title {
+    position: relative;
+    display: inline-block;
+    transition: color 0.3s ease;
+}
+
+.clickable-title::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    width: 0%;
+    height: 2px;
+    background-color: #01368c;
+    transition: width 0.3s ease;
+}
+
+.clickable-title:hover {
+    color: #01368c;
+    transform: translateY(-2px);
+}
+
+.clickable-title:hover::after {
+    width: 100%;
+}
+
+.timeline-container {
+			position: relative;
+			display: flex;
+			justify-content: center;
+			margin-top: 60px;
+		}
+
+		.vertical {
+			position: absolute;
+			width: 4px;
+			background: #01368c;
+			left: 50%;
+			transform: translateX(-50%);
+			top: 0;
+			bottom: 0;
+			animation: growLine 1s ease-out forwards;
+			opacity: 0;
+		}
+
+		@keyframes growLine {
+			from {
+				height: 0;
+				opacity: 0;
+			}
+			to {
+				height: 100%;
+				opacity: 1;
+			}
+		}
+
+		.timeline-point {
+			width: 22px;
+			height: 22px;
+			background: #01368c;
+			border-radius: 50%;
+			position: absolute;
+			left: 50%;
+			transform: translateX(-50%);
+			border: 4px solid white;
+			box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+		}
+
+		.label-box {
+			background: white;
+			border-left: 4px solid #01368c;
+			padding: 20px;
+			border-radius: 6px;
+			opacity: 0;
+			animation: fadeUp 0.7s ease forwards;
+		}
+
+		@keyframes fadeUp {
+			from {
+				opacity: 0;
+				transform: translateY(25px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		.label-title {
+			font-size: 20px;
+			font-weight: 700;
+			color: #01368c;
+		}
+
+		.year-badge {
+			font-weight: bold;
+			font-size: 14px;
+			background: #01368c;
+			color: white;
+			padding: 3px 10px;
+			border-radius: 4px;
+		}
+
+		/* ====== RESPONSIVE ====== */
+		@media(max-width: 768px) {
+			.timeline-block {
+				width: 100% !important;
+				position: relative !important;
+				left: 0 !important;
+				right: 0 !important;
+				margin-bottom: 50px;
+			}
+
+			.vertical {
+				left: 10px;
+			}
+
+			.timeline-point {
+				left: 10px;
+				transform: translateX(-0%);
+			}
+
+			.label-box {
+				margin-left: 40px !important;
+				width: calc(100% - 50px);
+				text-align: left !important;
+			}
+		}
+</style>
+
+    <div class="col-md-12 col-lg-12">
+		<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">La roadmap financière</h1>
+
+		<div class="container">
+			<nav aria-label="breadcrumb">
+				<ol class="breadcrumb">
+					{% if is_granted('ROLE_CUSTOMER') %}
+						<li class="breadcrumb-item">
+							<a href="{{path('app_me_campany',{id:app.user.id})}}">Entreprise</a>
+						</li>
+					{% else %}
+						<li class="breadcrumb-item">
+							<a href="#">Entreprise</a>
+						</li>
+					{% endif %}
+					<li class="breadcrumb-item active" aria-current="page">Roadmap</li>
+				</ol>
+			</nav>
 
 			<div class="text-end mb-3">
-			{% if is_granted('ROLE_ADMIN') %}
-				<a href="{{path('app_new_roadmap', { id: user.id })}}" class="btn btn-warning rounded-0">
-					Nouvelle roadmap
-				</a>
-					{% endif %}
+				{% if is_granted('ROLE_ADMIN') %}
+					<a href="{{path('app_new_roadmap', { id: user.id })}}" class="btn btn-warning rounded-0">
+						Nouvelle roadmap
+					</a>
+				{% endif %}
 			</div>
-                            <div class="card shadow-sm rounded-0 border-0 p-5 text-center" style="max-width: 1200px;">
 
-    <!-- Infos entreprise -->
-    <p class="p-2 fs-5 fw-light text-body-secondary text-break text-center">
-        Cette partie représente la stratégie financière que nous avons imaginé pour vous.
-        Vous aurez, la liste des financements correspondants à votre besoin sur 5 ans.
-        Si vous voulez connaître les dispositifs vous aurez juste à cliquer sur le nom et
-        vous aurez les informations.
-    </p>
+			{# <div class="card shadow-sm rounded-0 border-0 p-5 text-center" style="max-width: 1200px;">
+				<p class="p-2 fs-5 fw-light text-body-secondary">
+					Cette partie représente la stratégie financière que nous avons imaginé pour vous.
+										                Vous aurez la liste des financements correspondant à votre besoin sur 5 ans.
+										                Cliquez sur le nom d’un dispositif pour en savoir plus.
+				</p>
+			</div> #}
 
-   
+{# <div class="col-md-12 col-lg-12" style="height: 100vh; overflow-y: auto;"> #}
+			{# Hauteur dynamique en fonction du nombre d’éléments #}
+			{% set timelineHeight = roadmaps|length * 220 %}
 
-</div>
+			<div class="timeline-container" style="height: {{ timelineHeight }}px;">
 
+				<div class="vertical"></div>
 
+				{% for r in roadmaps %}
+					{% set roadmap = r.entity %}
+					{% set isLeft = loop.index is odd %}
+					{% set topPos = loop.index0 * 200 %}
 
-<div class="container mt-5 d-flex justify-content-center position-relative">
-  <!-- Ligne verticale -->
-  <div class="vertical"></div>
+					{# Point sur la ligne #}
+					<div class="timeline-point" style="top: {{ topPos + 20 }}px;"></div>
 
-  <!-- Cercle du haut -->
-  <div class="circle position-absolute top-0 start-50 translate-middle-x">
-    0
-  </div>
+					{% if isLeft %}
+						<!-- Gauche -->
+						<div class="timeline-block position-absolute" style="top: {{ topPos }}px; left: 0; width: 45%;">
+							<div class="label-box text-end ms-auto">
 
-  
+								<span class="year-badge">
+									{{ roadmap.date|date('Y') }}
+								</span>
 
-  <!-- Cercle du milieu -->
-  <div class="circle position-absolute start-50 translate-middle-x" style="top: 50%;">
-    1
-  </div>
-
-  <!-- Cercle du bas -->
-  <div class="circle position-absolute bottom-0 start-50 translate-middle-x">
-    2
-  </div>
-  
-
-{% for roadmap in roadmaps %}
-
-    {% set isLeft = loop.index is odd %}
-
-    {% if isLeft %}
-        <!-- Bloc gauche -->
-        <div class="position-absolute" style="top: {{ loop.index0 * 150 }}px; left: 0; width: 45%;">
-            <div class="label-box text-end ms-auto">
-                <h5 class="label-title">{{ roadmap.product.name }}</h5>
-                <div class="label-line"></div>
-                <p class="label-text">
-                    <br>{{ roadmap.date|date('d/m/Y') }}<br>
-                   {{ roadmap.product.productDescription }}
-                </p>
-            </div>
-        </div>
-    {% else %}
-        <!-- Bloc droit -->
-        <div class="position-absolute" style="top: {{ loop.index0 * 150 }}px; right: 0; width: 45%;">
-            <div class="label-box text-start me-auto">
-                <h5 class="label-title">{{ roadmap.product.name }}</h5>
-                <div class="label-line"></div>
-                <p class="label-text">
-                    <br>{{ roadmap.date|date('d/m/Y') }}<br>
-                   {{ roadmap.product.productDescription }}
-                </p>
-            </div>
-        </div>
-    {% endif %}
-
-{% endfor %}
+<h5 class="label-title">
+    <a href="{{ path('app_product_show', { id: roadmap.product.id }) }}"
+       class="text-decoration-none clickable-title">
+        {{ roadmap.product.name }}
+    </a>
+</h5>
 
 
-</div>
+								<div class="label-line"></div>
 
+								<p class="label-text">
+									Trimestre :
+									<strong>{{ r.quarter }}</strong><br>
 
+									{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
+										Date :
+										{{ roadmap.date|date('d/m/Y') }}<br>
+									{% endif %}
 
-</div>
+									{{ roadmap.product.productDescription }}
+								</p>
 
+								{% if is_granted('ROLE_ADMIN') %}
+									<a href="{{ path('app_edit_roadmap', { id: roadmap.id }) }}" class="btn btn-sm btn-primary rounded-0 mt-2">
+										✏️ Modifier
+									</a>
+								{% endif %}
 
+								{% if is_granted('ROLE_ADMIN') %}
+									<a href="{{ path('app_delete_roadmap', { id: roadmap.id }) }}" class="btn btn-sm btn-danger rounded-0 mt-2" onclick="return confirm('Voulez-vous vraiment supprimer cette roadmap ?');">
+										🗑️ Supprimer
+									</a>
+								{% endif %}
 
-                         
+							</div>
+						</div>
 
+					{% else %}
+						<!-- Droite -->
+						<div class="timeline-block position-absolute" style="top: {{ topPos }}px; right: 0; width: 45%;">
+							<div class="label-box text-start me-auto">
 
-                           
+								<span class="year-badge">
+									{{ roadmap.date|date('Y') }}
+								</span>
 
+								<h5 class="label-title">
+    <a href="{{ path('app_product_show', { id: roadmap.product.id }) }}"
+       class="text-decoration-none clickable-title">
+        {{ roadmap.product.name }}
+    </a>
+</h5>
+								<div class="label-line"></div>
 
+								<p class="label-text">
+									Trimestre :
+									<strong>{{ r.quarter }}</strong><br>
 
+									{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
+										Date :
+										{{ roadmap.date|date('d/m/Y') }}<br>
+									{% endif %}
 
+									{{ roadmap.product.productDescription }}
+								</p>
 
+								{% if is_granted('ROLE_ADMIN') %}
+									<a href="{{ path('app_edit_roadmap', { id: roadmap.id }) }}" class="btn btn-sm btn-primary rounded-0 mt-2">
+										✏️ Modifier
+									</a>
+								{% endif %}
 
+								{% if is_granted('ROLE_ADMIN') %}
+									<a href="{{ path('app_delete_roadmap', { id: roadmap.id }) }}" class="btn btn-sm btn-danger rounded-0 mt-2" onclick="return confirm('Voulez-vous vraiment supprimer cette roadmap ?');">
+										🗑️ Supprimer
+									</a>
+								{% endif %}
+							</div>
+						</div>
 
+					{% endif %}
+				{% endfor %}
+			</div>
+		</div>
+	</div>
 
-
-
-
-                           
-                        </div>
-                        
-                    </main>
-                </div>
-            </div>
-
-
-
-
-
-
-            <!-- Script Bootstrap JS (avec Popper inclus) -->
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            <script>
-                // Bar Chart - Dépense/Revenue
-
-
-                // Pie Chart - Répartition
-                const pieCtx = document.getElementById('pieChart').getContext('2d');
-                new Chart(pieCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: ['bpifrance', 'lcl', 'cic', 'créalia', 'Iniative'],
-                        datasets: [{
-                            data: [15, 30, 20, 15, 20],
-                            backgroundColor: ['#FBBB3B', '#272E80', '#038B92', '#038BC2', '#E7226F']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    usePointStyle: true,
-                                    pointStyle: 'circle'
-                                }
-                            }
-                        }
-                    }
-
-                });
-            </script>
 {% endblock %}
