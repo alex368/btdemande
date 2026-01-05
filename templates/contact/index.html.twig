@@ -15,6 +15,17 @@
 			</a>
 			<h1 class="mb-4">Liste des contacts</h1>
 
+			<form method="get" class="row g-3 mb-4" action="{{ path('app_contact') }}">
+				<div class="col-md-4">
+					<input type="text" name="q" value="{{ app.request.get('q') }}" class="form-control" placeholder="Rechercher un nom, prénom, email...">
+				</div>
+				<div class="col-md-auto">
+					<button type="submit" class="btn btn-primary">Rechercher</button>
+					<a href="{{ path('app_contact') }}" class="btn btn-secondary">Réinitialiser</a>
+				</div>
+			</form>
+
+
 			<table class="table table-bordered table-striped">
 				<thead class="table-dark">
 					<tr>

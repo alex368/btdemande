@@ -28,10 +28,16 @@ class ProductType extends AbstractType
                 'attr' => ['class' => 'form-control'],
                 'row_attr' => ['class' => 'mb-3']
             ])
-              ->add('fundingMechanism', EntityType::class, [
-    'class' => FundingMechanism::class,
-    'choice_label' => 'name', // ou le champ à afficher
-])
+     ->add('fundingMechanism', EntityType::class, [
+            'class' => FundingMechanism::class,
+            'choice_label' => 'name',
+            'placeholder' => 'Sélectionnez un mécanisme de financement',
+            'attr' => [
+                'class' => 'form-select', // classe Bootstrap 5 pour un <select>
+            ],
+            'label' => 'Mécanisme de financement',
+            'required' => true, // ou false selon ton besoin
+        ])
 
            ->add('documentTemplates', CollectionType::class, [
     'entry_type' => DocumentTemplateType::class,

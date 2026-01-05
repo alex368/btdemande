@@ -11,11 +11,33 @@
  *
  * The "importmap:require" command can be used to add new entries to this file.
  */
+
+
 return [
+    // ===== ENTRYPOINTS =====
     'app' => [
         'path' => './assets/app.js',
         'entrypoint' => true,
     ],
+
+    // ===== FullCalendar =====
+    '@fullcalendar/core' => [
+        'path' => 'node_modules/@fullcalendar/core/index.js',
+    ],
+
+    '@fullcalendar/daygrid' => [
+        'path' => 'node_modules/@fullcalendar/daygrid/index.js',
+    ],
+
+    '@fullcalendar/icalendar' => [
+        'path' => 'node_modules/@fullcalendar/icalendar/index.js',
+    ],
+
+    'ical.js' => [
+        'path' => 'node_modules/ical.js/build/ical.es.js',
+    ],
+
+    // ===== Stimulus =====
     '@hotwired/stimulus' => [
         'version' => '3.2.2',
     ],

@@ -1,0 +1,29 @@
+<div id="chat">
+    <div id="messages"></div>
+
+    <input id="chatInput" type="text" placeholder="Votre message..." />
+    <button id="sendBtn">Envoyer</button>
+</div>
+
+<script>
+document.getElementById('sendBtn').onclick = async function () {
+
+    let text = document.getElementById('chatInput').value;
+    document.getElementById('chatInput').value = "";
+
+    // Ajouter dans l'interface
+    document.getElementById('messages').innerHTML += "<p><b>Vous:</b> " + text + "</p>";
+
+    // Appel backend
+    const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+
+    // Affichage réponse IA
+    document.getElementById('messages').innerHTML += "<p><b>Assistant:</b> " + data.reply + "</p>";
+};
+</script>

@@ -7,14 +7,20 @@
 <div class="container mt-5">
       <h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Ajouter un document personnalisé pour la demande</h1>
 
-    {{ form_start(form) }}
-     {{ form_row(form.logo) }}
-        {{ form_row(form.name) }}
-        {{ form_row(form.sector) }}
-         {{ form_row(form.type) }}
-          {{ form_row(form.description) }}
-        <button class="btn btn-primary mt-5">Ajouter</button>
-    {{ form_end(form) }}
+   {{ form_start(form) }}
+            {{ form_row(form.logo) }}
+            {{ form_row(form.name) }}
+            {{ form_row(form.sector) }}
+            {{ form_row(form.type) }}
+            {{ form_row(form.description, {
+                'attr': {
+                    'class': 'wysiwyg',
+                    'data-editor': 'tinymce'
+                }
+            }) }}
+            <button class="btn btn-primary mt-5">Ajouter</button>
+        {{ form_end(form) }}
 </div>
 </main>
+
 {% endblock %}

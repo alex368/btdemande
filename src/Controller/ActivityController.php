@@ -35,7 +35,7 @@ final class ActivityController extends AbstractController
             return $this->redirectToRoute('app_contact_show', ['id' => $contact->getId()]);
         }
 
-        return $this->render('opportunity/index.html.twig', [
+        return $this->render('activity/index.html.twig', [
             'form' => $oppForm->createView(),
             'contact' => $contact,
         ]);
@@ -64,7 +64,7 @@ final class ActivityController extends AbstractController
             return $this->redirectToRoute('app_contact_show', ['id' => $activity->getContact()->getId()]);
         }
 
-        return $this->render('Activity/edit.html.twig', [
+        return $this->render('activity/edit.html.twig', [
             'form' => $oppForm->createView(),
             'contact' => $activity->getContact(),
         ]);

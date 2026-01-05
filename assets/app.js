@@ -1,10 +1,17 @@
-import './bootstrap.js';
-/*
- * Welcome to your app's main JavaScript file!
- *
- * This file will be included onto the page via the importmap() Twig function,
- * which should already be in your base.html.twig.
- */
-import './styles/app.css';
+import { Calendar } from '@fullcalendar/core'
+import dayGridPlugin from '@fullcalendar/daygrid'
+import icalendarPlugin from '@fullcalendar/icalendar'
+import * as ICAL from 'ical.js'
 
-console.log('This log comes from assets/app.js - welcome to AssetMapper! 🎉');
+document.addEventListener('DOMContentLoaded', () => {
+    const calendar = new Calendar(document.getElementById('calendar'), {
+        initialView: 'dayGridMonth',
+        plugins: [dayGridPlugin, icalendarPlugin],
+        events: {
+            url: '/icloud.ics',
+            format: 'ics'
+        }
+    });
+
+    calendar.render();
+});

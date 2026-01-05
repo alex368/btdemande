@@ -43,9 +43,13 @@ class ActivityType extends AbstractType
 ])
 
             ->add('description', null, [
-                'label' => 'Description',
-                'attr' => ['class' => 'form-control'],
-            ])
+    'label' => 'Description',
+    'attr' => [
+        'class' => 'form-control wysiwyg',
+        'data-editor' => 'tinymce',
+    ],
+])
+
             ->add('activityDate', DateTimeType::class, [
                 'label' => 'Date',
                 'widget' => 'single_text',

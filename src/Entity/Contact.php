@@ -76,6 +76,9 @@ class Contact
     #[ORM\OneToMany(targetEntity: Quote::class, mappedBy: 'customer')]
     private Collection $quotes;
 
+    #[ORM\ManyToOne(inversedBy: 'contacts')]
+    private ?User $account = null;
+
     public function __construct()
     {
         $this->opportunity = new ArrayCollection();
@@ -345,4 +348,72 @@ class Contact
 
         return $this;
     }
+
+
+
+public function getAccount(): ?User
+{
+    return $this->account;
+}
+
+public function setAccount(?User $account): static
+{
+    $this->account = $account;
+
+    return $this;
+}
+
+
+public function toUser(): User
+{
+    $user = new User();
+
+    $user->setName($this->lastName ?? '');
+    $user->setLastName($this->firstName ?? '');
+
+    // Email
+    if (!empty($this->email) && is_array($this->email)) {
+        $user->setEmail($this->email[0]);
+    }
+
+    // Username
+    if (method_exists($user, 'setUsername')) {
+        $username = strtolower(trim(($this->lastName ?? '') . '.' . ($this->firstName ?? '')));
+        $user->setUsername($username ?: uniqid('user_'));
+    }
+
+    //     if (method_exists($user, 'setAccountId')) {
+    //     $user->setAccountId($this->getId());
+    // }
+
+    // Numéro sécurisé
+    $number = $this->getPrimaryPhone() ?? "0000000000";
+    $user->setNumber($number);
+
+    // Rôle par défaut
+    $user->setRoles(['ROLE_CUSTOMER']);
+
+    // Mot de passe temporaire
+    $user->setPassword('TEMPORARY');
+
+    return $user;
+}
+
+
+public function getPrimaryPhone(): ?string
+{
+    // mobilePhone prioritaire
+    if (is_array($this->mobilePhone) && !empty($this->mobilePhone)) {
+        return $this->mobilePhone[0];
+    }
+
+    // fallback téléphone fixe
+    if (is_array($this->phone) && !empty($this->phone)) {
+        return $this->phone[0];
+    }
+
+    return null;
+}
+
+    
 }

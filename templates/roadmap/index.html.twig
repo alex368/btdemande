@@ -213,8 +213,10 @@
 										Date :
 										{{ roadmap.date|date('d/m/Y') }}<br>
 									{% endif %}
+									
 
-									{{ roadmap.product.productDescription }}
+									{#{{ roadmap.product.productDescription|truncate_html(150) }}#}
+
 								</p>
 
 								{% if is_granted('ROLE_ADMIN') %}
@@ -258,7 +260,7 @@
 										{{ roadmap.date|date('d/m/Y') }}<br>
 									{% endif %}
 
-									{{ roadmap.product.productDescription }}
+									{#{{ roadmap.product.productDescription|truncate_html(150) }}#}
 								</p>
 
 								{% if is_granted('ROLE_ADMIN') %}

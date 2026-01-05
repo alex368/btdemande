@@ -28,3 +28,44 @@
 
 </div>
 {% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    {# ✅ Chargement de TinyMCE depuis le CDN officiel #}
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+    <script>
+        function enhanceEditors() {
+            if (typeof tinymce === "undefined") return;
+
+            // Supprimer les instances existantes pour éviter les doublons
+            tinymce.remove();
+
+            document.querySelectorAll('textarea.wysiwyg[data-editor="tinymce"]').forEach(el => {
+                if (!el.id) {
+                    el.id = 'tinymce-' + Math.random().toString(36).substring(2, 9);
+                }
+
+                tinymce.init({
+                    target: el,
+                    height: 300,
+                    menubar: false,
+                    branding: false,
+                    plugins: 'lists link image media code table codesample',
+                    toolbar: 'undo redo | styleselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media | code',
+                    paste_data_images: true,
+                    automatic_uploads: true,
+                    images_upload_url: '/upload/image',
+                    setup: (editor) => {
+                        editor.on('change', () => editor.save());
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            enhanceEditors();
+        });
+    </script>
+{% endblock %}
