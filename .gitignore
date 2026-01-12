@@ -18,3 +18,12 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+# Secrets
+.env
+.env.local
+.env.prod
+.env.dev
+
+# Google OAuth
+config/google/token.json
+config/google/credentials.json
