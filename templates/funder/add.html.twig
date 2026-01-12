@@ -24,3 +24,31 @@
 </main>
 
 {% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+
+
+    <script>
+        function enhanceEditors() {
+            document.querySelectorAll('textarea[data-editor="tinymce"]').forEach((textarea) => {
+
+                if (textarea.classList.contains('tinymce-applied')) {
+                    return;
+                }
+
+                tinymce.init({
+                    target: textarea,
+                    height: 300,
+                    menubar: false,
+                    plugins: 'lists link table code',
+                    toolbar: 'undo redo | bold italic | bullist numlist | link | code',
+                    license_key: 'gpl', // ✅ licence conservée
+                });
+
+                textarea.classList.add('tinymce-applied');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', enhanceEditors);
+    </script>
+{% endblock %}

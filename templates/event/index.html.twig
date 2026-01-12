@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Events{% endblock %}
+
+{% block body %}
+<h1>Events</h1>
+
+<a href="{{ path('app_event_new') }}">Add event</a>
+
+<div id="calendar"></div>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const calendarEl = document.getElementById('calendar');
+
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                height: 'auto',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: [
+                    {% for event in events %}
+                    {
+                        title: "{{ event.title|e('js') }}",
+                        start: "{{ event.startDate|date('Y-m-d\\TH:i:s') }}",
+                        end: "{{ event.endDate|date('Y-m-d\\TH:i:s') }}",
+                        url: "{{ path('app_event_show', { slug: event.slug }) }}"
+                    },
+                    {% endfor %}
+                ]
+            });
+
+            calendar.render();
+        });
+    </script>
+{% endblock %}

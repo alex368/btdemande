@@ -67,6 +67,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Contact::class, mappedBy: 'account')]
     private Collection $contacts;
 
+    /**
+     * @var Collection<int, ResetPassword>
+     */
+    #[ORM\OneToMany(targetEntity: ResetPassword::class, mappedBy: 'user')]
+    private Collection $resetPasswords;
+
 
     public function __construct()
     {
@@ -74,6 +80,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->fundingRequests = new ArrayCollection();
         $this->opportunities = new ArrayCollection();
         $this->contacts = new ArrayCollection();
+        $this->resetPasswords = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -304,6 +311,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($contact->getAccount() === $this) {
                 $contact->setAccount(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ResetPassword>
+     */
+    public function getResetPasswords(): Collection
+    {
+        return $this->resetPasswords;
+    }
+
+    public function addResetPassword(ResetPassword $resetPassword): static
+    {
+        if (!$this->resetPasswords->contains($resetPassword)) {
+            $this->resetPasswords->add($resetPassword);
+            $resetPassword->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeResetPassword(ResetPassword $resetPassword): static
+    {
+        if ($this->resetPasswords->removeElement($resetPassword)) {
+            // set the owning side to null (unless already changed)
+            if ($resetPassword->getUser() === $this) {
+                $resetPassword->setUser(null);
             }
         }
 

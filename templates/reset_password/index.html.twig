@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello ResetPasswordController!
+{% endblock %}
+
+{% block body %}
+{# On vide complètement la sidebar #}
+{% block sidebar %}{% endblock %}
+{# {% include 'partials/_navbar.html.twig' %} #}
+ {# <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #FFFEFC;
+        }
+
+        .card-img-top {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+        }
+        .container-fluid {
+            height: 80%;
+        }
+        .card {
+            background-color: #136F63;
+        }
+        .px-8 {
+            padding-left: 4rem !important;
+            padding-right: 4rem !important;
+        }
+    </style> #}
+	
+    <div class="container-fluid">
+        <div class="row h-100">
+            <!-- Colonne gauche : formulaire -->
+            <div class="col-md-6 mb-5 d-flex flex-column justify-content-center px-8">
+					<h1 class="text-center text-xl-start">Mot de passe oublié</h1>
+					<p class="text-center text-xl-start pb-3 mb-5">
+						Vous avez déjà un compte ?
+						<a href="{{'app_login'}}">Connectez-vous</a>
+					</p>
+
+					<form
+						method="post" class="needs-validation" novalidate>
+						<!-- Email -->
+						<div class="mb-3">
+							<label for="inputEmail" class="form-label">Email</label>
+							<input type="email" id="inputEmail" class="form-control" name="email" placeholder="Entrez votre email" required/>
+							<div class="invalid-feedback">Veuillez entrer un email valide.</div>
+						</div>
+
+						<!-- Submit Button -->
+						<div class="mb-5 d-grid">
+							<button type="submit" class="btn btn-icon btn-custom-dark btn-lg w-100">Réinitialiser</button>
+						</div>
+
+						<!-- Link to Login -->
+						<div class="text-center">
+							<span>Retourner à la
+								<a href="{{ path('app_login') }}">connexion</a>
+							</span>
+						</div>
+					</form>
+				</div>
+
+							<!-- Colonne droite : carte -->
+	       
+
+            <!-- Colonne droite : carte -->
+            <div class="col-md-6 d-none d-md-block"
+                style=" background-image: url('{{asset('image/imageLogin.png')}}');  background-size: cover; background-position: center; background-repeat: no-repeat; height: 100%; ">
+            </div>
+
+
+
+
+        </div>
+			</div>
+		</section>
+	</main>
+{% endblock %}

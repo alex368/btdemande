@@ -17,20 +17,28 @@
 
 				<div class="row">
 					{% for tracking in trackingData %}
+
+
 						{% set campany = tracking.campany %}
 						{% set requests = tracking.requests %}
 
 						<div class="col-lg-3">
 							<div class="card border-0 shadow p-3 text-center">
-								<div class="d-flex align-items-start text-center mb-2">
-									<img src="https://upload.wikimedia.org/wikipedia/fr/9/91/Logo_CIC_2006.svg" alt="Logo CIC" width="40" class="me-2">
-								</div>
+
+								{% for request in tracking.requests %}
+
+									<img src="{{ asset('uploads/logos/' ~ request.product.fundingMechanism.logo )}}" alt="Logo" width="40" class="me-2">
+								{% endfor %}
+								{# <div class="d-flex align-items-start text-center mb-2">
+																	<img src="https://upload.wikimedia.org/wikipedia/fr/9/91/Logo_CIC_2006.svg" alt="Logo CIC" width="40" class="me-2">
+																</div> #}
 
 								<div class="text-center fw-bold">{{ campany.legalName }}</div>
-
+	{% for request in tracking.requests %}
 								<div>
-									<span class="badge badge-custom fw-bold">En cours</span>
+									<span class="badge badge-custom fw-bold">{{ request.status }}</span>
 								</div>
+									{% endfor %}
 								<p class="mb-2">État d’avancement</p>
 
 								<div class="card border-0 p-2 mb-3 text-center" style="background-color: #214995;">
@@ -66,8 +74,8 @@
 									</a>
 								{% elseif requests is not empty and request.status == 'Retour client' %}
 									<a class="btn btn-custom w-100" href="{{ path('client_request_tracking', { id: request.id }) }}">
-    Suivre ma demande
-</a>
+										Suivre ma demande
+									</a>
 
 								{% endif %}
 

@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mise à jour | fidelissimo - La formation communautaire
+{% endblock %}
+
+{% block body %}
+	{% block sidebar %}{% endblock %}
+	{# {% include 'partials/_navbar.html.twig' %} #}
+	{# <style>
+		html,
+		body {
+			height: 100%;
+			margin: 0;
+			padding: 0;
+			background-color: #FFFEFC;
+		}
+
+		.card-img-top {
+			width: 100%;
+			aspect-ratio: 1 / 1;
+			object-fit: cover;
+		}
+		.container-fluid {
+			height: 80%;
+		}
+		.card {
+			background-color: #136F63;
+		}
+		.px-8 {
+			padding-left: 4rem !important;
+			padding-right: 4rem !important;
+		}
+	</style> #}
+	<div class="container-fluid">
+		<div
+			class="row h-100">
+			<!-- Colonne gauche : formulaire -->
+			<div class="col-md-6 mb-5 d-flex flex-column justify-content-center px-8">
+				<h1 class="text-center text-xl-start">Modification du mot de passe</h1>
+				{{ form_start(form) }}
+				<div class="mb-3">
+													<label class="form-label" for="password">Mot de passe</label>
+													{{ form_widget(form.password.first, {'attr': {'class': 'form-control', 'id': 'password'}}) }}
+													<div class="invalid-feedback">Merci d'entrer un mot de passe.</div>
+												</div>
+				
+												<div class="mb-3">
+													<label class="form-label" for="confirmPassword">Confirmer le mot de passe</label>
+													{{ form_widget(form.password.second, {'attr': {'class': 'form-control', 'id': 'confirmPassword'}}) }}
+													<div class="invalid-feedback">Merci de confirmer votre mot de passe.</div>
+												</div>
+				
+												<div class="d-grid mb-3">
+													{{ form_widget(form.submit, {'attr': {'class': 'btn btn-custom rounded-0'}}) }}
+												</div>
+				{{ form_end(form) }}
+			</div>
+
+			<!-- Colonne droite : carte -->
+			<!-- Colonne droite : carte -->
+			<div class="col-md-6 d-none d-md-block" style=" background-image: url('{{asset('image/imageLogin.png')}}');  background-size: cover; background-position: center; background-repeat: no-repeat; height: 100%; "></div>
+		</div>
+	</section>
+{% endblock %}

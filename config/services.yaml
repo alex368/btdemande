@@ -1,7 +1,8 @@
 parameters:
     documents_directory: '%kernel.project_dir%/public/uploads/documents'
-    logos_directory: '%kernel.project_dir%/public/uploads/logos'
+    #logos_directory: '%kernel.project_dir%/public/uploads/logos'
     documents_path: '%kernel.project_dir%/var/documents'
+    app.docs_directory: '%env(resolve:UPLOAD_DIR)%'
 
     gmail_credentials_path: '%kernel.project_dir%/config/google/credentials.json'
     gmail_token_path: '%kernel.project_dir%/config/google/token.json'
@@ -10,6 +11,7 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
+    
 
     App\:
         resource: '../src/'
@@ -32,13 +34,11 @@ services:
             $credentialsPath: '%gmail_credentials_path%'
             $tokenPath: '%gmail_token_path%'
 
-    App\Command\RagAskCommand:
+    App\Service\RagTestService:
         arguments:
-            $documentsPath: '%documents_path%'
+            $docsDirectory: '%app.docs_directory%'  
+            $openAiApiKey: '%env(OPENAI_API_KEY)%'
 
-    App\AI\RagRunner:
-        arguments:
-            $openAiKey: '%env(OPENAI_API_KEY)%'
 
     App\Schedule\GmailSchedule:
         tags: ['schedule.provider']

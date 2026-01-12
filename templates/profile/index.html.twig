@@ -1,0 +1,130 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello ProfileController!
+{% endblock %}
+
+{% block body %}
+	<div class="col-md-9 col-lg-10 p-4" style="height: 100vh; overflow-y: auto;">
+
+
+		<div class="container py-5">
+
+			<div class="text-center mb-5">
+				<img src="{{ asset('image/logo.png') }}" alt="logo" width="70">
+				
+				<h3 class="mt-3 text-success fw-bold text-uppercase">Mon compte</h3>
+			</div>
+			
+
+
+			<!-- Formulaire -->
+			<form class="mx-auto" style="max-width: 600px;" method="post" action="{{ path('app_profile', {id: app.user.id}) }}">
+             {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+      {# <div class="d-flex align-items-center justify-content-between bg-light p-3 rounded shadow-sm mb-4">
+
+
+	  
+				<div>
+					🧾 Actuellement sur le plan :
+					<strong class="text-primary text-uppercase">{{ get_plan_name(app.user) }}</strong>
+				</div>
+
+				<div>
+					<a href="{{ path('app_change_plan') }}" class="btn btn-outline-success btn-sm text-uppercase">
+						🔄 Changer de formule
+					</a>
+				</div>
+
+
+				
+			</div> #}
+
+				<div class="d-grid mb-3">
+    {# <a href="{{ path('app_notification_preferences', { code: classroom.code}) }}" class="btn btn-outline-primary text-uppercase fw-bold py-2">
+        <i class="bi bi-bell me-1"></i> Gérer mes notifications
+    </a> #}
+</div>
+				{{ form_start(form, {'attr': {'class': 'mx-auto', 'style': 'max-width: 600px;'}}) }}
+
+				<!-- NOM -->
+				<div class="mb-3">
+					{{ form_label(form.name, null, {'label_attr': {'class': 'form-label text-uppercase small fw-bold'}}) }}
+					{{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+					{{ form_errors(form.name) }}
+				</div>
+
+				<!-- PRENOM -->
+				<div class="mb-3">
+					{{ form_label(form.lastname, null, {'label_attr': {'class': 'form-label text-uppercase small fw-bold'}}) }}
+					{{ form_widget(form.lastname, {'attr': {'class': 'form-control'}}) }}
+					{{ form_errors(form.lastname) }}
+				</div>
+
+				<!-- EMAIL -->
+				<div class="mb-3">
+					{{ form_label(form.email, null, {'label_attr': {'class': 'form-label text-uppercase small fw-bold'}}) }}
+					{{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+					{{ form_errors(form.email) }}
+				</div>
+
+				<div class="mb-3">
+					{{ form_label(form.number, null, {'label_attr': {'class': 'form-label text-uppercase small fw-bold'}}) }}
+					{{ form_widget(form.number, {'attr': {'class': 'form-control'}}) }}
+					{{ form_errors(form.number) }}
+				</div>
+
+
+				<!-- MOT DE PASSE avec bouton MODIFIER -->
+				<div class="mb-4 row align-items-center">
+					<div class="col-9">
+						{{ form_label(form.password, 'Mot de passe', {'label_attr': {'class': 'form-label text-uppercase small fw-bold'}}) }}
+						{{ form_widget(form.password, {'attr': {'class': 'form-control', 'id': 'motdepasse'}}) }}
+						{{ form_errors(form.password) }}
+					</div>
+					<div class="col-3 mt-4">
+						<a class="btn btn-warning w-100 rounded-0 text-uppercase fw-bold" href="{{ path('app_profile_password', {id: app.user.id}) }}">
+							Modifier
+						</a>
+					</div>
+				</div>
+
+				<!-- ENREGISTRER -->
+				<div class="d-grid">
+					<button type="submit" class="btn btn-primary text-uppercase fw-bold py-2">Enregistrer</button>
+				</div>
+
+
+		
+
+
+				{{ form_end(form) }}
+			</form>
+			{# Annuler mon abonnement #}
+
+
+			
+			{# {% if app.user.isPremium and app.user.stripeSubscriptionStatus not in ['canceled', 'one_time'] %}
+				<div class="mt-4 text-center">
+					<form method="post" action="{{ path('app_cancel_subscription') }}">
+						<input type="hidden" name="_token" value="{{ csrf_token('cancel_subscription') }}">
+						<button type="submit" class="btn btn-outline-danger">
+							❌ Annuler mon abonnement
+						</button>
+					</form>
+
+					<p class="text-muted small mt-2">Votre abonnement restera actif jusqu’à la fin de la période actuelle.</p>
+				</div>
+			{% endif %} #}
+		</div>
+
+
+	</div>
+
+</div></div>{% endblock %}

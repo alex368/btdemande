@@ -165,7 +165,7 @@
         {% endif %}
 
         <li class="nav-item mb-2">
-            <a href="#">
+            <a href="{{ path('app_profile',{id: app.user.id}) }}">
                 <i class="bi bi-gear me-2"></i>Profil
             </a>
         </li>
@@ -191,6 +191,12 @@
 <li class="nav-item mb-2">
     <a href="{{ path('app_prospect_kanban') }}">
         <i class="bi bi-kanban me-2"></i>Prospect
+    </a>
+</li>
+
+<li class="nav-item mb-2">
+    <a href="{{ path('app_event_index') }}">
+        <i class="bi bi-calendar me-2"></i>Evénéments
     </a>
 </li>
 

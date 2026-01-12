@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello EventController!{% endblock %}
+
+{% block body %}
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+          
+
+                    <h1 class="card-title mb-4 text-center">
+                       {{ event is defined ? 'Modifier évenement' : 'Nouvelle évenement' }}
+                    </h1>
+
+                    {{ form_start(form) }}
+
+                        {{ form_errors(form) }}
+
+                        {{ form_row(form.title) }}
+                        {{ form_row(form.slug) }}
+                        {{ form_row(form.theme) }}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form_row(form.startDate) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_row(form.endDate) }}
+                            </div>
+                        </div>
+
+                        {{ form_row(form.url) }}
+                        {{ form_row(form.description) }}
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ path('app_event_index') }}"
+                               class="btn btn-outline-secondary">
+                               ← Retour
+                            </a>
+
+                            <button class="btn btn-primary">
+                             {{ event is defined ? 'Modifier un événement' : 'Créer un événement' }}
+                            </button>
+                        </div>
+
+                    {{ form_end(form) }}
+
+       
+
+        </div>
+    </div>
+{% endblock %}

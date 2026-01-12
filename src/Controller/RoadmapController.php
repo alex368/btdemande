@@ -13,6 +13,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Service\QuarterService;
+use Dompdf\Dompdf;
+use Dompdf\Options;
+use Knp\Snappy\Pdf as SnappyPdf;
+use PhpOffice\PhpSpreadsheet\Writer\Pdf;
 
 final class RoadmapController extends AbstractController
 {
@@ -22,7 +26,7 @@ final class RoadmapController extends AbstractController
     public function index(EntityManagerInterface $em, QuarterService $quarterService, int $id): Response
     {
 
-      
+
         $campany = $em->getRepository(Campany::class)->findOneById($id);
 
         $roadmaps = $em->getRepository(Roadmap::class)->findBy(
@@ -147,6 +151,61 @@ public function delete(int $id, EntityManagerInterface $em): Response
     $this->addFlash('success', 'Roadmap supprimée avec succès.');
 
     return $this->redirectToRoute('app_roadmap', ['id' => $userId]);
+}
+
+
+
+#[Route('/roadmap/{id}/export', name: 'app_roadmap_export')]
+public function exportRoadmap(
+    EntityManagerInterface $em,
+    QuarterService $quarterService,
+    int $id
+): Response {
+    $campany = $em->getRepository(Campany::class)->find($id);
+
+    $roadmaps = $em->getRepository(Roadmap::class)->findBy(
+        ['campany' => $campany],
+        ['date' => 'ASC']
+    );
+
+    $roadmapsWithQuarter = [];
+    foreach ($roadmaps as $roadmap) {
+        $roadmapsWithQuarter[] = [
+            'entity'  => $roadmap,
+            'quarter' => $quarterService->getQuarter($roadmap->getDate()),
+        ];
+    }
+
+    // Générer le HTML à partir de Twig
+    $html = $this->renderView('roadmap/export.html.twig', [
+        'user' => $campany,
+        'roadmaps' => $roadmapsWithQuarter,
+    ]);
+
+
+
+$options = new Options();
+$options->set('defaultFont', 'DejaVu Sans');
+$options->setIsRemoteEnabled(true); // Important si tu utilises des images ou CSS externes
+
+$dompdf = new Dompdf($options);
+$dompdf->loadHtml($html);
+$dompdf->setPaper('A4', 'portrait');
+$dompdf->render();
+
+    $dompdf = new Dompdf($options);
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+
+    return new Response(
+        $dompdf->output(),
+        200,
+        [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="roadmap.pdf"',
+        ]
+    );
 }
 
 

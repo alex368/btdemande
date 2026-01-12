@@ -52,40 +52,68 @@
 {% endblock %}
 
 
-
 {% block javascripts %}
     {{ parent() }}
     <script>
-addButton.addEventListener('click', () => {
-    const prototype = wrapper.dataset.prototype;
-    const newFormHtml = prototype.replace(/__name__/g, index);
+    function enhanceEditors() {
+    document.querySelectorAll('textarea[data-editor="tinymce"]').forEach((textarea) => {
 
-    const container = document.createElement('div');
-    container.classList.add('document-entry', 'mb-3', 'border', 'p-3', 'bg-light', 'rounded');
-    container.innerHTML = newFormHtml;
+        // Empêche double initialisation
+        if (textarea.classList.contains('tinymce-applied')) {
+            return;
+        }
 
-    const removeBtn = document.createElement('button');
-    removeBtn.type = 'button';
-    removeBtn.className = 'btn btn-sm btn-danger mt-2 remove-document';
-    removeBtn.innerHTML = '<i class="bi bi-trash"></i> Supprimer';
-    addRemoveHandler(removeBtn);
-
-    container.appendChild(removeBtn);
-    wrapper.appendChild(container);
-    index++;
-
-    enhanceEditors(); // ✅ Recharge TinyMCE sur les nouveaux champs
-
-    // Gère affichage du nom de fichier sélectionné
-    const fileInputs = container.querySelectorAll('input[type="file"]');
-    fileInputs.forEach((input) => {
-        input.addEventListener('change', (e) => {
-            const label = document.createElement('div');
-            label.className = 'form-text';
-            label.textContent = e.target.files.length > 0 ? `Fichier sélectionné : ${e.target.files[0].name}` : '';
-            input.parentElement.appendChild(label);
+        tinymce.init({
+            target: textarea,
+            height: 300,
+            menubar: false,
+            plugins: 'lists link table code',
+            toolbar: 'undo redo | bold italic | bullist numlist | link | code',
+            license_key: 'gpl', // ⬅️ garde ta licence
         });
+
+        textarea.classList.add('tinymce-applied');
     });
+}
+
+// Initialisation au chargement
+document.addEventListener('DOMContentLoaded', enhanceEditors);
+document.addEventListener('DOMContentLoaded', function () {
+
+    const addButton = document.getElementById('add-document');
+    const wrapper = document.getElementById('document-collection-wrapper');
+    let index = wrapper.children.length;
+
+    function addRemoveHandler(button) {
+        button.addEventListener('click', function () {
+            button.closest('.document-entry').remove();
+        });
+    }
+
+    document.querySelectorAll('.remove-document').forEach(addRemoveHandler);
+
+    addButton.addEventListener('click', () => {
+        const prototype = wrapper.dataset.prototype;
+        const newFormHtml = prototype.replace(/__name__/g, index);
+
+        const container = document.createElement('div');
+        container.classList.add('document-entry', 'mb-3', 'border', 'p-3', 'bg-light', 'rounded');
+        container.innerHTML = newFormHtml;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn btn-sm btn-danger mt-2 remove-document';
+        removeBtn.innerHTML = '<i class="bi bi-trash"></i> Supprimer';
+
+        addRemoveHandler(removeBtn);
+
+        container.appendChild(removeBtn);
+        wrapper.appendChild(container);
+        index++;
+
+        enhanceEditors();
+    });
+
 });
 
 </script>

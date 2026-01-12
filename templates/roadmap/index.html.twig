@@ -155,12 +155,20 @@
 			</nav>
 
 			<div class="text-end mb-3">
-				{% if is_granted('ROLE_ADMIN') %}
+				{% if is_granted('ROLE_COLLABORATOR') %}
 					<a href="{{path('app_new_roadmap', { id: user.id })}}" class="btn btn-warning rounded-0">
 						Nouvelle roadmap
 					</a>
+					    <a href="{{ path('app_roadmap_export', { id: user.id }) }}" class="btn btn-outline-primary rounded-0">
+        📄 Exporter en PDF
+    </a>
 				{% endif %}
 			</div>
+
+			{# {% if is_granted('ROLE_ADMIN') %} #}
+
+{# {% endif %} #}
+
 
 			{# <div class="card shadow-sm rounded-0 border-0 p-5 text-center" style="max-width: 1200px;">
 				<p class="p-2 fs-5 fw-light text-body-secondary">

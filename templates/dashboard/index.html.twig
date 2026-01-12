@@ -153,7 +153,63 @@
                         <div class="container text-center mt-2">
                             <div class="row g-4 align-items-stretch">
                                 <!-- Dépense -->
+                                {% for request in requests %}
                                 <div class="col-lg-3">
+                                    <div class="card border-0 shadow p-3 text-center">
+                                        <div class="d-flex align-items-start text-center mb-2">
+
+									<img src="{{ asset('uploads/logos/' ~ request.product.fundingMechanism.logo )}}" alt="Logo" width="40" class="me-2">
+
+                                            
+                                            <div>
+                                            </div>
+                                        </div>
+                                        <div class="text-center">Prêt bancaire</div>
+                                        <div>
+                                            <span class="badge badge-custom fw-bold">{{ request.status }}</span>
+                                        </div>
+                                        <p class="mb-2">Etat d’avancement</p>
+                                        <div class="card border-0 p-2 mb-3  text-center"
+                                            style="background-color: #214995;">
+                                            <div class="timeline">
+                                                <div class="timeline-step">
+                                                    <div class="fw-bold small text-start">Complétude du dossier</div>
+                                                    <div class="small text-start">04/04/2025</div>
+                                                </div>
+                                                <div class="timeline-step">
+                                                    <div class="fw-bold small text-start">En cours</div>
+                                                    <div class="small text-start">04/04/2025</div>
+                                                </div>
+                                                <div class="timeline-step">
+                                                    <div class="fw-bold small text-start">En attente de décision</div>
+                                                    <div class="small text-start">04/04/2025</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                      {% if requests is not empty and request.status == 'Attente client' %}
+    <a class="btn btn-custom w-100" href="{{ path('client_documents', { id: request.id }) }}">
+        Faire ma demande
+    </a>
+
+{% elseif requests is not empty and request.status == 'Retour client' %}
+    <a class="btn btn-custom w-100" href="{{ path('client_request_tracking', { id: request.id }) }}">
+        Suivre ma demande
+    </a>
+
+{% else %}
+    <a class="btn btn-custom w-100" href="{{ path('client_request_tracking', { id: request.id }) }}">
+        Voir
+    </a>
+{% endif %}
+
+                                
+
+                                    </div>
+                                </div>
+{% endfor %}
+
+                                {# <div class="col-lg-3">
                                     <div class="card border-0 shadow p-3 text-center">
                                         <div class="d-flex align-items-start text-center mb-2">
                                             <img src="https://upload.wikimedia.org/wikipedia/fr/9/91/Logo_CIC_2006.svg"
@@ -186,43 +242,7 @@
 
                                         <button class="btn btn-custom w-100">Voir le détail</button>
                                     </div>
-                                </div>
-
-
-                                <div class="col-lg-3">
-                                    <div class="card border-0 shadow p-3 text-center">
-                                        <div class="d-flex align-items-start text-center mb-2">
-                                            <img src="https://upload.wikimedia.org/wikipedia/fr/9/91/Logo_CIC_2006.svg"
-                                                alt="Logo CIC" width="40" class="me-2">
-                                            <div>
-                                            </div>
-                                        </div>
-                                        <div class="text-center">Prêt bancaire</div>
-                                        <div>
-                                            <span class="badge badge-custom fw-bold">En cours</span>
-                                        </div>
-                                        <p class="mb-2">Etat d’avancement</p>
-                                        <div class="card border-0 p-2 mb-3  text-center"
-                                            style="background-color: #214995;">
-                                            <div class="timeline">
-                                                <div class="timeline-step">
-                                                    <div class="fw-bold small text-start">Complétude du dossier</div>
-                                                    <div class="small text-start">04/04/2025</div>
-                                                </div>
-                                                <div class="timeline-step">
-                                                    <div class="fw-bold small text-start">En cours</div>
-                                                    <div class="small text-start">04/04/2025</div>
-                                                </div>
-                                                <div class="timeline-step">
-                                                    <div class="fw-bold small text-start">En attente de décision</div>
-                                                    <div class="small text-start">04/04/2025</div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <button class="btn btn-custom w-100">Voir le détail</button>
-                                    </div>
-                                </div>
+                                </div> #}
 
 
 
@@ -230,52 +250,21 @@
 
 
                                 <div class="col-lg-3">
+                          
                                     <div class="card border-0 shadow p-3 h-100 text-start">
                                         <div class="d-flex justify-content-between text-color-blue mb-2">
                                             <span class="small">Dossier</span>
                                             <span class="small fw-semibold">Voir Tout</span>
                                         </div>
+                                          {% for request in requests %}
                                         <div class="d-flex justify-content-between mb-2">
-                                            <div><img
-                                                    src="https://hellowilla.co/wp-content/uploads/2020/06/BPIFrance-logo.png"
-                                                    class="category-icon me-2">Bourse french tech</div>
-                                            <div><strong>10K€</strong></div>
+                                            <div>
+                                                    	<img src="{{ asset('uploads/logos/' ~ request.product.fundingMechanism.logo )}}" alt="Logo" width="40" class="me-2">
+                                                    
+                                                    {{request.product.name}}</div>
+                                            <div><strong>{{request.amount}}€</strong></div>
                                         </div>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <div><img
-                                                    src="https://hellowilla.co/wp-content/uploads/2020/06/BPIFrance-logo.png"
-                                                    class="category-icon me-2">Prêt Innovation</div>
-                                            <div><strong>100K€</strong></div>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <div><img
-                                                    src="https://hellowilla.co/wp-content/uploads/2020/06/BPIFrance-logo.png"
-                                                    class="category-icon me-2">Prêt d'amorçage</div>
-                                            <div><strong>200K€</strong></div>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <div><img
-                                                    src="https://upload.wikimedia.org/wikipedia/commons/9/94/LOGO-INITIATIVEFRANCE-2022.png"
-                                                    class="category-icon me-2">Prêt d'honneur</div>
-                                            <div><strong>15K€</strong></div>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <div><img src="https://upload.wikimedia.org/wikipedia/fr/0/0b/Lcl_logo.svg"
-                                                    class="category-icon me-2">Prêt lcl</div>
-                                            <div><strong>300K€</strong></div>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <div><img
-                                                    src="https://upload.wikimedia.org/wikipedia/fr/9/91/Logo_CIC_2006.svg"
-                                                    class="category-icon me-2">Prêt cic</div>
-                                            <div><strong>300K€</strong></div>
-                                        </div>
-                                        <div class="d-flex justify-content-between">
-                                            <div><img
-                                                    src="https://crealia.org/wp-content/uploads/2023/04/logo-crealia-sans-baseline.png.webp"
-                                                    class="category-icon me-2">Créalia</div>
-                                            <div><strong>15K€</strong></div>
-                                        </div>
+                                         {% endfor %}
                                     </div>
                                 </div>
 
@@ -285,27 +274,42 @@
 
                                 <!-- Prochaine facture -->
                                 <div class="col-lg-3">
-                                    <div class="card border-0 shadow p-3 h-100 text-start">
-                                        <div class="d-flex justify-content-between text-color-blue  mb-2">
-                                            <span class="small">Evénement</span>
-                                            <span class="small fw-semibold">Voir Tout</span>
-                                        </div>
-                                        <div class="my-3 text-center">
-                                            <h1 class="fw-bold">19</h1>
-                                            <h5 class="text-muted">Juillet</h5>
-                                            <h6 class="fw-semibold text-muted">2025</h6>
-                                        </div>
-                                        <div class="d-flex justify-content-between">
-                                            <span>Concours pépite</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between">
-                                            <span>Pitch & win</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between">
-                                            <span>French tech tremplin</span>
-                                        </div>
-                                    </div>
-                                </div>
+    <div class="card border-0 shadow p-3 h-100 text-start">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between text-color-blue mb-2">
+        <span class="small">Événements du jour</span>
+        <a href="{{ path('app_event_index') }}" class="small fw-semibold text-decoration-none">
+            Voir tout
+        </a>
+    </div>
+
+    <!-- Date du jour -->
+    <div class="my-3 text-center">
+        <h1 class="fw-bold">{{ "now"|date('d') }}</h1>
+        <h5 class="text-muted">{{ "now"|date('F') }}</h5>
+        <h6 class="fw-semibold text-muted">{{ "now"|date('Y') }}</h6>
+    </div>
+
+    <!-- Liste des événements -->
+    {% if events is not empty %}
+        {% for event in events %}
+            <div class="d-flex justify-content-between mb-1">
+                <span class="small">
+                    {{ event.title }}
+                </span>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-muted small text-center">
+            Aucun événement aujourd’hui
+        </div>
+    {% endif %}
+
+</div>
+
+
+
 
                             </div>
                         </div>
@@ -328,34 +332,77 @@
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
             <script>
-                // Bar Chart - Dépense/Revenue
-               
+    document.addEventListener('DOMContentLoaded', function () {
 
-                // Pie Chart - Répartition
-                const pieCtx = document.getElementById('pieChart').getContext('2d');
-                new Chart(pieCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: ['bpifrance', 'lcl', 'cic', 'créalia', 'Iniative'],
-                        datasets: [{
-                            data: [15, 30, 20, 15, 20],
-                            backgroundColor: ['#FBBB3B', '#272E80', '#038B92', '#038BC2', '#E7226F']
-                        }]
+        // 1. Récupération des données Twig
+        const requests = [
+            {% for request in requests %}
+            {
+                name: "{{ request.product.name|e('js') }}",
+                amount: {{ request.amount }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        // 2. Regroupement des montants par financeur
+        const financeurs = {};
+        requests.forEach(item => {
+            if (financeurs[item.name]) {
+                financeurs[item.name] += item.amount;
+            } else {
+                financeurs[item.name] = item.amount;
+            }
+        });
+
+        // 3. Préparation des données pour Chart.js
+        const labels = Object.keys(financeurs);
+        const data = Object.values(financeurs);
+
+        // 4. Couleurs (adaptables)
+        const backgroundColors = [
+            '#FBBB3B',
+            '#272E80',
+            '#038B92',
+            '#038BC2',
+            '#E7226F',
+            '#6F42C1',
+            '#198754'
+        ];
+
+        // 5. Initialisation du graphique
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: backgroundColors.slice(0, labels.length)
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
                     },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    usePointStyle: true,
-                                    pointStyle: 'circle'
-                                }
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return context.label + ' : ' + context.raw + ' €';
                             }
                         }
                     }
+                }
+            }
+        });
+    });
+</script>
 
-                });
-            </script>
 </body>
 {% endblock %}

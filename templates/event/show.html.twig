@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ event.title }} | Event{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+
+                    <!-- Title -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h1 class="card-title">
+                            {{ event.title }}
+                        </h1>
+
+                        <!-- Actions -->
+                        <div class="btn-group">
+                            <a href="{{ path('app_event_edit', { id: event.id }) }}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i> Modifier
+                            </a>
+
+                            <form method="post"
+                                  action="{{ path('app_event_delete', { id: event.id }) }}"
+                                  onsubmit="return confirm('Voulez-vous vraiment supprimer cet événement ?');">
+                                <input type="hidden" name="_token"
+                                       value="{{ csrf_token('delete' ~ event.id) }}">
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i> Supprimer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Meta -->
+                    <div class="mb-3 text-muted">
+                        <span class="badge bg-primary me-2">
+                            {{ event.theme }}
+                        </span>
+
+                        <span class="me-3">
+                            <i class="bi bi-calendar-event"></i>
+                            {{ event.startDate|date('d M Y H:i') }}
+                            –
+                            {{ event.endDate|date('d M Y H:i') }}
+                        </span>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <h5 class="mb-2">Description</h5>
+                        <p class="text-secondary">
+                            {{ event.description|nl2br }}
+                        </p>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ path('app_event_index') }}"
+                           class="btn btn-outline-secondary">
+                            ← Retour à la liste
+                        </a>
+
+                        {% if event.url %}
+                            <a href="{{ event.url }}"
+                               class="btn btn-primary"
+                               target="_blank" rel="noopener">
+                                Aller au site de l’événement
+                            </a>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

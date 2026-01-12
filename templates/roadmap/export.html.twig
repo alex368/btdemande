@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Roadmap Financière</title>
+
+    <style>
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #01368c;
+            margin-bottom: 40px;
+        }
+
+        .timeline-container {
+            position: relative;
+            width: 100%;
+            padding-left: 40px;
+            border-left: 4px solid #01368c;
+        }
+
+        .timeline-block {
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .timeline-point {
+            width: 16px;
+            height: 16px;
+            background: #01368c;
+            border-radius: 50%;
+            position: absolute;
+            left: -11px;
+            top: 5px;
+            border: 3px solid white;
+        }
+
+        .label-box {
+            background: #f9f9f9;
+            padding: 15px 20px;
+            border-left: 4px solid #01368c;
+            border-radius: 5px;
+        }
+
+        .label-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #01368c;
+            margin-bottom: 8px;
+        }
+
+        .label-text {
+            font-size: 12px;
+        }
+
+        .year-badge {
+            display: inline-block;
+            font-weight: bold;
+            font-size: 11px;
+            background: #01368c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            margin-bottom: 5px;
+        }
+
+        .section {
+            page-break-inside: avoid;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>La Roadmap Financière</h1>
+
+    <div class="timeline-container">
+        {% for r in roadmaps %}
+            {% set roadmap = r.entity %}
+
+            <div class="timeline-block section">
+                <div class="timeline-point"></div>
+                <div class="label-box">
+                    <span class="year-badge">{{ roadmap.date|date('Y') }}</span>
+                    <div class="label-title">
+                        {{ roadmap.product.name }}
+                    </div>
+                    <div class="label-text">
+                        Trimestre : <strong>{{ r.quarter }}</strong><br>
+                        {# Date : {{ roadmap.date|date('d/m/Y') }}<br>
+                        {% if roadmap.product.productDescription %}
+                            Description : {{ roadmap.product.productDescription }}
+                        {% endif %} #}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+</body>
+</html>
