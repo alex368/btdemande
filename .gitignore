@@ -28,3 +28,5 @@
 config/google/token.json
 config/google/credentials.json
 .DS_Store
+.DS_Store
+.env
