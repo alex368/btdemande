@@ -30,3 +30,5 @@ config/google/credentials.json
 .DS_Store
 .DS_Store
 .env
+.env
+.DS_Store
