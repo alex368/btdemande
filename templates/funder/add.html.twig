@@ -1,71 +1,77 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello FunderController!{% endblock %}
+{% block title %}Ajouter un financeur{% endblock %}
 
 {% block body %}
-  <main class="col-md-12 col-lg-12 p-2">
-<div class="container mt-5">
-      <h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Ajouter un nouveau financeur pour la demande</h1>
+<main class="col-md-12 col-lg-12 p-2">
+    <div class="container mt-5">
+        <h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">
+            Ajouter un nouveau financeur pour la demande
+        </h1>
 
-   {{ form_start(form) }}
+        {{ form_start(form) }}
             {{ form_row(form.logo) }}
             {{ form_row(form.name) }}
             {{ form_row(form.sector) }}
             {{ form_row(form.type) }}
             {{ form_row(form.description, {
-                'attr': {
-                    'class': 'wysiwyg',
+                attr: {
+                    class: 'wysiwyg',
                     'data-editor': 'tinymce'
                 }
             }) }}
+
             <button class="btn btn-primary mt-5">Ajouter</button>
         {{ form_end(form) }}
-</div>
+    </div>
 </main>
-
 {% endblock %}
-<script>
-function enhanceEditors() {
-    if (typeof tinymce === "undefined") return;
 
-    tinymce.remove(); // Clear existing editors
+{% block javascripts %}
+    {{ parent() }}
 
-    document.querySelectorAll('textarea.wysiwyg[data-editor="tinymce"]').forEach(el => {
-        if (!el.id) {
-            el.id = 'tinymce-' + Math.random().toString(36).substring(2, 9);
+    <script>
+        function enhanceEditors() {
+            if (typeof tinymce === "undefined") return;
+
+            tinymce.remove();
+
+            document.querySelectorAll('textarea.wysiwyg[data-editor="tinymce"]').forEach(el => {
+                if (!el.id) {
+                    el.id = 'tinymce-' + Math.random().toString(36).substring(2, 9);
+                }
+
+                tinymce.init({
+                    target: el,
+                    height: 300,
+                    menubar: false,
+                    branding: false,
+                    license_key: 'gpl',
+                    plugins: 'lists link image media code table codesample',
+                    toolbar: 'undo redo | styleselect | fontselect fontsizeselect | bold italic underline forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist | link image media | codesample code',
+                    font_size_formats: '12px 14px 16px 18px 24px 36px',
+                    content_css: 'https://cdn.jsdelivr.net/npm/prismjs@1/themes/prism.css',
+                    codesample_languages: [
+                        { text: 'HTML/XML', value: 'markup' },
+                        { text: 'JavaScript', value: 'javascript' },
+                        { text: 'PHP', value: 'php' },
+                        { text: 'CSS', value: 'css' },
+                        { text: 'Python', value: 'python' },
+                        { text: 'Bash/Shell', value: 'bash' },
+                        { text: 'SQL', value: 'sql' }
+                    ],
+                    paste_data_images: true,
+                    automatic_uploads: true,
+                    images_upload_url: '/upload/image',
+                    setup: (editor) => {
+                        editor.on('change', () => editor.save());
+                    }
+                });
+            });
         }
 
-        tinymce.init({
-            target: el,
-            height: 300,
-            menubar: false,
-            branding: false,
-            license_key: 'gpl',
-            plugins: 'lists link image media code table codesample',
-            toolbar: 'undo redo | styleselect | fontselect fontsizeselect | bold italic underline forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist | link image media | codesample code',
-            font_size_formats: '12px 14px 16px 18px 24px 36px',
-            content_css: 'https://cdn.jsdelivr.net/npm/prismjs@1/themes/prism.css',
-            codesample_languages: [
-                { text: 'HTML/XML', value: 'markup' },
-                { text: 'JavaScript', value: 'javascript' },
-                { text: 'PHP', value: 'php' },
-                { text: 'CSS', value: 'css' },
-                { text: 'Python', value: 'python' },
-                { text: 'Bash/Shell', value: 'bash' },
-                { text: 'SQL', value: 'sql' }
-            ],
-            paste_data_images: true,
-            automatic_uploads: true,
-            images_upload_url: '/upload/image',
-            setup: (editor) => {
-                editor.on('change', () => editor.save());
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            enhanceEditors();
         });
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    enhanceEditors();
-});
-</script>
+    </script>
 {% endblock %}
