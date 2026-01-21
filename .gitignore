@@ -27,3 +27,4 @@
 # Google OAuth
 config/google/token.json
 config/google/credentials.json
+.DS_Store
