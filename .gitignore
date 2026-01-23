@@ -17,6 +17,10 @@
 ###> symfony/asset-mapper ###
 /public/assets/
 /assets/vendor/
+/public/uploads/*
+!.gitkeep
+
+
 ###< symfony/asset-mapper ###
 # Secrets
 # .env

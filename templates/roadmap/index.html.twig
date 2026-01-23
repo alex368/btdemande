@@ -4,34 +4,34 @@
 {% endblock %}
 
 {% block body %}
-<style>
-.clickable-title {
-    position: relative;
-    display: inline-block;
-    transition: color 0.3s ease;
-}
+	<style>
+		.clickable-title {
+			position: relative;
+			display: inline-block;
+			transition: color 0.3s ease;
+		}
 
-.clickable-title::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -3px;
-    width: 0%;
-    height: 2px;
-    background-color: #01368c;
-    transition: width 0.3s ease;
-}
+		.clickable-title::after {
+			content: "";
+			position: absolute;
+			left: 0;
+			bottom: -3px;
+			width: 0;
+			height: 2px;
+			background-color: #01368c;
+			transition: width 0.3s ease;
+		}
 
-.clickable-title:hover {
-    color: #01368c;
-    transform: translateY(-2px);
-}
+		.clickable-title:hover {
+			color: #01368c;
+			transform: translateY(-2px);
+		}
 
-.clickable-title:hover::after {
-    width: 100%;
-}
+		.clickable-title:hover::after {
+			width: 100%;
+		}
 
-.timeline-container {
+		.timeline-container {
 			position: relative;
 			display: flex;
 			justify-content: center;
@@ -133,19 +133,19 @@
 				text-align: left !important;
 			}
 		}
-</style>
+	</style>
 
-    <div class="col-md-12 col-lg-12">
+	<div class="col-md-12 col-lg-12">
 		<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">La roadmap financière</h1>
 
 		<div class="container">
 			<nav aria-label="breadcrumb">
 				<ol class="breadcrumb">
-					{% if is_granted('ROLE_CUSTOMER') %}
+					{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
 						<li class="breadcrumb-item">
 							<a href="{{path('app_me_campany',{id:app.user.id})}}">Entreprise</a>
 						</li>
-					{% else %}
+						{% elseif is_granted('ROLE_CUSTOMER') %}
 						<li class="breadcrumb-item">
 							<a href="#">Entreprise</a>
 						</li>
@@ -159,32 +159,34 @@
 					<a href="{{path('app_new_roadmap', { id: user.id })}}" class="btn btn-warning rounded-0">
 						Nouvelle roadmap
 					</a>
-					    <a href="{{ path('app_roadmap_export', { id: user.id }) }}" class="btn btn-outline-primary rounded-0">
-        📄 Exporter en PDF
-    </a>
+<a href="{{ path('app_roadmap_export', { id: user.id }) }}"
+   class="btn btn-outline-primary rounded-0"
+   target="_blank"
+   rel="noopener noreferrer">
+    📄 Exporter en PDF
+</a>
+
 				{% endif %}
 			</div>
 
 			{# {% if is_granted('ROLE_ADMIN') %} #}
 
-{# {% endif %} #}
+			{# {% endif %} #}
 
 
 			{# <div class="card shadow-sm rounded-0 border-0 p-5 text-center" style="max-width: 1200px;">
-				<p class="p-2 fs-5 fw-light text-body-secondary">
-					Cette partie représente la stratégie financière que nous avons imaginé pour vous.
-										                Vous aurez la liste des financements correspondant à votre besoin sur 5 ans.
-										                Cliquez sur le nom d’un dispositif pour en savoir plus.
-				</p>
-			</div> #}
+							<p class="p-2 fs-5 fw-light text-body-secondary">
+								Cette partie représente la stratégie financière que nous avons imaginé pour vous.
+													                Vous aurez la liste des financements correspondant à votre besoin sur 5 ans.
+													                Cliquez sur le nom d’un dispositif pour en savoir plus.
+							</p>
+						</div> #}
 
-{# <div class="col-md-12 col-lg-12" style="height: 100vh; overflow-y: auto;"> #}
+			{# <div class="col-md-12 col-lg-12" style="height: 100vh; overflow-y: auto;"> #}
 			{# Hauteur dynamique en fonction du nombre d’éléments #}
 			{% set timelineHeight = roadmaps|length * 220 %}
 
-			<div class="timeline-container" style="height: {{ timelineHeight }}px;">
-
-				<div class="vertical"></div>
+				<div class="timeline-container" style="height: {{ timelineHeight }}px;"> <div class="vertical"></div>
 
 				{% for r in roadmaps %}
 					{% set roadmap = r.entity %}
@@ -204,8 +206,7 @@
 								</span>
 
 								<h5 class="label-title">
-									<a href="{{ path('app_product_show', { id: roadmap.product.id }) }}"
-									class="text-decoration-none clickable-title">
+									<a href="{{ path('app_product_show', { id: roadmap.product.id }) }}" class="text-decoration-none clickable-title">
 										{{ roadmap.product.name }}
 									</a>
 								</h5>
@@ -221,7 +222,7 @@
 										Date :
 										{{ roadmap.date|date('d/m/Y') }}<br>
 									{% endif %}
-									
+
 
 									{#{{ roadmap.product.productDescription|truncate_html(150) }}#}
 
@@ -252,11 +253,10 @@
 								</span>
 
 								<h5 class="label-title">
-    <a href="{{ path('app_product_show', { id: roadmap.product.id }) }}"
-       class="text-decoration-none clickable-title">
-        {{ roadmap.product.name }}
-    </a>
-</h5>
+									<a href="{{ path('app_product_show', { id: roadmap.product.id }) }}" class="text-decoration-none clickable-title">
+										{{ roadmap.product.name }}
+									</a>
+								</h5>
 								<div class="label-line"></div>
 
 								<p class="label-text">
