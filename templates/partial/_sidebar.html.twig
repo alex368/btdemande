@@ -203,6 +203,13 @@
 </li>
 
 
+<li class="nav-item mb-2">
+    <a href="{{ path('app_partnership')}}">
+        <i class="bi bi-calendar me-2"></i>partenaire
+    </a>
+</li>
+
+
         {% if is_granted('ROLE_CUSTOMER') %}
             <li class="nav-item mb-2">
                 <a href="{{ path('app_me_campany', {id: app.user.id}) }}">

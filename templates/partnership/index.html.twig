@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Contacts
+{% endblock %}
+
+{% block body %}
+	<div class="container mt-4">
+		<div class="text-end mb-3">
+			<a href="{{path('app_partnership_add')}}" class="btn btn-warning rounded-0">
+				Nouveau partenaire
+			</a>
+
+			<a href="{{path('app_partnership_import')}}" class="btn btn-warning rounded-0">
+				Import excel
+			</a>
+			<h1 class="mb-4">Liste des partenaires</h1>
+
+			<form method="get" class="row g-3 mb-4" action="{{ path('app_partnership') }}">
+				<div class="col-md-4">
+					<input type="text" name="q" value="{{ app.request.get('q') }}" class="form-control" placeholder="Rechercher un nom, prénom, email...">
+				</div>
+				<div class="col-md-auto">
+					<button type="submit" class="btn btn-primary">Rechercher</button>
+					<a href="{{ path('app_partnership') }}" class="btn btn-secondary">Réinitialiser</a>
+				</div>
+			</form>
+
+
+			<table class="table table-bordered table-striped">
+				<thead class="table-dark">
+					<tr>
+						<th>Civilité</th>
+						<th>Nom</th>
+						<th>Prénom</th>
+						<th>Email(s)</th>
+						<th>Téléphone(s)</th>
+						<th>Structure/organisme</th>
+						<th>Outil</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					{% for p in partnerships %}
+						<tr>
+							<td>{{ p.salutation }}</td>
+							<td>{{ p.lastName }}</td>
+							<td>{{ p.firstName }}</td>
+							<td>
+								{% if p.email is iterable %}
+									{% for e in p.email %}
+										<div>{{ e }}</div>
+									{% endfor %}
+								{% else %}
+									{{ p.email }}
+								{% endif %}
+							</td>
+							{# <td>
+								{% for p in p.phone %}
+									<div>{{ p }}</div>
+								{% endfor %}
+							</td> #}
+							<td>
+								{% for m in p.mobilePhone %}
+									<div>{{ m }}</div>
+								{% endfor %}
+							</td>
+							<td>
+								{{ p.fundingMechanism ? p.fundingMechanism.name : '-' }}
+							</td>
+							<td class="text-center">
+
+								<a href="{{ path('app_partnership_edit', { id: p.id }) }}" class="btn btn-sm btn-outline-warning">
+									<i class="bi bi-pencil-square"></i>
+								</a>
+								<a href="{{ path('app_partnership_show', { id: p.id }) }}" class="btn btn-sm btn-info">
+									<i class="bi bi-eye"></i>
+
+								</a>
+								<form method="post" action="{{ path('app_partnership_delete', { id: p.id }) }}" style="display:inline-block" onsubmit="return confirm('Supprimer ce contact ?');">
+									<input type="hidden" name="_token" value="{{ csrf_token('delete-partnership-' ~ p.id) }}">
+									<button class="btn btn-sm btn-outline-danger">
+										<i class="bi bi-trash"></i>
+									</button>
+								</form>
+							</td>
+						</tr>
+					{% else %}
+						<tr>
+							<td colspan="8" class="text-center text-muted">Aucun contact trouvé</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+
+			</table>
+
+			<div class="navigation d-flex justify-content-center">
+				{{ knp_pagination_render(partnerships) }}
+			</div>
+
+		</div>
+	{% endblock %}

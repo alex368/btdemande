@@ -37,9 +37,16 @@ class FundingMechanism
     #[ORM\Column(length: 255)]
     private ?string $logo = null;
 
+    /**
+     * @var Collection<int, Partnership>
+     */
+    #[ORM\OneToMany(targetEntity: Partnership::class, mappedBy: 'fundingMechanism')]
+    private Collection $partnerships;
+
     public function __construct()
     {
         $this->product = new ArrayCollection();
+        $this->partnerships = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -133,6 +140,36 @@ class FundingMechanism
     public function setLogo(string $logo): static
     {
         $this->logo = $logo;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Partnership>
+     */
+    public function getPartnerships(): Collection
+    {
+        return $this->partnerships;
+    }
+
+    public function addPartnership(Partnership $partnership): static
+    {
+        if (!$this->partnerships->contains($partnership)) {
+            $this->partnerships->add($partnership);
+            $partnership->setFundingMechanism($this);
+        }
+
+        return $this;
+    }
+
+    public function removePartnership(Partnership $partnership): static
+    {
+        if ($this->partnerships->removeElement($partnership)) {
+            // set the owning side to null (unless already changed)
+            if ($partnership->getFundingMechanism() === $this) {
+                $partnership->setFundingMechanism(null);
+            }
+        }
 
         return $this;
     }

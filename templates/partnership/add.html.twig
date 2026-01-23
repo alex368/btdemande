@@ -1,0 +1,159 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer un contact{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1 class="mb-4">Créer un contact</h1>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+
+            {{ form_start(form) }}
+
+            {# ------- IDENTITÉ -------- #}
+            <h5 class="fw-bold mb-3"><i class="bi bi-person-badge"></i> Identité</h5>
+
+            <div class="row">
+                <div class="col-md-4">
+                    {{ form_row(form.salutation) }}
+                </div>
+                <div class="col-md-4">
+                    {{ form_row(form.lastName) }}
+                </div>
+                <div class="col-md-4">
+                    {{ form_row(form.firstName) }}
+                </div>
+
+                <div class="col-md-4">
+                    {{ form_row(form.linkedin) }}
+                </div>
+
+                 <div class="col-md-4">
+                    {{ form_row(form.fundingMechanism) }}
+                </div>
+            </div>
+
+            <hr>
+
+            {# ------- EMAILS -------- #}
+            <h5 class="fw-bold mt-3"><i class="bi bi-envelope"></i> E-mails</h5>
+
+            <div id="email-wrapper"
+                 data-prototype="{{ form_widget(form.email.vars.prototype)|e('html_attr') }}"
+                 data-index="{{ form.email|length }}">
+
+                {% for emailField in form.email %}
+                    <div class="d-flex gap-2 mb-2">
+                        {{ form_widget(emailField) }}
+                        <button type="button" class="btn btn-danger btn-sm remove-item">X</button>
+                    </div>
+                {% endfor %}
+
+            </div>
+
+            <button type="button" class="btn btn-primary btn-sm mt-2" id="add-email">
+                <i class="bi bi-plus-circle"></i> Ajouter un email
+            </button>
+
+            <hr>
+
+            {# ------- TELEPHONES / MOBILES -------- #}
+            <div class="row mt-4">
+
+                
+
+                <div class="col-md-6">
+                    <h5 class="fw-bold"><i class="bi bi-phone"></i> Mobiles</h5>
+
+                    <div id="mobile-wrapper"
+                         data-prototype="{{ form_widget(form.mobilePhone.vars.prototype)|e('html_attr') }}"
+                         data-index="{{ form.mobilePhone|length }}">
+
+                        {% for mobileField in form.mobilePhone %}
+                            <div class="d-flex gap-2 mb-2">
+                                {{ form_widget(mobileField) }}
+                                <button type="button" class="btn btn-danger btn-sm remove-item">X</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="button" class="btn btn-primary btn-sm mt-2" id="add-mobile">
+                        <i class="bi bi-plus-circle"></i> Ajouter un mobile
+                    </button>
+                </div>
+            </div>
+
+            
+
+           
+
+
+            <hr>
+
+            {# ------- PROFESSION ------- #}
+            <h5 class="fw-bold mt-4"><i class="bi bi-briefcase"></i> Profession & Entreprise</h5>
+
+            <div class="row">
+                <div class="col-md-6">
+                    {{ form_row(form.occupation) }}
+                </div>
+                {# <div class="col-md-6">
+                    {{ form_row(form.campany) }}
+                </div> #}
+            </div>
+
+            <button class="btn btn-success mt-4 px-4">
+                <i class="bi bi-check2-circle"></i> Créer le partenaire
+            </button>
+
+            {{ form_end(form) }}
+
+        </div>
+    </div>
+</div>
+
+{# ---------------------------- JS COLLECTIONS ----------------------------- #}
+<script>
+function addItem(wrapperId) {
+    const wrapper = document.getElementById(wrapperId);
+    if (!wrapper) return;
+
+    const prototype = wrapper.dataset.prototype;
+    let index = parseInt(wrapper.dataset.index || "0", 10);
+
+    const newForm = prototype.replace(/__name__/g, index);
+    wrapper.dataset.index = (index + 1).toString();
+
+    const div = document.createElement('div');
+    div.classList.add('d-flex', 'gap-2', 'mb-2');
+    div.innerHTML = newForm + `
+        <button type="button" class="btn btn-danger btn-sm remove-item">X</button>
+    `;
+
+    wrapper.appendChild(div);
+}
+
+// Fonction pour éviter les erreurs si l'élément n'existe pas
+function bindAddButton(buttonId, wrapperId) {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return;
+
+    btn.addEventListener('click', () => addItem(wrapperId));
+}
+
+// Bind uniquement les boutons existants
+bindAddButton('add-email', 'email-wrapper');
+bindAddButton('add-mobile', 'mobile-wrapper');
+
+// Suppression via délégation d’évènement (ok même pour les nouveaux champs)
+document.addEventListener('click', (e) => {
+    const removeBtn = e.target.closest('.remove-item');
+    if (!removeBtn) return;
+
+    removeBtn.parentElement.remove();
+});
+</script>
+
+
+{% endblock %}

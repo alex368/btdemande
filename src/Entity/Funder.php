@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\FunderRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -19,6 +21,9 @@ class Funder
 
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
+
+
+
 
     public function getId(): ?int
     {
@@ -48,4 +53,7 @@ class Funder
 
         return $this;
     }
+
 }
+
+

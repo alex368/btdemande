@@ -1,0 +1,228 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+
+<style>
+/* Badge rosace certifiée (style Instagram Pro / TikTok Creator) */
+.verified-badge {
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+
+    /* Rosace en pétales */
+    clip-path: polygon(
+        50% 0%,
+        65% 10%,
+        85% 15%,
+        90% 35%,
+        100% 50%,
+        90% 65%,
+        85% 85%,
+        65% 90%,
+        50% 100%,
+        35% 90%,
+        15% 85%,
+        10% 65%,
+        0% 50%,
+        10% 35%,
+        15% 15%,
+        35% 10%
+    );
+
+    background: linear-gradient(135deg,
+        #4c8bf5,
+        #7b4df8,
+        #c53af5,
+        #ff4d9d
+    );
+
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+.verified-badge {
+    animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+
+</style>
+	<div class="container mt-4">
+
+	{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+            {{ message|raw }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endfor %}
+
+<h1 class="d-flex align-items-center gap-2">
+    <span>{{ partnership.firstName }} {{ partnership.lastName }}</span>
+</h1>
+
+		{# ===================== INFORMATIONS CONTACT ===================== #}
+		<div class="card mb-4 shadow-sm">
+			<div class="card-header bg-primary text-white fw-bold">
+				<i class="bi bi-person-lines-fill me-2"></i>
+				Informations Contact
+			</div>
+
+			
+
+			<div class="card-body">
+
+				<table class="table table-borderless align-middle">
+
+					<tr>
+						<th class="text-muted" style="width:25%;">Civilité</th>
+						<td>{{ partnership.salutation }}</td>
+					</tr>
+
+					<tr>
+						<th class="text-muted">Emails</th>
+						<td>
+							{% for e in partnership.email %}
+								<div>
+									<i class="bi bi-envelope-at me-1"></i>
+									<a href="mailto:{{ e }}">{{ e }}</a>
+								</div>
+							{% else %}
+								<em>Aucun</em>
+							{% endfor %}
+						</td>
+					</tr>
+
+
+					<tr>
+						<th class="text-muted">Financeur</th>
+						<td>
+							{{ partnership.fundingMechanism.name ?? '<em>Aucun</em>'|raw }}
+						</td>
+					</tr>
+
+					
+
+					<tr>
+						<th class="text-muted">Mobiles</th>
+						<td>
+							{% for m in partnership.mobilePhone %}
+								<div>
+									<i class="bi bi-phone me-1"></i>
+									{{ m }}</div>
+							{% else %}
+								<em>Aucun</em>
+							{% endfor %}
+						</td>
+					</tr>
+
+					<tr>
+						<th class="text-muted">Réseaux sociaux</th>
+						<td>
+							{% for s in partnership.linkedin %}
+								{% set url = s starts with 'http' ? s : 'https://' ~ s %}
+								<div
+									class="mb-1">
+
+									{# Auto-detection icône #}
+									{% set icon = 'bi-link-45deg' %}
+									{% if 'linkedin' in s %}
+										{% set icon = 'bi-linkedin' %}
+									{% endif %}
+									{% if 'facebook' in s %}
+										{% set icon = 'bi-facebook' %}
+									{% endif %}
+									{% if 'instagram' in s %}
+										{% set icon = 'bi-instagram' %}
+									{% endif %}
+									{% if 'twitter' in s or 'x.com' in s %}
+										{% set icon = 'bi-twitter-x' %}
+									{% endif %}
+									{% if 'youtube' in s %}
+										{% set icon = 'bi-youtube' %}
+									{% endif %}
+									{% if 'tiktok' in s %}
+										{% set icon = 'bi-tiktok' %}
+									{% endif %}
+
+									<i class="bi {{ icon }} me-1"></i>
+									<a href="{{ s }}" target="_blank" rel="noopener noreferrer">
+										{{ s }}
+									</a>
+								</div>
+							{% else %}
+								<em>Aucun</em>
+							{% endfor %}
+						</td>
+					</tr>
+
+					
+
+
+					<tr>
+						<th class="text-muted">Profession</th>
+						<td>{{ partnership.occupation ?: '-' }}</td>
+					</tr>
+
+					{# <tr>
+						<th class="text-muted">Entreprise</th>
+						<td>
+							{% if partnership.campany %}
+								<i class="bi bi-building me-1"></i>
+								{{ partnership.campany.legalName }}
+							{% else %}
+								<em>-</em>
+							{% endif %}
+						</td>
+					</tr> #}
+
+				</table>
+
+				<div class="mt-3">
+
+
+
+
+					<a href="{{ path('app_partnership') }}" class="btn btn-secondary">
+						<i class="bi bi-arrow-left"></i>
+						Retour
+					</a>
+
+					<a href="{{ path('app_partnership_edit', {id: partnership.id}) }}" class="btn btn-warning">
+						<i class="bi bi-pencil-square"></i>
+						Modifier
+					</a>
+
+
+					<form method="post" action="{{ path('app_partnership_delete', {id: partnership.id}) }}" class="d-inline" onsubmit="return confirm('Supprimer ce partnership ?');">
+
+						<input type="hidden" name="_token" value="{{ csrf_token('delete-partnership-' ~ partnership.id) }}">
+
+						<button class="btn btn-danger">
+							<i class="bi bi-trash"></i>
+							Supprimer
+						</button>
+					</form>
+				</div>
+
+			</div>
+		</div>
+    
+</div>
+
+
+
+	</div>
+
+
+	
+{% endblock %}

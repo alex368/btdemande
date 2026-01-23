@@ -28,6 +28,8 @@ use Symfony\Component\Routing\Attribute\Route;
 final class ContactController extends AbstractController
 {
 
+
+
     #[Route('/contact', name: 'app_contact')]
     public function index(ContactRepository $contactRepository, PaginatorInterface $paginator, Request $request): Response
     {

@@ -1,0 +1,35 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DoctrineMigrations;
+
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
+
+/**
+ * Auto-generated Migration: Please modify to your needs!
+ */
+final class Version20260123141023 extends AbstractMigration
+{
+    public function getDescription(): string
+    {
+        return '';
+    }
+
+    public function up(Schema $schema): void
+    {
+        // this up() migration is auto-generated, please modify it to your needs
+        $this->addSql('ALTER TABLE partnership ADD funder_id INT DEFAULT NULL');
+        $this->addSql('ALTER TABLE partnership ADD CONSTRAINT FK_8619D6AE6CC88588 FOREIGN KEY (funder_id) REFERENCES funder (id)');
+        $this->addSql('CREATE INDEX IDX_8619D6AE6CC88588 ON partnership (funder_id)');
+    }
+
+    public function down(Schema $schema): void
+    {
+        // this down() migration is auto-generated, please modify it to your needs
+        $this->addSql('ALTER TABLE partnership DROP FOREIGN KEY FK_8619D6AE6CC88588');
+        $this->addSql('DROP INDEX IDX_8619D6AE6CC88588 ON partnership');
+        $this->addSql('ALTER TABLE partnership DROP funder_id');
+    }
+}

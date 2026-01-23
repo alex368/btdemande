@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Utilisateur créé{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <h1 class="mb-4">Contact converti en utilisateur</h1>
+
+        <div class="alert alert-success">
+            L'utilisateur a été créé avec succès.
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <p><strong>Nom :</strong> {{ user.lastname }}</p>
+                <p><strong>Prénom :</strong> {{ user.name }}</p>
+                <p><strong>Email :</strong> {{ user.email }}</p>
+
+                {% if password is defined %}
+                    <hr>
+                    <div class="alert alert-warning">
+                        <strong>Mot de passe temporaire :</strong>
+                        <code>{{ password }}</code><br>
+                        ⚠️ Ce mot de passe ne sera plus affiché. Veuillez le transmettre à l'utilisateur immédiatement.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <a href="{{ path('contact_list') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Retour
+        </a>
+    </div>
+{% endblock %}
