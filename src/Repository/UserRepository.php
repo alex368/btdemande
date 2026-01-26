@@ -19,6 +19,21 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         parent::__construct($registry, User::class);
     }
 
+
+        /**
+     * Retourne l'utilisateur par son ID s'il possède un rôle donné.
+     */
+    public function findOneByIdAndRole(int $id, string $role): ?User
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.id = :id')
+            ->andWhere('u.roles LIKE :role')
+            ->setParameter('id', $id)
+            ->setParameter('role', '%"' . $role . '"%')
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     /**
      * Used to upgrade (rehash) the user's password automatically over time.
      */

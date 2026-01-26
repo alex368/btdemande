@@ -11,7 +11,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class AdminFollowController extends AbstractController
 {
- #[Route('/admin/follow', name: 'app_admin_follow')]
+ #[Route('/adminz/follow', name: 'app_admin_follow')]
     public function index(EntityManagerInterface $em): Response
     {
         // ===========================

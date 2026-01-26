@@ -1,0 +1,137 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Assistant Chat{% endblock %}
+
+{% block body %}
+<style>
+    .chat-container { height: 105vh; display: flex; flex-direction: column; }
+  .chat-messages { flex-grow: 1; overflow-y: auto; padding: 1rem 1.5rem; }
+  .chat-message { max-width: 75%; padding: 0.75rem 1rem; border-radius: 20px; word-break: break-word; }
+  .chat-message.assistant { background-color: #166a5d; color: white; border-bottom-right-radius: 0; align-self: flex-start; }
+  .chat-message.user { background-color: #198754; color: white; border-bottom-left-radius: 0; align-self: flex-end; }
+  .chat-input { padding: 1rem; border-top: 1px solid #dee2e6; }
+
+  .sources-box { margin-top: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; padding: 10px 12px; font-size: 0.92rem; }
+  .sources-box summary { cursor: pointer; font-weight: 600; }
+  .sources-item { margin-top: 6px; padding: 6px 8px; border-radius: 10px; background: rgba(0,0,0,0.15); }
+  .sources-item code { color: #fff; background: rgba(0,0,0,0.25); padding: 2px 6px; border-radius: 8px; }
+</style>
+
+<div class=" col-lg-12 chat-container" id="chat-root">
+  <div class="chat-header">
+    <h2 class="fw-bold mb-0 d-flex align-items-center">
+      Assistant <span class="badge bg-warning text-dark ms-2">Bêta</span>
+    </h2>
+    <p class="text-muted mb-0">Pose ta question, je réponds directement.</p>
+  </div>
+
+
+<div class="chat-messages d-flex flex-column gap-4" id="chat-messages">
+  <div class="chat-messages">
+    <div class="chat-message assistant">
+      Bonjour. Je suis prêt. Envoie ta question.
+    </div>
+  </div>
+</div>
+ 
+
+
+
+
+  <div class="chat-input">
+    <form id="chat-form" class="d-flex align-items-center w-100 gap-2 flex-nowrap">
+      <input type="text" name="question" class="form-control rounded-0 px-4" placeholder="Pose ta question ici..." required autocomplete="off">
+
+      <button type="submit" class="btn btn-primary rounded-0 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+        <i class="bi bi-send-fill"></i>
+      </button>
+    </form>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("chat-form");
+  const input = form.querySelector("input[name='question']");
+  const messagesContainer = document.getElementById("chat-messages");
+
+  // Helpers UI
+  function addMessage(text, sender) {
+    const div = document.createElement("div");
+    div.classList.add("chat-message", sender);
+    div.innerText = text;
+    messagesContainer.appendChild(div);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    return div;
+  }
+
+  function animateThinking(el) {
+    let dots = 0;
+    return setInterval(() => {
+      dots = (dots + 1) % 4;
+      el.innerText = "Je réfléchis" + ".".repeat(dots);
+    }, 400);
+  }
+
+  function renderMarkdown(text) {
+    const t = String(text || "");
+    if (typeof marked !== "undefined" && marked.parse) {
+      return marked.parse(t);
+    }
+    return t_toggle
+    t.replace(/\n/g, "<br>");
+  }
+
+  // Envoi du message
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const question = input.value.trim();
+    if (!question) return;
+
+    // UI user
+    addMessage(question, "user");
+    input.value = "";
+
+    // UI assistant placeholder
+    const botMsg = addMessage("Je réfléchis", "assistant");
+    const thinkingInterval = animateThinking(botMsg);
+
+    try {
+      const res = await fetch("/api/chat-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
+
+      const rawText = await res.text();
+
+      let data = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch (e) {
+        data = { error: "Erreur serveur (non JSON)", details: rawText.slice(0, 800) };
+      }
+
+      clearInterval(thinkingInterval);
+
+      if (!res.ok || data.error) {
+        botMsg.innerText = "⚠️ " + (data.error || "Erreur serveur.");
+        return;
+      }
+
+      const answerText = String(data.answer || "");
+      botMsg.innerHTML = renderMarkdown(answerText);
+
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    } catch (err) {
+      clearInterval(thinkingInterval);
+      botMsg.innerText = "⚠️ Erreur réseau.";
+      console.error(err);
+    }
+  });
+});
+</script>
+{% endblock %}

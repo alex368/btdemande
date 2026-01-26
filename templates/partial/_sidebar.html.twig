@@ -210,6 +210,13 @@
 </li>
 
 
+<li class="nav-item mb-2">
+    <a href="{{ path('app_chat_general', {id: app.user.id})}}">
+        <i class="bi bi-book me-2"></i>Lucie
+    </a>
+</li>
+
+
         {% if is_granted('ROLE_CUSTOMER') %}
             <li class="nav-item mb-2">
                 <a href="{{ path('app_me_campany', {id: app.user.id}) }}">

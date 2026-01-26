@@ -61,12 +61,6 @@
         .bebas {
     font-family: 'Bebas Neue', sans-serif;
   } 
-
-
-
-
-
-
       .icon-blue {
             color: #173F9A;
             /* green-400 */
@@ -208,28 +202,6 @@ thead {
   object-fit: cover;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .vertical {
   width: 20px;
   height: 1000px;
@@ -295,6 +267,7 @@ thead {
         {% endblock %}
     </head>
       <body data-turbo="false">
+      
 {% block sidebar %}
 			{% include 'partial/_sidebar.html.twig'%}
 {% endblock %}
@@ -306,6 +279,8 @@ thead {
 
         {% endblock %}
         <script src="{{ asset('js/tinymce/tinymce.min.js') }}"></script>
+        {# <script type="module" src="{{ asset('node_modules/@fullcalendar/core/index.js') }}"></script> #}
+
         <script>
     // Fonction d'initialisation TinyMCE
     function enhanceEditors() {

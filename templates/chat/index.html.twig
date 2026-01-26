@@ -1,0 +1,508 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Assistant Chat{% endblock %}
+
+{% block body %}
+<style>
+  .chat-container { height: 100vh; display: flex; flex-direction: column; }
+  .chat-messages { flex-grow: 1; overflow-y: auto; padding: 1rem 1.5rem; }
+  .chat-message { max-width: 75%; padding: 0.75rem 1rem; border-radius: 20px; word-break: break-word; }
+  .chat-message.assistant { background-color: #166a5d; color: white; border-bottom-right-radius: 0; align-self: flex-start; }
+  .chat-message.user { background-color: #198754; color: white; border-bottom-left-radius: 0; align-self: flex-end; }
+  .chat-input { padding: 1rem; border-top: 1px solid #dee2e6; }
+
+  .sources-box { margin-top: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; padding: 10px 12px; font-size: 0.92rem; }
+  .sources-box summary { cursor: pointer; font-weight: 600; }
+  .sources-item { margin-top: 6px; padding: 6px 8px; border-radius: 10px; background: rgba(0,0,0,0.15); }
+  .sources-item code { color: #fff; background: rgba(0,0,0,0.25); padding: 2px 6px; border-radius: 8px; }
+</style>
+
+<div class="col-md-9 col-lg-10 chat-container" id="chat-root" data-course-id="{{ course.id }}">
+  <div class="px-4 py-3 border-bottom">
+    <h2 class="fw-bold mb-0 d-flex align-items-center">
+      Assistant de cours <span class="badge bg-warning text-dark ms-2">Bêta V2</span>
+    </h2>
+    <p class="text-muted mb-0">Pose une question ou entraîne-toi avec un quiz interactif</p>
+  </div>
+
+  <div class="chat-messages d-flex flex-column gap-3" id="chat-messages"></div>
+
+  <div class="chat-input">
+    <form id="chat-form" class="d-flex align-items-center w-100 gap-2 flex-nowrap">
+      <select name="mode" id="chat-mode" class="form-select rounded-0" style="max-width: 170px;">
+        <option value="explication">Explication</option>
+        <option value="etude_de_cas">Étude de cas</option>
+        <option value="quizz">Quizz</option>
+        <option value="calcul">Calcul</option>
+        <option value="resume">Résumé</option>
+      </select>
+
+      <select name="engine" id="chat-engine" class="form-select rounded-0" style="max-width: 170px;">
+        <option value="strict">Mode strict</option>
+        <option value="llm">Mode LLM</option>
+      </select>
+
+      <input type="text" name="question" class="form-control rounded-0 px-4" placeholder="Pose ta question ici..." required autocomplete="off">
+
+      <button type="submit" class="btn btn-primary rounded-0 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+        <i class="bi bi-send-fill"></i>
+      </button>
+    </form>
+
+    <small class="text-muted d-block mt-2">
+      Mode strict = uniquement le cours, sinon “Je ne sais pas.” | Mode LLM = réponse plus libre, avec sources si disponibles.
+    </small>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  // ============================
+  // CourseId stable
+  // ============================
+  const root = document.getElementById("chat-root");
+  const courseId = root?.dataset?.courseId;
+
+  if (!courseId) {
+    console.error("courseId introuvable (data-course-id manquant).");
+    return;
+  }
+
+  // ============================
+  // Init SQL.js
+  // ============================
+  const SQL = await initSqlJs({
+    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}`
+  });
+
+  // ============================
+  // DB locale (SQL.js -> localStorage)
+  // ============================
+  let db;
+  const savedDb = localStorage.getItem("chat_db");
+
+  if (savedDb) {
+    try {
+      const uInt8Array = base64ToUint8(savedDb);
+      db = new SQL.Database(uInt8Array);
+    } catch (e) {
+      console.warn("DB locale corrompue, recréation.", e);
+      db = new SQL.Database();
+    }
+  } else {
+    db = new SQL.Database();
+  }
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS conversation (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      course_id TEXT,
+      mode TEXT,
+      engine TEXT,
+      question TEXT,
+      answer TEXT,
+      sources_json TEXT
+    )
+  `);
+
+  // Best effort migrations
+  try { db.run("ALTER TABLE conversation ADD COLUMN engine TEXT"); } catch(e) {}
+  try { db.run("ALTER TABLE conversation ADD COLUMN sources_json TEXT"); } catch(e) {}
+
+  const saveDb = () => {
+    try {
+      const data = db.export();
+      const base64 = uint8ToBase64(data);
+      localStorage.setItem("chat_db", base64);
+    } catch (e) {
+      console.warn("Impossible de sauvegarder la DB en localStorage", e);
+    }
+  };
+
+  // ============================
+  // UI
+  // ============================
+  const form = document.getElementById("chat-form");
+  const input = form.querySelector("input[name='question']");
+  const modeSelect = document.getElementById("chat-mode");
+  const engineSelect = document.getElementById("chat-engine");
+  const messagesContainer = document.getElementById("chat-messages");
+
+  // Quiz state
+  let quizInProgress = false;
+  let lastQuizQuestion = null;
+
+  // ============================
+  // Submit handler
+  // ============================
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    let question = input.value.trim();
+    const mode = modeSelect.value;
+    const engine = engineSelect.value;
+
+    if (!question) return;
+
+    // UI message user
+    const engineLabel = engine === "strict" ? "STRICT" : "LLM";
+    addMessage(`[${mode.toUpperCase()} | ${engineLabel}] ${question}`, "user");
+    input.value = "";
+
+    // Placeholder bot
+    const botMsg = addMessage("Je réfléchis", "assistant");
+    let thinkingInterval = animateThinking(botMsg);
+
+    // Quiz shortcuts
+    const qLower = question.toLowerCase();
+    const isYesReply = (qLower === "suivant" || qLower === "oui");
+
+    // Payload
+    const payload = {
+      courseId,
+      mode,
+      engine,
+      question
+    };
+
+    // ✅ Quiz behavior:
+    // - "oui/suivant" => nouvelle question
+    // - sinon si quizInProgress => correction
+    if (mode === "quizz") {
+      if (isYesReply) {
+        quizInProgress = false;
+        lastQuizQuestion = null;
+        payload.question = "pose une nouvelle question";
+        question = "pose une nouvelle question";
+      } else if (quizInProgress && lastQuizQuestion) {
+        payload.userAnswer = question;
+        payload.previousQuestion = lastQuizQuestion;
+      }
+    }
+
+    // Cache rule
+    const disableCache = (mode === "quizz");
+
+    // ============================
+    // Cache lookup
+    // ============================
+    if (!disableCache) {
+      const cached = getCachedAnswer(courseId, mode, engine, question);
+      if (cached) {
+        clearInterval(thinkingInterval);
+
+        // Render markdown
+        botMsg.innerHTML = renderMarkdown(cached.answer || "");
+
+        // Sources
+        appendSources(botMsg, cached.sources || []);
+
+        return;
+      }
+    }
+
+    // ============================
+    // API call (avec polling indexation)
+    // ============================
+    try {
+      const data = await callApiWithPolling(payload, botMsg, () => {
+        // reset propre du thinking
+        if (thinkingInterval) clearInterval(thinkingInterval);
+        thinkingInterval = animateThinking(botMsg);
+      }, () => {
+        if (thinkingInterval) clearInterval(thinkingInterval);
+        thinkingInterval = null;
+      });
+
+      // Polling a échoué ou timeout
+      if (!data) return;
+
+      if (thinkingInterval) clearInterval(thinkingInterval);
+      botMsg.innerText = "";
+
+      const answerText = String(data.answer || "");
+      const sources = Array.isArray(data.sources) ? data.sources : [];
+
+      // Progressive display (texte brut)
+      const plainText = stripMarkdown(answerText);
+      const words = plainText.split(/\s+/).filter(Boolean);
+
+      let i = 0;
+      let display = "";
+
+      const typingInterval = setInterval(() => {
+        display += (words[i] || "") + " ";
+        botMsg.innerText = display.trim();
+        i++;
+
+        if (i >= words.length) {
+          clearInterval(typingInterval);
+
+          botMsg.innerHTML = renderMarkdown(answerText);
+          appendSources(botMsg, sources);
+
+          // Save cache
+          if (!disableCache) {
+            saveCachedAnswer(courseId, mode, engine, question, answerText, sources);
+            saveDb();
+          }
+
+          // Quiz state
+          if (mode === "quizz") {
+            if (!payload.userAnswer) {
+              quizInProgress = true;
+              lastQuizQuestion = answerText;
+            }
+          }
+        }
+
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }, 25);
+
+    } catch (err) {
+      if (thinkingInterval) clearInterval(thinkingInterval);
+      botMsg.innerText = "⚠️ Erreur réseau.";
+      console.error(err);
+    }
+  });
+
+  // =========================================================
+  // API CALL + POLLING (indexing)
+  // =========================================================
+  async function callApiWithPolling(payload, botMsg, onRetryThinkingStart, onStopThinking) {
+    const maxAttempts = 15;         // 15 * 2s ~ 30s si retryAfterMs=2000
+    let attempt = 0;
+
+    while (attempt <= maxAttempts) {
+      const res = await fetch("/api/chat-ai", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload)
+});
+
+let rawText = "";
+try {
+  rawText = await res.text();
+} catch(e) {
+  rawText = "";
+}
+
+let data = {};
+try {
+  data = rawText ? JSON.parse(rawText) : {};
+} catch(e) {
+  // si HTML Symfony -> on garde brut
+  data = { error: "Erreur serveur (non JSON)", details: rawText.slice(0, 1200) };
+}
+
+
+      // ✅ statut indexation
+      if (data && data.status === "indexing") {
+        onStopThinking?.();
+        botMsg.innerText = data.answer || "Veuillez patienter… lecture du document en cours.";
+
+        // si trop long => stop
+        if (attempt >= maxAttempts) {
+          botMsg.innerText = "⏳ Indexation trop longue. Réessaie dans quelques secondes.";
+          return null;
+        }
+
+        const wait = Number(data.retryAfterMs || 2000);
+        await sleep(wait);
+
+        botMsg.innerText = "Je réfléchis";
+        onRetryThinkingStart?.();
+
+        attempt++;
+        continue;
+      }
+
+      // Erreur HTTP ou backend
+if (!res.ok || data.error) {
+  onStopThinking?.();
+
+  const details = data.details ? ("\n" + String(data.details)) : "";
+  botMsg.innerText = "⚠️ Erreur : " + (data.error || "Erreur serveur") + details;
+
+  console.error("Backend error:", { status: res.status, data });
+  return null;
+}
+
+
+      // ✅ Réponse OK
+      return data;
+    }
+
+    onStopThinking?.();
+    botMsg.innerText = "⏳ Indexation trop longue. Réessaie dans quelques secondes.";
+    return null;
+  }
+
+  // =========================================================
+  // Cache helpers
+  // =========================================================
+  function getCachedAnswer(courseId, mode, engine, question) {
+    try {
+      const stmt = db.prepare(
+        "SELECT answer, sources_json FROM conversation WHERE course_id = ? AND mode = ? AND engine = ? AND question = ? LIMIT 1"
+      );
+      stmt.bind([String(courseId), String(mode), String(engine), String(question)]);
+
+      if (stmt.step()) {
+        const row = stmt.getAsObject();
+        stmt.free();
+
+        return {
+          answer: row.answer || "",
+          sources: safeParseJson(row.sources_json)
+        };
+      }
+
+      stmt.free();
+      return null;
+    } catch (e) {
+      console.warn("Cache lookup failed", e);
+      return null;
+    }
+  }
+
+  function saveCachedAnswer(courseId, mode, engine, question, answer, sources) {
+    try {
+      const stmt = db.prepare(
+        "INSERT INTO conversation (course_id, mode, engine, question, answer, sources_json) VALUES (?, ?, ?, ?, ?, ?)"
+      );
+      stmt.run([
+        String(courseId),
+        String(mode),
+        String(engine),
+        String(question),
+        String(answer || ""),
+        JSON.stringify(Array.isArray(sources) ? sources : [])
+      ]);
+      stmt.free();
+    } catch (e) {
+      console.warn("Cache insert failed", e);
+    }
+  }
+
+  // =========================================================
+  // UI Helpers
+  // =========================================================
+  function addMessage(text, sender) {
+    const div = document.createElement("div");
+    div.classList.add("chat-message", sender, "align-self-" + (sender === "user" ? "end" : "start"));
+    div.innerText = text;
+    messagesContainer.appendChild(div);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    return div;
+  }
+
+  function animateThinking(el) {
+    let dots = 0;
+    return setInterval(() => {
+      dots = (dots + 1) % 4;
+      el.innerText = "Je réfléchis" + ".".repeat(dots);
+    }, 400);
+  }
+
+  function appendSources(containerEl, sources) {
+  if (!Array.isArray(sources) || sources.length === 0) return;
+
+  const details = document.createElement("details");
+  details.className = "sources-box";
+
+  const summary = document.createElement("summary");
+  summary.innerText = `Sources (${sources.length})`;
+  details.appendChild(summary);
+
+  sources.forEach((src) => {
+    const item = document.createElement("div");
+    item.className = "sources-item";
+
+    const extract = (src.extract != null) ? src.extract : "?";
+    const page = (src.page && String(src.page).trim() !== "") ? src.page : "?";
+    const snippet = src.snippet ? src.snippet : "";
+
+    item.innerHTML = `
+      <div><code>EXTRACT ${escapeHtml(extract)}</code>
+        <span style="opacity:0.9;">page ${escapeHtml(page)}</span>
+      </div>
+      <div style="margin-top:4px; opacity:0.95;">${escapeHtml(snippet)}</div>
+    `;
+
+    details.appendChild(item);
+  });
+
+  containerEl.appendChild(details);
+}
+
+
+  function escapeHtml(text) {
+    return String(text || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function safeParseJson(s) {
+    try {
+      if (!s) return [];
+      return JSON.parse(s);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Markdown render safe (si marked absent)
+  function renderMarkdown(text) {
+    const t = String(text || "");
+    if (typeof marked !== "undefined" && marked.parse) {
+      return marked.parse(t);
+    }
+    return escapeHtml(t).replace(/\n/g, "<br>");
+  }
+
+  function stripMarkdown(text) {
+    return String(text || "")
+      .replace(/^#{1,6}\s*/gm, "")
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1");
+  }
+
+  function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+  }
+
+  // =========================================================
+  // Base64 <-> Uint8Array (plus robuste que btoa(...spread))
+  // =========================================================
+  function uint8ToBase64(u8) {
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let i = 0; i < u8.length; i += chunkSize) {
+      const chunk = u8.subarray(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, chunk);
+    }
+    return btoa(binary);
+  }
+
+  function base64ToUint8(base64) {
+    const binary = atob(base64);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  }
+});
+</script>
+
+{% endblock %}
