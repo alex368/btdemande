@@ -17,7 +17,7 @@ final class AiEntityKnowledgeService
 {
     public function __construct(
         private EntityManagerInterface $em,
-        private string $baseUrl = 'https://127.0.0.1:8000'
+        private string $baseUrl = 'https://lemonchiffon-lark-278094.hostingersite.com/'
     ) {}
 
     /**
