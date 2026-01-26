@@ -4,20 +4,118 @@
 
 {% block body %}
 <style>
-    .chat-container { height: 105vh; display: flex; flex-direction: column; }
-  .chat-messages { flex-grow: 1; overflow-y: auto; padding: 1rem 1.5rem; }
-  .chat-message { max-width: 75%; padding: 0.75rem 1rem; border-radius: 20px; word-break: break-word; }
-  .chat-message.assistant { background-color: #166a5d; color: white; border-bottom-right-radius: 0; align-self: flex-start; }
-  .chat-message.user { background-color: #198754; color: white; border-bottom-left-radius: 0; align-self: flex-end; }
-  .chat-input { padding: 1rem; border-top: 1px solid #dee2e6; }
+  .chat-container {
+    height: 105vh;
+    display: flex;
+    flex-direction: column;
+  }
 
-  .sources-box { margin-top: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; padding: 10px 12px; font-size: 0.92rem; }
-  .sources-box summary { cursor: pointer; font-weight: 600; }
-  .sources-item { margin-top: 6px; padding: 6px 8px; border-radius: 10px; background: rgba(0,0,0,0.15); }
-  .sources-item code { color: #fff; background: rgba(0,0,0,0.25); padding: 2px 6px; border-radius: 8px; }
+  .chat-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    background: #fff;
+  }
+
+  .chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: #f8f9fa;
+  }
+
+  .chat-message {
+    max-width: 75%;
+    padding: 0.75rem 1rem;
+    border-radius: 20px;
+    word-break: break-word;
+    line-height: 1.35;
+  }
+
+  .chat-message.assistant {
+    background-color: #166a5d;
+    color: white;
+    border-bottom-right-radius: 0;
+    align-self: flex-start;
+  }
+
+  .chat-message.user {
+    background-color: #198754;
+    color: white;
+    border-bottom-left-radius: 0;
+    align-self: flex-end;
+  }
+
+  .chat-input {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #dee2e6;
+    background: #fff;
+  }
+
+  /* Markdown render */
+  .chat-message.assistant p {
+    margin: 0 0 0.6rem 0;
+  }
+  .chat-message.assistant p:last-child {
+    margin-bottom: 0;
+  }
+  .chat-message.assistant ul {
+    margin: 0.5rem 0 0.5rem 1.2rem;
+  }
+  .chat-message.assistant code {
+    background: rgba(0,0,0,0.15);
+    padding: 2px 6px;
+    border-radius: 8px;
+    color: #fff;
+  }
+  .chat-message.assistant pre {
+    background: rgba(0,0,0,0.18);
+    padding: 10px 12px;
+    border-radius: 12px;
+    overflow-x: auto;
+    margin: 0.6rem 0;
+  }
+
+  /* Actions / links */
+  .ai-links {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.25);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .ai-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.18);
+    color: #fff;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+
+  .ai-links a:hover {
+    background: rgba(0,0,0,0.28);
+    color: #fff;
+  }
+
+  .ai-links .badge-type {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.18);
+  }
 </style>
 
-<div class=" col-lg-12 chat-container" id="chat-root">
+<div class="col-lg-12 chat-container" id="chat-root">
+
   <div class="chat-header">
     <h2 class="fw-bold mb-0 d-flex align-items-center">
       Assistant <span class="badge bg-warning text-dark ms-2">Bêta</span>
@@ -25,28 +123,34 @@
     <p class="text-muted mb-0">Pose ta question, je réponds directement.</p>
   </div>
 
-
-<div class="chat-messages d-flex flex-column gap-4" id="chat-messages">
-  <div class="chat-messages">
+  <div class="chat-messages" id="chat-messages">
     <div class="chat-message assistant">
       Bonjour. Je suis prêt. Envoie ta question.
     </div>
   </div>
-</div>
- 
-
-
-
 
   <div class="chat-input">
     <form id="chat-form" class="d-flex align-items-center w-100 gap-2 flex-nowrap">
-      <input type="text" name="question" class="form-control rounded-0 px-4" placeholder="Pose ta question ici..." required autocomplete="off">
-
-      <button type="submit" class="btn btn-primary rounded-0 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+      <input
+        type="text"
+        name="question"
+        class="form-control rounded-0 px-4"
+        placeholder="Pose ta question ici..."
+        required
+        autocomplete="off"
+      >
+      <button
+        type="submit"
+        class="btn btn-primary rounded-0 d-flex align-items-center justify-content-center"
+        style="width: 48px; height: 48px;"
+        aria-label="Envoyer"
+      >
         <i class="bi bi-send-fill"></i>
       </button>
     </form>
   </div>
+
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
@@ -56,13 +160,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const input = form.querySelector("input[name='question']");
   const messagesContainer = document.getElementById("chat-messages");
 
-  // Helpers UI
+  function scrollToBottom() {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
   function addMessage(text, sender) {
     const div = document.createElement("div");
     div.classList.add("chat-message", sender);
-    div.innerText = text;
+    div.innerText = String(text || "");
     messagesContainer.appendChild(div);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    scrollToBottom();
     return div;
   }
 
@@ -74,16 +181,73 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 400);
   }
 
+  function escapeHtml(str) {
+    return String(str || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
   function renderMarkdown(text) {
     const t = String(text || "");
+
     if (typeof marked !== "undefined" && marked.parse) {
       return marked.parse(t);
     }
-    return t_toggle
-    t.replace(/\n/g, "<br>");
+
+    return "<p>" + escapeHtml(t).replace(/\n/g, "<br>") + "</p>";
   }
 
-  // Envoi du message
+  function renderKnowledgeLinks(knowledge) {
+    if (!knowledge || typeof knowledge !== "object") return "";
+
+    const links = [];
+
+    // Directory button
+    if (knowledge.directory && knowledge.directory.url) {
+      links.push(`
+        <a href="${knowledge.directory.url}" target="_blank" rel="noopener noreferrer">
+          <i class="bi bi-folder2-open"></i>
+          Ouvrir la liste
+          <span class="badge-type">${escapeHtml(knowledge.directory.type || "directory")}</span>
+        </a>
+      `);
+    }
+
+    // Best resolved item button
+    if (knowledge.resolved && knowledge.resolved.url) {
+      links.push(`
+        <a href="${knowledge.resolved.url}" target="_blank" rel="noopener noreferrer">
+          <i class="bi bi-box-arrow-up-right"></i>
+          Ouvrir la fiche
+          <span class="badge-type">${escapeHtml(knowledge.resolved.type || "item")}</span>
+        </a>
+      `);
+    }
+
+    // Suggestions (max 3)
+    if (Array.isArray(knowledge.matches) && knowledge.matches.length > 0) {
+      knowledge.matches.slice(0, 3).forEach(m => {
+        if (!m.url) return;
+        const label = m.label ? escapeHtml(m.label) : "Suggestion";
+        const type = m.type ? escapeHtml(m.type) : "item";
+
+        links.push(`
+          <a href="${m.url}" target="_blank" rel="noopener noreferrer">
+            <i class="bi bi-link-45deg"></i>
+            ${label}
+            <span class="badge-type">${type}</span>
+          </a>
+        `);
+      });
+    }
+
+    if (links.length === 0) return "";
+    return `<div class="ai-links">${links.join("")}</div>`;
+  }
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -93,6 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // UI user
     addMessage(question, "user");
     input.value = "";
+    input.focus();
 
     // UI assistant placeholder
     const botMsg = addMessage("Je réfléchis", "assistant");
@@ -107,24 +272,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const rawText = await res.text();
 
-      let data = {};
+      let data;
       try {
         data = rawText ? JSON.parse(rawText) : {};
-      } catch (e) {
-        data = { error: "Erreur serveur (non JSON)", details: rawText.slice(0, 800) };
+      } catch (parseErr) {
+        data = {
+          error: "Erreur serveur (non JSON)",
+          details: rawText ? rawText.slice(0, 1200) : "Réponse vide"
+        };
       }
 
       clearInterval(thinkingInterval);
 
       if (!res.ok || data.error) {
         botMsg.innerText = "⚠️ " + (data.error || "Erreur serveur.");
+        if (data.details) console.error("Server details:", data.details);
         return;
       }
 
       const answerText = String(data.answer || "");
       botMsg.innerHTML = renderMarkdown(answerText);
 
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      // ✅ Ajout des liens internes sous la réponse
+      const knowledgeHtml = renderKnowledgeLinks(data.knowledge);
+      if (knowledgeHtml) {
+        botMsg.insertAdjacentHTML("beforeend", knowledgeHtml);
+      }
+
+      scrollToBottom();
 
     } catch (err) {
       clearInterval(thinkingInterval);
@@ -132,6 +307,8 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error(err);
     }
   });
+
+  scrollToBottom();
 });
 </script>
 {% endblock %}
