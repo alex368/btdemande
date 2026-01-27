@@ -18,6 +18,7 @@ use App\Service\LlmService;
 use App\Service\RagTestService;
 use App\Service\SidebarService;
 use Doctrine\ORM\EntityManagerInterface;
+use Dom\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security as SecurityBundleSecurity;
 use Symfony\Component\Console\Output\NullOutput;
@@ -66,34 +67,34 @@ final class ChatController extends AbstractController
 
 
 
-    #[Route('/collaborator/{id}/chat', name: 'app_chat', methods: ['GET'])]
-    public function chatSpecialise(
-        int $id,
-        EntityManagerInterface $em
-    ): Response {
+#[Route('/collaborator/contact/{id}/chat', name: 'app_chat_contact', methods: ['GET'], requirements: ['id' => '\d+'])]
+public function chatSpecialise(
+    int $id,
+    EntityManagerInterface $em
+): Response {
+    /** @var \App\Entity\User $user */
+    $user = $this->getUser();
 
-
-
-        $user = $em->getRepository(User::class)->findAll();
-        $customer = $em->getRepository(Contact::class)->findAll();
-        $product = $em->getRepository(Product::class)->findAll();
-        $event = $em->getRepository(Event::class)->findAll();
-        $financementMechanism = $em->getRepository(FundingMechanism::class)->findAll();
-        $partnership = $em->getRepository(Partnership::class)->findAll();
-
-
-
-        // dd($customer);
-
-
-        // $course = $em->getRepository(Course::class)->find($id);
-
-        return $this->render('chatbot/chat.html.twig', [
-            // 'classroom'   => $classroom,
-            // 'course'      => $course,
-            // 'sidebarData' => $sidebarService->getSidebarData($classroom),
-        ]);
+    if (!$user) {
+        throw $this->createAccessDeniedException('Non authentifié.');
     }
+
+    // ✅ {id} = Contact ID
+    $contact = $em->getRepository(Contact::class)->find($id);
+    if (!$contact) {
+        throw $this->createNotFoundException('Contact introuvable.');
+    }
+
+    // ✅ Autorisation simple par rôle
+    if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('ROLE_COLLABORATOR')) {
+        throw $this->createAccessDeniedException('Accès refusé.');
+    }
+
+    return $this->render('chatbot/chatSpecialise.html.twig', [
+        'contact' => $contact,
+        'contactId' => $contact->getId(), // utile pour ton JS endpoint /api/chat-ai/contact/{id}
+    ]);
+}
 
 
 
@@ -133,71 +134,71 @@ final class ChatController extends AbstractController
     }
 
     #[Route('/api/chat-ai', name: 'api_chat_ai', methods: ['POST'])]
-public function apiChatAi(
-    Request $request,
-    LlmService $llmService,
-    AiEntityKnowledgeService $knowledge
-): JsonResponse {
-    // ✅ 1) Lire le body brut
-    $raw = $request->getContent() ?: '';
+    public function apiChatAi(
+        Request $request,
+        LlmService $llmService,
+        AiEntityKnowledgeService $knowledge
+    ): JsonResponse {
+        // ✅ 1) Lire le body brut
+        $raw = $request->getContent() ?: '';
 
-    // ✅ 2) Parser JSON sans 400 auto
-    $payload = [];
-    if ($raw !== '') {
-        $decoded = json_decode($raw, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            $payload = $decoded;
-        }
-    }
-
-    // ✅ 3) Récupérer la question (JSON ou form-data)
-    $question = trim((string) ($payload['question'] ?? $request->request->get('question', '')));
-
-    if ($question === '') {
-        return $this->json([
-            'error' => 'Missing "question" in JSON body',
-            'received_raw' => mb_substr($raw, 0, 300),
-        ], 400);
-    }
-
-    // ✅ 4) Nouveau service : gère directory + recherche + best match
-    $knowledgeResult = $knowledge->handleQuestion($question, 8);
-
-    /**
-     * $knowledgeResult contient :
-     * - action: open_directory | open_item | no_match
-     * - directory: {type,url} ou null
-     * - resolved: {type,label,url,...} ou null
-     * - matches: [] (suggestions)
-     */
-
-    // ✅ 5) Construire un contexte utile pour l’IA
-    $context = '';
-
-    if (!empty($knowledgeResult['directory']['url'])) {
-        $context .= "Page à ouvrir (répertoire) : " . $knowledgeResult['directory']['url'] . "\n";
-    }
-
-    if (!empty($knowledgeResult['resolved']['url'])) {
-        $context .= "Lien interne exact trouvé : " . $knowledgeResult['resolved']['url'] . "\n";
-        $context .= "Label : " . ($knowledgeResult['resolved']['label'] ?? '') . "\n";
-        $context .= "Type : " . ($knowledgeResult['resolved']['type'] ?? '') . "\n";
-    }
-
-    if (!empty($knowledgeResult['matches'])) {
-        $context .= "Suggestions internes :\n";
-        foreach ($knowledgeResult['matches'] as $m) {
-            $label = $m['label'] ?? '';
-            $url   = $m['url'] ?? '';
-            $type  = $m['type'] ?? '';
-            if ($url) {
-                $context .= "- {$type} | {$label} => {$url}\n";
+        // ✅ 2) Parser JSON sans 400 auto
+        $payload = [];
+        if ($raw !== '') {
+            $decoded = json_decode($raw, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $payload = $decoded;
             }
         }
-    }
 
-    // ✅ 6) Prompt IA (Lucy)
-    $prompt = <<<PROMPT
+        // ✅ 3) Récupérer la question (JSON ou form-data)
+        $question = trim((string) ($payload['question'] ?? $request->request->get('question', '')));
+
+        if ($question === '') {
+            return $this->json([
+                'error' => 'Missing "question" in JSON body',
+                'received_raw' => mb_substr($raw, 0, 300),
+            ], 400);
+        }
+
+        // ✅ 4) Nouveau service : gère directory + recherche + best match
+        $knowledgeResult = $knowledge->handleQuestion($question, 8);
+
+        /**
+         * $knowledgeResult contient :
+         * - action: open_directory | open_item | no_match
+         * - directory: {type,url} ou null
+         * - resolved: {type,label,url,...} ou null
+         * - matches: [] (suggestions)
+         */
+
+        // ✅ 5) Construire un contexte utile pour l’IA
+        $context = '';
+
+        if (!empty($knowledgeResult['directory']['url'])) {
+            $context .= "Page à ouvrir (répertoire) : " . $knowledgeResult['directory']['url'] . "\n";
+        }
+
+        if (!empty($knowledgeResult['resolved']['url'])) {
+            $context .= "Lien interne exact trouvé : " . $knowledgeResult['resolved']['url'] . "\n";
+            $context .= "Label : " . ($knowledgeResult['resolved']['label'] ?? '') . "\n";
+            $context .= "Type : " . ($knowledgeResult['resolved']['type'] ?? '') . "\n";
+        }
+
+        if (!empty($knowledgeResult['matches'])) {
+            $context .= "Suggestions internes :\n";
+            foreach ($knowledgeResult['matches'] as $m) {
+                $label = $m['label'] ?? '';
+                $url   = $m['url'] ?? '';
+                $type  = $m['type'] ?? '';
+                if ($url) {
+                    $context .= "- {$type} | {$label} => {$url}\n";
+                }
+            }
+        }
+
+        // ✅ 6) Prompt IA (Lucy)
+        $prompt = <<<PROMPT
 Tu es Lucy, l'assistante du CRM.
 Tu dois aider l'utilisateur à naviguer dans l'application avec les liens internes.
 
@@ -215,254 +216,116 @@ Règles :
 - Si plusieurs suggestions existent, propose 3 liens max.
 PROMPT;
 
-    // ✅ 7) Appel LLM avec sécurité
+        // ✅ 7) Appel LLM avec sécurité
+        try {
+            $answer = $llmService->generate($prompt, [
+                'max_tokens' => 600,
+                'temperature' => 0.2,
+            ]);
+        } catch (\Throwable $e) {
+            return $this->json([
+                'error' => 'LLM error',
+                'details' => $e->getMessage(),
+                'knowledge' => $knowledgeResult,
+            ], 500);
+        }
+
+        // ✅ 8) JSON final (front + debug)
+        return $this->json([
+            'answer' => trim($answer),
+            'knowledge' => $knowledgeResult, // ✅ remplace "resolved"
+        ]);
+    }
+
+
+
+
+
+#[Route('/api/chat-ai/contact/{id}', name: 'api_chat_ai_contact', methods: ['POST'], requirements: ['id' => '\d+'])]
+public function apiChatAiContact(
+    int $id,
+    Request $request,
+    LlmService $llmService,
+    EntityManagerInterface $em,
+    AiEntityKnowledgeService $knowledge
+): JsonResponse {
+    $raw = $request->getContent() ?: '';
+    $payload = [];
+
+    if ($raw !== '') {
+        $decoded = json_decode($raw, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            $payload = $decoded;
+        }
+    }
+
+    $question = trim((string)($payload['question'] ?? $request->request->get('question', '')));
+    if ($question === '') {
+        return $this->json([
+            'error' => 'Missing "question" in JSON body',
+            'received_raw' => mb_substr($raw, 0, 300),
+        ], 400);
+    }
+
+    $customerDetails = $knowledge->getCustomerDetails($id, 20);
+    if (!$customerDetails) {
+        return $this->json([
+            'error' => "Contact introuvable (id={$id})",
+            'contactId' => $id,
+            'directoryUrl' => $knowledge->customerDirectoryUrl(),
+        ], 404);
+    }
+
+   
+    $journal = $knowledge->buildCustomerJournal($customerDetails, 8);
+ $contact = $em->getRepository(Contact::class)->find($id);
+ $n = $contact->getFirstname();
+ dump($n);
+    $prompt = <<<PROMPT
+Tu es {$n}, assistante CRM.
+
+QUESTION UTILISATEUR :
+{$question}
+
+JOURNAL CRM (source unique) :
+{$journal}
+
+Consignes (style naturel, texte brut uniquement) :
+- Pas de Markdown. Pas de lien cliquable. Pas de bloc "Détails contact".
+Ne donne jamais le lien de la fiche contact (pas de "Fiche :", pas d'URL).
+- Si la question demande ce qui "s'est dit" / un résumé :
+  - commence par "Il s'est dit :" puis 1 à 8 lignes, chacune commence par "- ".
+  - chaque ligne reformule fidèlement "desc=" des activités (si desc=N/A -> "Aucun détail noté.").
+- Si la question demande les opportunités :
+  - commence par "Opportunités :" puis 1 à 8 lignes "- " avec date + stage + lead.
+- Ensuite, ajoute une seule ligne "Action : ..."
+  - si une activité contient l'idée "envoyer un devis" ou "devis" et EMAIL_CONTACT n'est pas N/A :
+    Action : Envoyer le devis à EMAIL_CONTACT
+  - sinon si EMAIL_CONTACT est N/A :
+    Action : Ajouter l'email du contact puis envoyer le devis
+  - sinon :
+    Action : Suivre le dossier avec le contact
+PROMPT;
+
     try {
         $answer = $llmService->generate($prompt, [
-            'max_tokens' => 600,
+            'max_tokens' => 650,
             'temperature' => 0.2,
         ]);
     } catch (\Throwable $e) {
         return $this->json([
             'error' => 'LLM error',
             'details' => $e->getMessage(),
-            'knowledge' => $knowledgeResult,
+            'contactId' => $id,
         ], 500);
     }
 
-    // ✅ 8) JSON final (front + debug)
     return $this->json([
         'answer' => trim($answer),
-        'knowledge' => $knowledgeResult, // ✅ remplace "resolved"
+        'contactId' => $id,
+        // on peut garder customerDetails pour debug, mais front ne l’affiche plus
+        'customerDetails' => $customerDetails,
     ]);
 }
 
-
-    // #[Route('/api/chat-ai', name: 'api_chat_ai', methods: ['POST'])]
-    // public function apiChatAi(
-    //     Request $request,
-    //     EntityManagerInterface $em,
-    //     LlmService $llmService,
-    //     RagTestService $ragTestService,
-    //     SecurityBundleSecurity $security
-    // ): JsonResponse {
-    //     try {
-    //         set_time_limit(8000);
-
-    //         $user = $security->getUser();
-    //         if (!$user) {
-    //             return $this->jsonError('Unauthorized', 401);
-    //         }
-
-    //         $data = json_decode($request->getContent(), true);
-    //         if (!is_array($data)) {
-    //             return $this->jsonError('Invalid JSON body', 400);
-    //         }
-
-    //         $courseId = (int)($data['courseId'] ?? 0);
-    //         $question = trim((string)($data['question'] ?? ''));
-    //         $mode     = (string)($data['mode'] ?? 'explication');
-    //         $engine   = (string)($data['engine'] ?? 'strict');
-
-    //         $userAnswer       = $data['userAnswer'] ?? null;
-    //         $previousQuestion = $data['previousQuestion'] ?? null;
-
-    //         if ($courseId <= 0 || $question === '') {
-    //             return $this->jsonError('Missing courseId or question', 400);
-    //         }
-
-    //         /** @var Course|null $course */
-    //         $course = $em->getRepository(Course::class)->find($courseId);
-    //         if (!$course) {
-    //             return $this->jsonError('Course not found', 404);
-    //         }
-
-    //         $membership = $em->getRepository(ClassroomMembership::class)->findOneBy([
-    //             'user'      => $user,
-    //             'classroom' => $course->getClassroom(),
-    //         ]);
-
-    //         if (!$membership) {
-    //             return $this->jsonError('Access denied (not a classroom member)', 403);
-    //         }
-
-    //         // Normalisation UI -> backend
-    //         $mode = $this->normalizeMode($mode);
-
-    //         // ===========================
-    //         // 🔍 MODE STRICT (RAG)
-    //         // ===========================
-    //         if ($engine === 'strict') {
-    //             try {
-    //                 // ✅ un seul appel (important)
-    //                 $payload = $ragTestService->answerFromCoursePayload(
-    //                     courseId: $courseId,
-    //                     question: $question,
-    //                     mode: $mode,
-    //                     topK: 8,
-    //                     output: new NullOutput()
-    //                 );
-
-    //                 $answer = (string)($payload['answer'] ?? '');
-
-    //                 $chunkCount = (int)$em->getRepository(CourseRagChunk::class)->countByCourseId($courseId);
-    //                 if ($chunkCount === 0) {
-    //                     return new JsonResponse([
-    //                         'status'       => 'indexing',
-    //                         'answer'       => 'Indexation en cours… veuillez patienter.',
-    //                         'retryAfterMs' => 2000,
-    //                     ], 200);
-    //                 }
-
-    //                 $sources = $this->buildSourcesFromAnswer($answer, $course, $em);
-
-    //                 return new JsonResponse([
-    //                     'answer'   => $answer,
-    //                     'sources'  => $sources,
-    //                     'ragIndex' => $payload['ragIndex'] ?? [
-    //                         'indexed'    => true,
-    //                         'chunkCount' => $chunkCount,
-    //                         'updatedAt'  => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
-    //                     ],
-    //                 ], 200);
-
-    //             } catch (\Throwable $e) {
-    //                 return new JsonResponse([
-    //                     'error'   => 'Erreur RAG strict',
-    //                     'details' => $e->getMessage(),
-    //                 ], 500);
-    //             }
-    //         }
-
-    //         // ===========================
-    //         // 🧠 MODE LLM (non strict)
-    //         // ===========================
-    //         $contents = $em->getRepository(CourseContent::class)->findBy(['course' => $course]);
-    //         if (!$contents) {
-    //             return $this->jsonError('No course content available', 404);
-    //         }
-
-    //         $contextText = '';
-    //         foreach ($contents as $c) {
-    //             $contextText .= $c->getTitle() . "\n" . $c->getContent() . "\n\n";
-    //         }
-
-    //         $context = new LlmUserContext();
-
-    //         $answer = match ($mode) {
-    //             'quiz' => ($userAnswer && $previousQuestion)
-    //                 ? $llmService->checkQuizAnswer($userAnswer, $previousQuestion, $context, $contextText)
-    //                 : $llmService->generateQuizQuestion($context, $contextText),
-
-    //             'calcul' => $llmService->resolveCalcul($question, $context, $contextText),
-
-    //             'summary' => $llmService->generateSummary($contextText, $context, $contextText),
-
-    //             default => $llmService->modeEtudeDeCas($question, $context, $contextText),
-    //         };
-
-    //         return new JsonResponse([
-    //             'answer'  => (string)$answer,
-    //             'sources' => [],
-    //         ], 200);
-
-    //     } catch (\Throwable $e) {
-    //         return new JsonResponse([
-    //             'error'   => 'Erreur serveur (exception)',
-    //             'details' => $e->getMessage(),
-    //         ], 500);
-    //     }
-    // }
-
-    // private function jsonError(string $message, int $status): JsonResponse
-    // {
-    //     return new JsonResponse(['error' => $message], $status);
-    // }
-
-    // private function normalizeMode(string $mode): string
-    // {
-    //     $mode = trim(mb_strtolower($mode));
-
-    //     return match ($mode) {
-    //         'quizz'   => 'quiz',
-    //         'quiz'    => 'quiz',
-    //         'resume'  => 'summary',
-    //         'summary' => 'summary',
-    //         default   => $mode,
-    //     };
-    // }
-
-    // private function buildSourcesFromAnswer(
-    //     string $answer,
-    //     Course $course,
-    //     EntityManagerInterface $em
-    // ): array {
-    //     $sources = [];
-
-    //     preg_match_all(
-    //         '/\[EXTRACT\s+(\d+)\s*-\s*page\s*([0-9]+(?:-[0-9]+)?)\]/i',
-    //         $answer,
-    //         $matches,
-    //         PREG_SET_ORDER
-    //     );
-
-    //     foreach ($matches as $m) {
-    //         $extractNum = (int)$m[1];
-    //         $page       = (string)$m[2];
-
-    //         $chunk = $em->getRepository(CourseRagChunk::class)->findOneBy([
-    //             'course'     => $course,
-    //             'chunkIndex' => $extractNum - 1,
-    //         ]);
-
-    //         if (!$chunk) {
-    //             continue;
-    //         }
-
-    //         $sources[] = [
-    //             'extract' => $extractNum,
-    //             'page'    => $page,
-    //             'snippet' => mb_substr(trim((string)$chunk->getContent()), 0, 400),
-    //         ];
-    //     }
-
-    //     // unique
-    //     $unique = [];
-    //     foreach ($sources as $s) {
-    //         $key = ($s['extract'] ?? '') . '|' . ($s['page'] ?? '') . '|' . ($s['snippet'] ?? '');
-    //         $unique[$key] = $s;
-    //     }
-
-    //     return array_values($unique);
-    // }
-
-
-
-
-    // #[Route('/api/chat-ai', name: 'api_chat_ai', methods: ['POST'])]
-    // public function apiChatAi(
-    //     Request $request,
-    //     EntityManagerInterface $em,
-    //     LlmService $llmService,
-    //     SecurityBundleSecurity $security,
-    // ): JsonResponse {
-    //     set_time_limit(80000); // ⚡ très long pour les gros prompts
-
-    //     $user = $security->getUser();
-    //     if (!$user) {
-    //         return new JsonResponse(['error' => 'Unauthorized'], 401);
-    //     }
-
-    //     $data = json_decode($request->getContent(), true);
-    //     $courseId = $data['courseId'] ?? null;
-    //     $question = trim($data['question'] ?? '');
-    //     $mode = $data['mode'] ?? 'etude_de_cas';
-    //     $userAnswer = $data['userAnswer'] ?? null;
-    //     $previousQuestion = $data['previousQuestion'] ?? null;
-
-    //     if (!$courseId || !$question) {
-    //         return new JsonResponse(['error' => 'Missing courseId or question'], 400);
-    //     }
-
-
-    // }
 }

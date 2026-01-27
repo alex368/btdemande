@@ -49,23 +49,30 @@
 			{% endfor %}
 		{% endfor %}
 
-		<h1 class="d-flex align-items-center gap-2">
-			<span>{{ contact.firstName }}
-				{{ contact.lastName }}</span>
+<h1 class="d-flex align-items-center">
+  <a href="{{ path('app_contact') }}" class="btn btn-secondary me-3">
+    <i class="bi bi-arrow-left"></i>
+    Retour
+  </a>
+
+  <span class="ms-auto d-flex align-items-center gap-2">
+    <span>{{ contact.firstName }} {{ contact.lastName }}</span>
+
+    {% if contact.account %}
+      <span class="verified-badge" title="Compte certifié">
+        <i class="fa-solid fa-check"></i>
+      </span>
+    {% endif %}
+  </span>
+</h1>
 
 
-			{% if contact.account %}
-				<span class="verified-badge" title="Compte certifié">
-					<i class="fa-solid fa-check"></i>
-				</span>
-			{% endif %}
-		</h1>
 
 		{# ===================== INFORMATIONS CONTACT ===================== #}
 		<div class="card mb-4 shadow-sm">
 			<div class="card-header bg-primary text-white fw-bold">
 				<i class="bi bi-person-lines-fill me-2"></i>
-				Informations Contact
+				Informations Contacts
 			</div>
 
 
@@ -220,12 +227,6 @@
 					<a href="{{ path('contact_convert_user', { id: contact.id }) }}" class="btn btn-primary">
 						<i class="bi bi-person-plus"></i>
 						Convertir en utilisateur
-					</a>
-
-
-					<a href="{{ path('app_contact') }}" class="btn btn-secondary">
-						<i class="bi bi-arrow-left"></i>
-						Retour
 					</a>
 
 					<a href="{{ path('app_contact_edit', {id: contact.id}) }}" class="btn btn-warning">
@@ -512,7 +513,7 @@
 					Assistant
 				</span>
 
-				<a href="{{ path('app_chat', {id: contact.id}) }}" class="btn btn-outline-light btn-sm">
+				<a href="{{ path('app_chat_contact', {id: contact.id}) }}" class="btn btn-outline-light btn-sm">
 					<i class="bi bi-chat-dots me-1"></i>
 					Discuter
 				</a>

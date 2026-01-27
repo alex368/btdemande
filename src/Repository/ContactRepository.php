@@ -40,4 +40,18 @@ class ContactRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+
+   public function findByContactId(int $contactId, int $limit = 50): array
+    {
+        return $this->createQueryBuilder('a')
+            ->andWhere('IDENTITY(a.contact) = :cid')
+            ->setParameter('cid', $contactId)
+            ->orderBy('a.activityDate', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    
 }

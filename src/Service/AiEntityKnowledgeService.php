@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Entity\Activity;
 use App\Entity\User;
 use App\Entity\Contact;
 use App\Entity\Product;
 use App\Entity\Event;
 use App\Entity\EventCustomer;
 use App\Entity\FundingMechanism;
+use App\Entity\Opportunity;
 use App\Entity\Partnership;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -17,7 +19,7 @@ final class AiEntityKnowledgeService
 {
     public function __construct(
         private EntityManagerInterface $em,
-        private string $baseUrl = 'https://lemonchiffon-lark-278094.hostingersite.com/'
+        private string $baseUrl = 'https://127.0.0.1:8000/'
     ) {}
 
     /**
@@ -147,6 +149,7 @@ final class AiEntityKnowledgeService
             ];
         }
 
+        dump($docs);
         // -------------------------
         // PRODUCTS
         // -------------------------
@@ -710,4 +713,272 @@ private function getValue(object $o, string $method): ?string
         }
         return false;
     }
+
+    
+
+//     public function getCustomerDetails(int $contactId, int $limit = 30): ?array
+// {
+//     /** @var Contact|null $contact */
+//     $contact = $this->em->getRepository(Contact::class)->find($contactId);
+//     if (!$contact) {
+//         return null;
+//     }
+
+//     $label = $this->safeContactLabel($contact);
+
+//     // Activities
+//     $activities = $this->em->getRepository(Activity::class)->findBy(
+//         ['contact' => $contact],
+//         ['activityDate' => 'DESC'],
+//         $limit
+//     );
+
+//     // Opportunities
+//     $opportunities = $this->em->getRepository(Opportunity::class)->findBy(
+//         ['contact' => $contact],
+//         ['createdAt' => 'DESC'],
+//         $limit
+//     );
+
+//     // Mapper en tableau simple (JSON-friendly)
+//     $activitiesArr = array_map(function (Activity $a) {
+//         return [
+//             'id' => $a->getId(),
+//             'type' => $a->getType(),
+//             'status' => $a->getStatus(),
+//             'date' => $a->getActivityDate()?->format('Y-m-d H:i'),
+//             'description' => $a->getDescription(),
+//         ];
+//     }, $activities);
+
+//     $opportunitiesArr = array_map(function (Opportunity $o) {
+//         return [
+//             'id' => $o->getId(),
+//             'leadSource' => $o->getLeadSource(),
+//             'stage' => $o->getStage(),
+//             'createdAt' => $o->getCreatedAt()?->format('Y-m-d H:i'),
+//             'user' => $o->getUser() ? $this->safeUserLabel($o->getUser()) : null,
+//             'userId' => $o->getUser()?->getId(),
+//         ];
+//     }, $opportunities);
+
+//     return [
+//         'customer' => [
+//             'id' => $contact->getId(),
+//             'label' => $label,
+//             'url' => $this->contactUrl((int)$contact->getId()),
+//             'email' => $this->getValue($contact, 'getEmail'),
+//             'phone' => $this->getValue($contact, 'getPhone'),
+//         ],
+//         'activities' => [
+//             'count' => count($activitiesArr),
+//             'items' => $activitiesArr,
+//         ],
+//         'opportunities' => [
+//             'count' => count($opportunitiesArr),
+//             'items' => $opportunitiesArr,
+//         ],
+//     ];
+// }
+
+public function handleContactQuestion(string $question, int $limit = 8): array
+{
+    $q = trim($question);
+    if ($q === '') {
+        return [
+            'action' => 'no_match',
+            'message' => 'Question vide.',
+            'directory' => null,
+            'resolved' => null,
+            'matches' => [],
+        ];
+    }
+
+    // Intent "liste des clients"
+    $qn = $this->normalizeText($q);
+    if ($this->containsAny($qn, ['client', 'clients', 'customer', 'customers', 'contacts', 'contact'])) {
+        // Si pas d'ID explicite -> répertoire
+        if (!preg_match('/\b\d+\b/', $qn)) {
+            return [
+                'action' => 'open_directory',
+                'message' => 'Voici la page des clients (contacts).',
+                'directory' => [
+                    'type' => 'customer',
+                    'url' => $this->customerDirectoryUrl(),
+                ],
+                'resolved' => null,
+                'matches' => $this->searchInIndex($q, 'customer', $limit),
+            ];
+        }
+    }
+
+    // Si l'utilisateur donne explicitement "contact 12"
+    $resolved = $this->resolveContactLinkFromText($q);
+    if ($resolved) {
+        return [
+            'action' => 'open_item',
+            'message' => 'Contact trouvé via ID.',
+            'directory' => null,
+            'resolved' => $resolved,
+            'matches' => [],
+        ];
+    }
+
+    // Recherche texte (nom/prénom/email/phone, etc.) UNIQUEMENT sur customers
+    $matches = $this->searchInIndex($q, 'customer', $limit);
+
+    if (!empty($matches)) {
+        return [
+            'action' => 'open_item',
+            'message' => 'Contact trouvé par recherche.',
+            'directory' => null,
+            'resolved' => $matches[0],
+            'matches' => $matches,
+        ];
+    }
+
+    return [
+        'action' => 'no_match',
+        'message' => 'Aucun contact trouvé.',
+        'directory' => [
+            'type' => 'customer',
+            'url' => $this->customerDirectoryUrl(),
+        ],
+        'resolved' => null,
+        'matches' => [],
+    ];
+}
+
+
+public function resolveContactLinkFromText(string $text): ?array
+{
+    $text = $this->normalizeText($text);
+
+    if (preg_match('/\b(customer|contact)\b.*\b(\d+)\b/u', $text, $m)) {
+        $id = (int)$m[2];
+        $entity = $this->em->getRepository(Contact::class)->find($id);
+
+        return $entity ? [
+            'type' => 'customer',
+            'key' => (string)$id,
+            'label' => $this->safeContactLabel($entity),
+            'url' => $this->contactUrl($id),
+            'data' => ['id' => $id],
+        ] : null;
+    }
+
+    return null;
+}
+   public function getCustomerDetails(int $contactId, int $limit = 20): ?array
+    {
+        /** @var Contact|null $contact */
+        $contact = $this->em->getRepository(Contact::class)->find($contactId);
+        if (!$contact) return null;
+
+        $activities = $this->em->getRepository(Activity::class)->findBy(
+            ['contact' => $contact],
+            ['activityDate' => 'DESC'],
+            $limit
+        );
+
+        $opps = $this->em->getRepository(Opportunity::class)->findBy(
+            ['contact' => $contact],
+            ['createdAt' => 'DESC'],
+            $limit
+        );
+
+        $activitiesArr = array_map(static fn(Activity $a) => [
+            'id' => $a->getId(),
+            'type' => $a->getType(),
+            'status' => $a->getStatus(),
+            'date' => $a->getActivityDate()?->format('Y-m-d H:i'),
+            // si tu stockes parfois du HTML, on garde tel quel et on nettoie plus bas dans le journal
+            'description' => $a->getDescription(),
+        ], $activities);
+
+        $oppsArr = array_map(fn(Opportunity $o) => [
+            'id' => $o->getId(),
+            'leadSource' => $o->getLeadSource(),
+            'stage' => $o->getStage(),
+            'createdAt' => $o->getCreatedAt()?->format('Y-m-d H:i'),
+            'userId' => $o->getUser()?->getId(),
+            'user' => $o->getUser() ? $this->getValue($o->getUser(), 'getEmail') : null,
+        ], $opps);
+
+        return [
+            'customer' => [
+                'id' => $contact->getId(),
+                'label' => $this->safeContactLabel($contact),
+                'url' => $this->contactUrl((int)$contact->getId()),
+                'email' => $this->getValue($contact, 'getEmail'),
+                'phone' => $this->getValue($contact, 'getPhone'),
+            ],
+            'activities' => $activitiesArr,
+            'opportunities' => $oppsArr,
+        ];
+    }
+
+    private function stripHtml(?string $s): string
+    {
+        $s = (string)($s ?? '');
+        $s = trim(strip_tags($s));
+        // petites normalisations
+        $s = preg_replace('/\s+/', ' ', $s) ?: '';
+        return $s;
+    }
+
+    public function buildCustomerJournal(array $customerDetails, int $maxItems = 8): string
+    {
+        $c = $customerDetails['customer'] ?? [];
+        $activities = (array)($customerDetails['activities'] ?? []);
+        $opps = (array)($customerDetails['opportunities'] ?? []);
+
+        $out = [];
+        $out[] = "CONTACT_LABEL: " . ($c['label'] ?? '-');
+        $out[] = "EMAIL_CONTACT: " . (($c['email'] ?? '') !== '' ? $c['email'] : 'N/A');
+        $out[] = "FICHE_CONTACT: " . (($c['url'] ?? '') !== '' ? $c['url'] : 'N/A');
+        $out[] = "";
+
+        $out[] = "ACTIVITES:";
+        foreach (array_slice($activities, 0, $maxItems) as $a) {
+            if (!is_array($a)) continue;
+            $desc = $this->stripHtml($a['description'] ?? '');
+            $out[] = "- [" . ($a['date'] ?? '-') . "] type=" . ($a['type'] ?? '-') . " statut=" . ($a['status'] ?? '-') . " | desc=" . ($desc !== '' ? $desc : 'N/A');
+        }
+
+        $out[] = "";
+        $out[] = "OPPORTUNITES:";
+        foreach (array_slice($opps, 0, $maxItems) as $o) {
+            if (!is_array($o)) continue;
+            $out[] = "- [" . ($o['createdAt'] ?? '-') . "] stage=" . ($o['stage'] ?? '-') . " lead=" . ($o['leadSource'] ?? '-') . " user=" . ($o['user'] ?? '-');
+        }
+
+        return trim(implode("\n", $out));
+    }
+
+    public function getLastActivity(int $contactId): ?array
+{
+    /** @var Contact|null $contact */
+    $contact = $this->em->getRepository(Contact::class)->find($contactId);
+    if (!$contact) return null;
+
+    /** @var Activity|null $a */
+    $a = $this->em->getRepository(Activity::class)->findOneBy(
+        ['contact' => $contact],
+        ['activityDate' => 'DESC']
+    );
+
+    if (!$a) return null;
+
+    $desc = trim(strip_tags((string)($a->getDescription() ?? '')));
+    $desc = preg_replace('/\s+/', ' ', $desc) ?: '';
+
+    return [
+        'id' => $a->getId(),
+        'date' => $a->getActivityDate()?->format('Y-m-d H:i'),
+        'type' => $a->getType(),
+        'status' => $a->getStatus(),
+        'description' => $desc !== '' ? $desc : null,
+    ];
+}
 }

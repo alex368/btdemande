@@ -74,4 +74,18 @@ class OpportunityRepository extends ServiceEntityRepository
     return $qb->getQuery()->getResult();
 }
 
+    /**
+     * @return Opportunity[]
+     */
+    public function findByContactId(int $contactId, int $limit = 50): array
+    {
+        return $this->createQueryBuilder('o')
+            ->andWhere('IDENTITY(o.contact) = :cid')
+            ->setParameter('cid', $contactId)
+            ->orderBy('o.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
 }
