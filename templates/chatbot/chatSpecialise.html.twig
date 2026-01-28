@@ -138,20 +138,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const thinkingInterval = animateThinking(botMsg);
 
     try {
-      const res = await fetch(ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question })
-      });
+const res = await fetch(ENDPOINT, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  },
+  body: JSON.stringify({ question })
+});
 
-      const rawText = await res.text();
+const contentType = res.headers.get("content-type") || "";
+const rawText = await res.text();
 
-      let data = {};
-      try {
-        data = rawText ? JSON.parse(rawText) : {};
-      } catch (e) {
-        data = { error: "Erreur serveur (non JSON)", details: rawText ? rawText.slice(0, 1200) : "Réponse vide" };
-      }
+let data = {};
+if (contentType.includes("application/json")) {
+  try { data = rawText ? JSON.parse(rawText) : {}; } catch { data = {}; }
+} else {
+  data = { error: "Réponse serveur non-JSON", details: rawText.slice(0, 1200) };
+}
+
 
       clearInterval(thinkingInterval);
 

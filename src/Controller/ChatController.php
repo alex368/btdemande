@@ -19,6 +19,7 @@ use App\Service\RagTestService;
 use App\Service\SidebarService;
 use Doctrine\ORM\EntityManagerInterface;
 use Dom\Entity;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security as SecurityBundleSecurity;
 use Symfony\Component\Console\Output\NullOutput;
@@ -239,49 +240,60 @@ PROMPT;
 
 
 
-
-
 #[Route('/api/chat-ai/contact/{id}', name: 'api_chat_ai_contact', methods: ['POST'], requirements: ['id' => '\d+'])]
 public function apiChatAiContact(
     int $id,
     Request $request,
     LlmService $llmService,
     EntityManagerInterface $em,
-    AiEntityKnowledgeService $knowledge
+    AiEntityKnowledgeService $knowledge,
+    LoggerInterface $logger
 ): JsonResponse {
-    $raw = $request->getContent() ?: '';
-    $payload = [];
+    try {
+        $raw = $request->getContent() ?: '';
+        $payload = [];
 
-    if ($raw !== '') {
-        $decoded = json_decode($raw, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            $payload = $decoded;
+        if ($raw !== '') {
+            $decoded = json_decode($raw, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $payload = $decoded;
+            }
         }
-    }
 
-    $question = trim((string)($payload['question'] ?? $request->request->get('question', '')));
-    if ($question === '') {
-        return $this->json([
-            'error' => 'Missing "question" in JSON body',
-            'received_raw' => mb_substr($raw, 0, 300),
-        ], 400);
-    }
+        $question = trim((string)($payload['question'] ?? $request->request->get('question', '')));
+        if ($question === '') {
+            return $this->json([
+                'error' => 'Missing "question" in JSON body',
+                'received_raw' => mb_substr($raw, 0, 300),
+            ], 400);
+        }
 
-    $customerDetails = $knowledge->getCustomerDetails($id, 20);
-    if (!$customerDetails) {
-        return $this->json([
-            'error' => "Contact introuvable (id={$id})",
-            'contactId' => $id,
-            'directoryUrl' => $knowledge->customerDirectoryUrl(),
-        ], 404);
-    }
+        // IMPORTANT: sécuriser contact (sinon null->getFirstname() => 500 HTML)
+        $contact = $em->getRepository(Contact::class)->find($id);
+        if (!$contact) {
+            return $this->json([
+                'error' => "Contact introuvable (id={$id})",
+                'contactId' => $id,
+            ], 404);
+        }
 
-   
-    $journal = $knowledge->buildCustomerJournal($customerDetails, 8);
- $contact = $em->getRepository(Contact::class)->find($id);
- $n = $contact->getFirstname();
- dump($n);
-    $prompt = <<<PROMPT
+        $customerDetails = $knowledge->getCustomerDetails($id, 20);
+        if (!$customerDetails) {
+            return $this->json([
+                'error' => "Données CRM introuvables (id={$id})",
+                'contactId' => $id,
+                'directoryUrl' => $knowledge->customerDirectoryUrl(),
+            ], 404);
+        }
+
+        $journal = $knowledge->buildCustomerJournal($customerDetails, 8);
+
+        $n = trim((string)($contact->getFirstname() ?? ''));
+        if ($n === '') {
+            $n = 'Lucy';
+        }
+
+        $prompt = <<<PROMPT
 Tu es {$n}, assistante CRM.
 
 QUESTION UTILISATEUR :
@@ -307,25 +319,30 @@ Ne donne jamais le lien de la fiche contact (pas de "Fiche :", pas d'URL).
     Action : Suivre le dossier avec le contact
 PROMPT;
 
-    try {
         $answer = $llmService->generate($prompt, [
             'max_tokens' => 650,
             'temperature' => 0.2,
         ]);
-    } catch (\Throwable $e) {
+
         return $this->json([
-            'error' => 'LLM error',
+            'answer' => trim((string) $answer),
+            'contactId' => $id,
+            // en prod, évite de renvoyer customerDetails si c’est gros / sensible
+            // 'customerDetails' => $customerDetails,
+        ]);
+    } catch (\Throwable $e) {
+        $logger->error('api_chat_ai_contact failed', [
+            'contactId' => $id,
+            'exception' => $e,
+        ]);
+
+        // JSON garanti même si exception non prévue
+        return $this->json([
+            'error' => 'Erreur serveur',
             'details' => $e->getMessage(),
             'contactId' => $id,
         ], 500);
     }
-
-    return $this->json([
-        'answer' => trim($answer),
-        'contactId' => $id,
-        // on peut garder customerDetails pour debug, mais front ne l’affiche plus
-        'customerDetails' => $customerDetails,
-    ]);
 }
 
 }
