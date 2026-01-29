@@ -24,6 +24,12 @@
 			</div>
 
 			<div class="mb-3">
+				{{ form_label(form.projetName, 'Nom du projet', {'label_attr': {'for': 'legalName'}}) }}
+				{{ form_widget(form.projetName, {'attr': {'id': 'legalName', 'class': 'form-control'}}) }}
+			</div>
+
+
+			<div class="mb-3">
 				{{ form_label(form.logo, 'Logo', {'label_attr': {'for': form.logo.vars.id}}) }}
 				{{ form_widget(form.logo, {
         'attr': {

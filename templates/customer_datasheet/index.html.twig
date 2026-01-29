@@ -26,6 +26,7 @@
 
 							<tr>
 								<th>Raison social</th>
+								<th>Projet</th>
 								<th>Secteur</th>
 								<th>Adresse</th>
 								<th>SIREN</th>
@@ -40,6 +41,11 @@
 							{% for campany in users.campanies %}
 								<tr>
 									<td>{{ campany.legalName }}</td>
+									{% if campany.projetName is not empty %}
+									<td>{{ campany.projetName }}</td>
+									{% else %}
+									<td>--</td>
+									{% endif %}
 									<td>{{ campany.sector }}</td>
 									<td>{{ campany.adress }}</td>
 									<td>{{ campany.siren }}</td>

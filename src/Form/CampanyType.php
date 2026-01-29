@@ -52,6 +52,19 @@ class CampanyType extends AbstractType
                     new Length(['min' => 2])
                 ]
             ])
+                        ->add('projetName', TextType::class, [
+                'label' => 'Nom du projet',
+                'attr' => [
+                    'id' => 'campany_legalName',
+                    'placeholder' => 'Enter the project name',
+                    'class' => 'form-control'
+                ],
+                'row_attr' => ['class' => 'mb-3'],
+                'constraints' => [
+                    new NotBlank(),
+                    new Length(['min' => 2])
+                ]
+            ])
         ->add('sector', ChoiceType::class, [
     'label' => 'Secteur',
     'choices' => [
