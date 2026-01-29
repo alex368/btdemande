@@ -35,6 +35,7 @@
 						<table class="table  align-middle mb-0">
 							<thead class="table-primary text-white">
 								<tr>
+									<th>Entreprise</th>
 									<th>Nom</th>
 									<th>Prénom</th>
 									<th>Numéro</th>
@@ -43,25 +44,28 @@
 							</thead>
 
 							<tbody>
-								{% for customer in pagination %}
-
+								{% for campany in pagination %}
 									<tr>
-										<td>{{customer.name}}</td>
-										<td>{{customer.lastname}}</td>
-										<td>{{customer.number}}</td>
-										<td>
-											<i>
-												<a href="{{path('app_customer_datasheet',{id: customer.id})}}" class="bi bi-chevron-right"></a>
-											</i>
-										</td>
+										<td>{{ campany.legalName }}</td>
+										{% for customer in campany.customer %}
+											<td>{{ customer.name }}</td>
+											<td>{{ customer.lastname }}</td>
+											<td>{{ customer.number }}</td>
+											<td class="text-end">
+												<a href="{{ path('app_customer_datasheet', { id: customer.id }) }}" class="text-decoration-none">
+													<i class="bi bi-chevron-right"></i>
+												</a>
+											</td>
+										{% endfor %}
+
+
 									</tr>
 								{% endfor %}
 							</tbody>
 						</table>
-						{{ knp_pagination_render(pagination) }}
-					</div>
-				</div>
+						{{ knp_pagination_render(pagination) }}</div>
+				</body>
 			</div>
-		</main>
+		</div>
 	</body>
-</div></div></body>{% endblock %}
+</main></body></div></div></body>{% endblock %}

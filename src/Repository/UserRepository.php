@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -93,7 +94,7 @@ public function findByRole(string $role): array
         return in_array($role, $user->getRoles(), true);
     });
 }
-public function getQueryBuilderByRoleAndSearch(string $role, string $search): \Doctrine\ORM\QueryBuilder
+public function getQueryBuilderByRoleAndSearch(string $role, string $search): QueryBuilder
 {
     $qb = $this->createQueryBuilder('u')
         ->where('u.roles LIKE :role')

@@ -1,121 +1,129 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<main class="col-md-12 col-lg-12 p-2">
-    <h1 class="mb-4">Créer un produit</h1>
+	<main class="col-md-12 col-lg-12 p-2">
 
-    {% for message in app.flashes('success') %}
-        <div class="alert alert-success">{{ message }}</div>
-    {% endfor %}
+		<div class="d-flex align-items-center justify-content-between mb-4">
+			<a href="{{path('app_product')}}" class="btn btn-secondary">
+				<i class="bi bi-arrow-left"></i>
+				Retour
+			</a>
+			<h1 class="mb-0">Modifier un produit</h1>
+		</div>
 
-    {{ form_start(form) }}
-        {{ form_row(form.name) }}
-        {{ form_row(form.fundingMechanism) }}
-        {{ form_row(form.productDescription, {
+
+		{% for message in app.flashes('success') %}
+			<div class="alert alert-success">{{ message }}</div>
+		{% endfor %}
+
+		{{ form_start(form) }}
+		{{ form_row(form.name) }}
+        {{ form_row(form.typeProduct) }}
+		{{ form_row(form.fundingMechanism) }}
+		{{ form_row(form.productDescription, {
             'attr': {
                 'class': 'wysiwyg',
                 'data-editor': 'tinymce'
             }
         }) }}
 
-        <h5>Documents requis</h5>
-        <div id="document-collection-wrapper"
-             data-prototype="{{ form_widget(form.documentTemplates.vars.prototype)|e('html_attr') }}">
-            {% for docForm in form.documentTemplates %}
-                <div class="document-entry mb-3 border p-3 bg-light rounded">
-                    {{ form_row(docForm.title) }}
-                    {{ form_row(docForm.description, {
+		<h5>Documents requis</h5>
+		<div id="document-collection-wrapper" data-prototype="{{ form_widget(form.documentTemplates.vars.prototype)|e('html_attr') }}">
+			{% for docForm in form.documentTemplates %}
+				<div class="document-entry mb-3 border p-3 bg-light rounded">
+					{{ form_row(docForm.title) }}
+					{{ form_row(docForm.description, {
                         'attr': {
                             'class': 'wysiwyg',
                             'data-editor': 'tinymce'
                         }
                     }) }}
-                    {{ form_row(docForm.filename) }}
-                    <button type="button" class="btn btn-sm btn-danger remove-document mt-2">
-                        <i class="bi bi-trash"></i> Supprimer
-                    </button>
-                </div>
-            {% endfor %}
-        </div>
+					{{ form_row(docForm.filename) }}
+					<button type="button" class="btn btn-sm btn-danger remove-document mt-2">
+						<i class="bi bi-trash"></i>
+						Supprimer
+					</button>
+				</div>
+			{% endfor %}
+		</div>
 
-        <button type="button" id="add-document" class="btn btn-outline-secondary mt-2">
-            <i class="bi bi-plus-lg"></i> Ajouter un document
-        </button>
+		<button type="button" id="add-document" class="btn btn-outline-secondary mt-2">
+			<i class="bi bi-plus-lg"></i>
+			Ajouter un document
+		</button>
 
-        <div class="mt-4">
-            <button class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i> Ajouter le produit
-            </button>
-        </div>
-    {{ form_end(form) }}
-</main>
+		<div class="mt-4">
+			<button class="btn btn-primary">
+				<i class="bi bi-plus-circle me-1"></i>
+				Ajouter le produit
+			</button>
+		</div>
+		{{ form_end(form) }}
+	</main>
 {% endblock %}
 
 
 {% block javascripts %}
-    {{ parent() }}
-    <script>
-    function enhanceEditors() {
-    document.querySelectorAll('textarea[data-editor="tinymce"]').forEach((textarea) => {
+	{{ parent() }}
+	<script>
+		function enhanceEditors() {
+document.querySelectorAll('textarea[data-editor="tinymce"]').forEach((textarea) => { // Empêche double initialisation
+if (textarea.classList.contains('tinymce-applied')) {
+return;
+}
 
-        // Empêche double initialisation
-        if (textarea.classList.contains('tinymce-applied')) {
-            return;
-        }
+tinymce.init({
+target: textarea,
+height: 300,
+menubar: false,
+plugins: 'lists link table code',
+toolbar: 'undo redo | bold italic | bullist numlist | link | code',
+license_key: 'gpl', // ⬅️ garde ta licence
+});
 
-        tinymce.init({
-            target: textarea,
-            height: 300,
-            menubar: false,
-            plugins: 'lists link table code',
-            toolbar: 'undo redo | bold italic | bullist numlist | link | code',
-            license_key: 'gpl', // ⬅️ garde ta licence
-        });
-
-        textarea.classList.add('tinymce-applied');
-    });
+textarea.classList.add('tinymce-applied');
+});
 }
 
 // Initialisation au chargement
 document.addEventListener('DOMContentLoaded', enhanceEditors);
 document.addEventListener('DOMContentLoaded', function () {
 
-    const addButton = document.getElementById('add-document');
-    const wrapper = document.getElementById('document-collection-wrapper');
-    let index = wrapper.children.length;
+const addButton = document.getElementById('add-document');
+const wrapper = document.getElementById('document-collection-wrapper');
+let index = wrapper.children.length;
 
-    function addRemoveHandler(button) {
-        button.addEventListener('click', function () {
-            button.closest('.document-entry').remove();
-        });
-    }
+function addRemoveHandler(button) {
+button.addEventListener('click', function () {
+button.closest('.document-entry').remove();
+});
+}
 
-    document.querySelectorAll('.remove-document').forEach(addRemoveHandler);
+document.querySelectorAll('.remove-document').forEach(addRemoveHandler);
 
-    addButton.addEventListener('click', () => {
-        const prototype = wrapper.dataset.prototype;
-        const newFormHtml = prototype.replace(/__name__/g, index);
+addButton.addEventListener('click', () => {
+const prototype = wrapper.dataset.prototype;
+const newFormHtml = prototype.replace(/__name__/g, index);
 
-        const container = document.createElement('div');
-        container.classList.add('document-entry', 'mb-3', 'border', 'p-3', 'bg-light', 'rounded');
-        container.innerHTML = newFormHtml;
+const container = document.createElement('div');
+container.classList.add('document-entry', 'mb-3', 'border', 'p-3', 'bg-light', 'rounded');
+container.innerHTML = newFormHtml;
 
-        const removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'btn btn-sm btn-danger mt-2 remove-document';
-        removeBtn.innerHTML = '<i class="bi bi-trash"></i> Supprimer';
+const removeBtn = document.createElement('button');
+removeBtn.type = 'button';
+removeBtn.className = 'btn btn-sm btn-danger mt-2 remove-document';
+removeBtn.innerHTML = '<i class="bi bi-trash"></i> Supprimer';
 
-        addRemoveHandler(removeBtn);
+addRemoveHandler(removeBtn);
 
-        container.appendChild(removeBtn);
-        wrapper.appendChild(container);
-        index++;
+container.appendChild(removeBtn);
+wrapper.appendChild(container);
+index++;
 
-        enhanceEditors();
-    });
-
+enhanceEditors();
 });
 
-</script>
+});
+	</script>
 
 {% endblock %}

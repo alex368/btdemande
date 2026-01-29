@@ -50,4 +50,54 @@
 
         </div>
     </div>
+    <script>
+
+document.addEventListener('DOMContentLoaded', () => {
+  const start = document.querySelector('[name$="[startDate]"]');
+  const end   = document.querySelector('[name$="[endDate]"]');
+  if (!start || !end) return;
+
+  function sync() {
+    if (start.value) end.min = start.value;   // end >= start
+    else end.removeAttribute('min');
+
+    if (end.value) start.max = end.value;     // start <= end
+    else start.removeAttribute('max');
+  }
+
+  start.addEventListener('change', sync);
+  end.addEventListener('change', sync);
+  sync();
+});
+
+      (function () {
+        const titleEl = document.querySelector('[data-slug-target="title"]');
+        const slugEl  = document.querySelector('[data-slug-target="slug"]');
+
+        if (!titleEl || !slugEl) return;
+
+        let slugTouched = slugEl.value.trim().length > 0;
+
+        slugEl.addEventListener('input', () => {
+          slugTouched = slugEl.value.trim().length > 0;
+        });
+
+        const toSlug = (s) => {
+          return (s || '')
+            .toString()
+            .toLowerCase()
+            .trim()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // enlève accents
+            .replace(/[^a-z0-9]+/g, '-')                      // espaces -> -
+            .replace(/^-+|-+$/g, '');                         // trim -
+        };
+
+        titleEl.addEventListener('input', () => {
+          if (slugTouched) return;
+          const v = toSlug(titleEl.value);
+          if (v !== '') slugEl.value = v;
+        });
+      })();
+    </script>
+
 {% endblock %}

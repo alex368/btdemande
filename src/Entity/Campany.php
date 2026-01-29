@@ -61,6 +61,9 @@ class Campany
     #[ORM\OneToMany(targetEntity: Contact::class, mappedBy: 'campany')]
     private Collection $contact;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $projetName = null;
+
     public function __construct()
     {
         $this->customer = new ArrayCollection();
@@ -268,6 +271,18 @@ class Campany
                 $contact->setCampany(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getProjetName(): ?string
+    {
+        return $this->projetName;
+    }
+
+    public function setProjetName(?string $projetName): static
+    {
+        $this->projetName = $projetName;
 
         return $this;
     }

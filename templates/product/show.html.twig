@@ -1,56 +1,69 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Produit : {{ product.name }}{% endblock %}
+{% block title %}Produit :
+	{{ product.name }}
+{% endblock %}
 
 {% block body %}
-<main class="col-md-12 col-lg-12 p-2">
+	<main class="col-md-12 col-lg-12 p-2">
 
-    <div class="card shadow-sm rounded-0 border-0 p-5 text-center"
-         style="max-width: 1200px; width: 100%; min-height: 600px;">
+		<div
+			class="card shadow-sm rounded-0 border-0 p-5 text-center" style="max-width: 1200px; width: 100%; min-height: 600px;">
 
-        <!-- Logo -->
-        <a href="#" class="d-flex justify-content-center align-items-center mb-4 text-decoration-none">
-            <img src="{{ asset('uploads/logos/' ~ product.fundingMechanism.logo)}}"
-                 alt="Logo" width="150">
-        </a>
+			<!-- Logo -->
+			<a href="#" class="d-flex justify-content-center align-items-center mb-4 text-decoration-none">
+				<img src="{{ asset('uploads/logos/' ~ product.fundingMechanism.logo)}}" alt="Logo" width="150">
+			</a>
 
-        <!-- Titre principal -->
-        <h1 class="mb-3">{{ product.name }}</h1>
+			<!-- Titre principal -->
+			<h1 class="mb-3">{{ product.name }}</h1>
+			<div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+				{% set type = (product.typeProduct ?? '')|lower %}
+				{% set badgeClass =
+    type in ['pret','prêt'] ? 'text-bg-primary' :
+    type == 'subvention' ? 'text-bg-success' :
+    type == 'concours' ? 'text-bg-warning' :
+    'text-bg-secondary'
+  %}
+				<span class="badge rounded-pill {{ badgeClass }}">
+					{{ product.typeProduct }}
+				</span>
+			</div>
 
-        <!-- Description -->
-        <div class="mb-5">
-            <h3 class="text-start">Description</h3>
-            <p class="fs-5 fw-light text-body-secondary text-start">
-                {{ product.productDescription|raw  }}
-            </p>
-        </div>
-{# {% if is_granted('ROLE_COLLABORATOR') and is_granted('ROLE_ADMIN') %} #}
-        <!-- Documents associés -->
-        <div class="mb-5 text-start">
-            <h3>Documents associés</h3>
-            <ul class="list-group">
-                {% for document in product.documentTemplates %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{ document.template }}
-                        <a class="btn btn-sm btn-outline-primary"
-                           href="{{ asset('uploads/documents/' ~ document.template) }}"
-                           download>
-                            Télécharger
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="list-group-item text-muted">Aucun document associé.</li>
-                {% endfor %}
-            </ul>
-        </div>
-{# {% endif %} #}
-        <!-- Bouton retour -->
-        <div class="text-start">
-            <a href="{{ path('app_product') }}" class="btn btn-secondary">
-                ← Retour à la liste
-            </a>
-        </div>
+			<!-- Description -->
+			<div class="mb-5">
+				<h3 class="text-start">Description</h3>
+				<p class="fs-5 fw-light text-body-secondary text-start">
+					{{ product.productDescription|raw  }}
+				</p>
 
-    </div>
-</main>
+
+			</div>
+			{# {% if is_granted('ROLE_COLLABORATOR') and is_granted('ROLE_ADMIN') %} #}
+			<!-- Documents associés -->
+			<div class="mb-5 text-start">
+				<h3>Documents associés</h3>
+				<ul class="list-group">
+					{% for document in product.documentTemplates %}
+						<li class="list-group-item d-flex justify-content-between align-items-center">
+							{{ document.template }}
+							<a class="btn btn-sm btn-outline-primary" href="{{ asset('uploads/documents/' ~ document.template) }}" download>
+								Télécharger
+							</a>
+						</li>
+					{% else %}
+						<li class="list-group-item text-muted">Aucun document associé.</li>
+					{% endfor %}
+				</ul>
+			</div>
+			{# {% endif %} #}
+			<!-- Bouton retour -->
+			<div class="text-start">
+				<a href="{{ path('app_product') }}" class="btn btn-secondary">
+					← Retour à la liste
+				</a>
+			</div>
+
+		</div>
+	</main>
 {% endblock %}

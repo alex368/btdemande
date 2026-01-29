@@ -43,6 +43,9 @@ class Product
     #[ORM\ManyToOne(inversedBy: 'product')]
     private ?FundingMechanism $fundingMechanism = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $typeProduct = null;
+
     public function __construct()
     {
         $this->documentTemplates = new ArrayCollection();
@@ -177,6 +180,18 @@ class Product
     public function setFundingMechanism(?FundingMechanism $fundingMechanism): static
     {
         $this->fundingMechanism = $fundingMechanism;
+
+        return $this;
+    }
+
+    public function getTypeProduct(): ?string
+    {
+        return $this->typeProduct;
+    }
+
+    public function setTypeProduct(string $typeProduct): static
+    {
+        $this->typeProduct = $typeProduct;
 
         return $this;
     }

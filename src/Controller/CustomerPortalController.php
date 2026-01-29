@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Repository\CampanyRepository;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,14 +17,19 @@ final class CustomerPortalController extends AbstractController
 public function index(
     Request $request,
     UserRepository $userRepository,
+    CampanyRepository $campanyRepository,
     PaginatorInterface $paginator
 ): Response {
     $search = $request->query->get('search', '');
+  
 
     $queryBuilder = $userRepository->getQueryBuilderByRoleAndSearch('ROLE_CUSTOMER', $search);
 
+    $queryBuilderCampany = $campanyRepository->findAll();
+   
+
     $pagination = $paginator->paginate(
-        $queryBuilder,
+        $queryBuilderCampany,
         $request->query->getInt('page', 1),
         10
     );

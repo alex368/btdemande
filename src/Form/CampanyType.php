@@ -95,7 +95,7 @@ class CampanyType extends AbstractType
                 'constraints' => [
                     new NotBlank(),
                     new Regex([
-                        'pattern' => '/^\d{9}$/',
+                        'pattern' => '/^(?:0|\d{9})$/',
                         'message' => 'The SIREN must be exactly 9 digits.',
                     ])
                 ]

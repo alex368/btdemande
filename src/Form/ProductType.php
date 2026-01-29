@@ -7,6 +7,7 @@ use App\Entity\FundingMechanism;
 use App\Entity\Product;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -18,7 +19,7 @@ class ProductType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-          ->add('name', TextType::class, [
+            ->add('name', TextType::class, [
                 'label' => 'Nom du produit',
                 'attr' => ['class' => 'form-control'],
                 'row_attr' => ['class' => 'mb-3']
@@ -28,25 +29,40 @@ class ProductType extends AbstractType
                 'attr' => ['class' => 'form-control'],
                 'row_attr' => ['class' => 'mb-3']
             ])
-     ->add('fundingMechanism', EntityType::class, [
-            'class' => FundingMechanism::class,
-            'choice_label' => 'name',
-            'placeholder' => 'Sélectionnez un mécanisme de financement',
-            'attr' => [
-                'class' => 'form-select', // classe Bootstrap 5 pour un <select>
-            ],
-            'label' => 'Mécanisme de financement',
-            'required' => true, // ou false selon ton besoin
-        ])
+            ->add('typeProduct', ChoiceType::class, [
+                'label' => 'Type',
+                'choices' => [
+                    'Prêt' => 'pret',
+                    'Subvention' => 'subvention',
+                    'Concours' => 'concours',
+                ],
+                'placeholder' => '— Choisir —',
+                'attr' => ['class' => 'form-select'],
+                'row_attr' => ['class' => 'mb-3'],
+            ])
+            ->add('fundingMechanism', EntityType::class, [
+                'class' => FundingMechanism::class,
+                'choice_label' => 'name',
+                'placeholder' => 'Sélectionnez un mécanisme de financement',
+                'attr' => [
+                    'class' => 'form-select', // classe Bootstrap 5 pour un <select>
+                ],
+                'label' => 'Mécanisme de financement',
+                'required' => true, // ou false selon ton besoin
+            ])
 
-           ->add('documentTemplates', CollectionType::class, [
-    'entry_type' => DocumentTemplateType::class,
-    'allow_add' => true,
-    'allow_delete' => true,
-    'by_reference' => false,
-    'prototype' => true,
-    'entry_options' => ['label' => false],
-           ]);
+            ->add('documentTemplates', CollectionType::class, [
+                'entry_type' => DocumentTemplateType::class,
+                'allow_add' => true,
+                    'allow_delete' => true,
+                    'by_reference' => false,
+                    'required' => false,
+                    'prototype' => true,
+                    'delete_empty' => true, // important
+                    'entry_options' => [
+                        'required' => false,
+                    ],
+                ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

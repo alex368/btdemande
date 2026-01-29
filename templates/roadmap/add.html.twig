@@ -4,56 +4,123 @@
 
 {% block body %}
 <main class="col-md-12 col-lg-12 p-2">
-<h1 class="mb-4">Créer plusieurs Roadmaps</h1>
+  <h1 class="mb-4">Créer plusieurs Roadmaps</h1>
 
-{{ form_start(form) }}
+  {{ form_start(form) }}
 
-<div id="roadmap-collection"
-     data-prototype="{{ form_widget(form.roadmaps.vars.prototype)|e('html_attr') }}"
-     data-index="{{ form.roadmaps|length }}"
->
-    {% for roadmapForm in form.roadmaps %}
-        <div class="roadmap-item border rounded p-3 mb-3">
-            {{ form_row(roadmapForm) }}
-        </div>
-    {% endfor %}
-</div>
+  <div id="roadmap-collection"
+       data-prototype="{{ form_widget(form.roadmaps.vars.prototype)|e('html_attr') }}"
+       data-index="{{ form.roadmaps|length }}"
+  >
+      {% for roadmapForm in form.roadmaps %}
+          <div class="roadmap-item border rounded p-3 mb-3">
+              <div class="d-flex justify-content-end mb-2">
+                  <button type="button" class="btn btn-outline-danger btn-sm js-remove-roadmap">
+                      Supprimer
+                  </button>
+              </div>
 
-<button type="button" id="add-roadmap" class="btn btn-primary mt-3">
-    Ajouter une roadmap
-</button>
+              {{ form_row(roadmapForm) }}
+          </div>
+      {% endfor %}
+  </div>
 
-<button type="submit" class="btn btn-success mt-3">
-    Enregistrer
-</button>
+  <button type="button" id="add-roadmap" class="btn btn-primary mt-3">
+      Ajouter une roadmap
+  </button>
 
-{{ form_end(form) }}
-</div>
+  <button type="submit" class="btn btn-success mt-3">
+      Enregistrer
+  </button>
+
+  {{ form_end(form) }}
+</main>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const container = document.getElementById('roadmap-collection');
-        const addBtn = document.getElementById('add-roadmap');
 
-        addBtn.addEventListener('click', () => {
-            let index = parseInt(container.dataset.index);
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.getElementById('roadmap-collection');
+  const addBtn = document.getElementById('add-roadmap');
+  if (!container || !addBtn) return;
 
-            // Récupérer le prototype
-            let prototype = container.dataset.prototype;
-            let newForm = prototype.replace(/__name__/g, index);
+  function isFirstItem(itemEl) {
+    // On considère "premier item" = premier enfant direct du container
+    // (c’est le plus robuste si ta collection est rendue en enfants directs)
+    return itemEl === container.firstElementChild;
+  }
 
-            // Création du conteneur
-            let div = document.createElement('div');
-            div.classList.add('roadmap-item', 'border', 'rounded', 'p-3', 'mb-3');
-            div.innerHTML = newForm;
+  function addRemoveButton(itemEl) {
+    // 1) pas de bouton sur le premier item
+    if (isFirstItem(itemEl)) return;
 
-            // Ajout dans le DOM
-            container.appendChild(div);
+    // 2) évite duplication
+    if (itemEl.querySelector('.js-remove-roadmap')) return;
 
-            // Incrémentation index
-            container.dataset.index = index + 1;
-        });
-    });
+    const topBar = document.createElement('div');
+    topBar.className = 'd-flex justify-content-end mb-2';
+    topBar.innerHTML = `
+      <button type="button" class="btn btn-outline-danger btn-sm js-remove-roadmap">
+        Supprimer
+      </button>
+    `;
+    itemEl.prepend(topBar);
+  }
+
+  // Délégation: supprime l'item wrapper le plus proche
+  container.addEventListener('click', (e) => {
+    const btn = e.target.closest('.js-remove-roadmap');
+    if (!btn) return;
+
+    const item = btn.closest('.roadmap-item') || btn.closest('[data-roadmap-item]');
+    if (!item) return;
+
+    // Blocage: le premier item ne doit pas être supprimable
+    if (isFirstItem(item)) return;
+
+    item.remove();
+  });
+
+  // Ajout dynamique
+  addBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+
+    const index = parseInt(container.dataset.index || '0', 10);
+    const prototype = container.dataset.prototype;
+    const newForm = prototype.replace(/__name__/g, index);
+
+    const div = document.createElement('div');
+    div.className = 'roadmap-item border rounded p-3 mb-3';
+    div.setAttribute('data-roadmap-item', '1');
+    div.innerHTML = newForm;
+
+    // Ajout bouton (pas concerné par "premier item" car ajouté en fin)
+    addRemoveButton(div);
+
+    container.appendChild(div);
+    container.dataset.index = String(index + 1);
+  });
+
+  // Init: tag + bouton uniquement à partir du 2e item
+  const children = Array.from(container.children);
+
+  children.forEach((child, i) => {
+    child.setAttribute('data-roadmap-item', '1');
+
+    // Optionnel: s'assure d'avoir une classe wrapper homogène
+    if (!child.classList.contains('roadmap-item')) {
+      child.classList.add('roadmap-item', 'border', 'rounded', 'p-3', 'mb-3');
+    }
+
+    if (i === 0) {
+      // Si un bouton existe déjà (au cas où), on le retire
+      child.querySelectorAll('.js-remove-roadmap').forEach(b => b.closest('.d-flex')?.remove() || b.remove());
+      return;
+    }
+
+    addRemoveButton(child);
+  });
+});
 </script>
+
 
 {% endblock %}
