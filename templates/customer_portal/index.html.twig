@@ -6,9 +6,10 @@
 {% block body %}
 	<body>
 		<!-- Contenu principal à droite -->
-		<main
-			class="col-md-12 col-lg-12 p-2">
+		<main class="col-md-12 col-lg-12 p-2">
 			<!-- Contenu principal à gauche -->
+
+
 
 			<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Portail client</h1>
 
@@ -44,10 +45,31 @@
 							</thead>
 
 							<tbody>
-								{% for campany in pagination %}
+
+							<pre>
+								
+							</pre>
+								{% for customer in pagination %}
 									<tr>
-										<td>{{ campany.legalName }}</td>
-										{% for customer in campany.customer %}
+										{# <td>{{ campany.legalName }}</td> #}
+										{# <td>#</td> #}
+										{% if customer.campanies is not empty %}
+										{% for campany in customer.campanies %}
+											<td>{{ campany.legalName }}</td>
+										{% endfor %}
+										{% else %}
+											<td>-</td>
+										{% endif %}	
+										<td>{{ customer.lastname }}</td>
+										<td>{{ customer.name }}</td>
+										<td>{{ customer.number }}</td>
+										<td class="text-end">
+												<a href="{{ path('app_customer_datasheet', { id: customer.id }) }}" class="text-decoration-none">
+													<i class="bi bi-chevron-right"></i>
+												</a>
+											</td>
+										{# {% for customer in campany.customer %}
+										{{ campany.legalName }}
 											<td>{{ customer.name }}</td>
 											<td>{{ customer.lastname }}</td>
 											<td>{{ customer.number }}</td>
@@ -56,7 +78,7 @@
 													<i class="bi bi-chevron-right"></i>
 												</a>
 											</td>
-										{% endfor %}
+										{% endfor %} #}
 
 
 									</tr>

@@ -17,14 +17,14 @@ class LlmService
         $config = new OpenAIConfig();
         $config->apiKey = $_ENV['OPENAI_API_KEY']; // ⚡ plus fiable que getenv()
         $config->url = $_ENV['OPENAI_API_BASE_URL'] ?? 'https://api.openai.com/v1';
-       $config->model = 'gpt-4o-mini'; // ou gpt-4o, selon ton besoin
+        $config->model = 'gpt-4o-mini'; // ou gpt-4o, selon ton besoin
 
         $this->chat = new OpenAIChat($config);
     }
-public function generate(string $prompt, array $options = []): string
-{
-    return $this->chat->generateText($prompt, $options);
-}
+    public function generate(string $prompt, array $options = []): string
+    {
+        return $this->chat->generateText($prompt, $options);
+    }
 
 
     public function getChat(): OpenAIChat
@@ -33,7 +33,7 @@ public function generate(string $prompt, array $options = []): string
     }
 
 
- public function translateContent(string $instruction, string $textToTranslate): string
+    public function translateContent(string $instruction, string $textToTranslate): string
     {
         $prompt = <<<PROMPT
 {$instruction}
@@ -46,18 +46,18 @@ PROMPT;
     }
 
 
-/**
- * 0) Génération d’un plan global (titres des fiches hors Intro/Conclusion)
- */
-public function generateRevisionPlan(string $context, array $historyTitles = []): array
-{
-    // Historique pour éviter redondances
-    $history = !empty($historyTitles)
-        ? "Titres déjà générés :\n- " . implode("\n- ", $historyTitles)
-        : "Aucun titre encore généré.";
+    /**
+     * 0) Génération d’un plan global (titres des fiches hors Intro/Conclusion)
+     */
+    public function generateRevisionPlan(string $context, array $historyTitles = []): array
+    {
+        // Historique pour éviter redondances
+        $history = !empty($historyTitles)
+            ? "Titres déjà générés :\n- " . implode("\n- ", $historyTitles)
+            : "Aucun titre encore généré.";
 
-    // Prompt envoyé au modèle
-    $prompt = <<<PROMPT
+        // Prompt envoyé au modèle
+        $prompt = <<<PROMPT
 Tu es un professeur universitaire expert en pédagogie.  
 Ta mission : à partir des notes/documents ci-dessous, proposer un **plan structuré de fiches de révision** destiné à des étudiants.  
 
@@ -87,44 +87,44 @@ Créer une liste de titres de fiches permettant de couvrir tout le contenu de ma
 ---
 PROMPT;
 
-    // Génération brute
-    $titlesRaw = $this->generate($prompt, [
-        'max_tokens'   => 600,
-        'temperature'  => 0.1,
-    ]);
+        // Génération brute
+        $titlesRaw = $this->generate($prompt, [
+            'max_tokens'   => 600,
+            'temperature'  => 0.1,
+        ]);
 
-    // Transformation en tableau
-    $titles = array_filter(array_map('trim', explode("\n", $titlesRaw)));
+        // Transformation en tableau
+        $titles = array_filter(array_map('trim', explode("\n", $titlesRaw)));
 
-    // Nettoyage : suppression doublons insensibles à la casse
-    $normalized = [];
-    $uniqueTitles = [];
+        // Nettoyage : suppression doublons insensibles à la casse
+        $normalized = [];
+        $uniqueTitles = [];
 
-    foreach ($titles as $t) {
-        $norm = mb_strtolower($t);
-        if (!in_array($norm, $normalized) && !in_array($norm, ['introduction', 'conclusion'])) {
-            $normalized[] = $norm;
-            $uniqueTitles[] = $t; // garde la casse originale
+        foreach ($titles as $t) {
+            $norm = mb_strtolower($t);
+            if (!in_array($norm, $normalized) && !in_array($norm, ['introduction', 'conclusion'])) {
+                $normalized[] = $norm;
+                $uniqueTitles[] = $t; // garde la casse originale
+            }
         }
+
+        return array_values($uniqueTitles);
     }
 
-    return array_values($uniqueTitles);
-}
 
+    /**
+     * 1) Génération d’une fiche de révision (hors Intro/Conclusion)
+     */
+    public function generateRevisionCard(string $title, string $context, array $historyCards = []): string
+    {
+        $history = !empty($historyCards)
+            ? "Fiches déjà générées :\n" . implode("\n", array_map(
+                fn($c) => "- " . $c['title'],
+                $historyCards
+            ))
+            : "Aucune fiche encore générée.";
 
-/**
- * 1) Génération d’une fiche de révision (hors Intro/Conclusion)
- */
-public function generateRevisionCard(string $title, string $context, array $historyCards = []): string
-{
-    $history = !empty($historyCards)
-        ? "Fiches déjà générées :\n" . implode("\n", array_map(
-            fn($c) => "- " . $c['title'],
-            $historyCards
-        ))
-        : "Aucune fiche encore générée.";
-
-    $prompt = <<<PROMPT
+        $prompt = <<<PROMPT
 Tu es un professeur universitaire expert. 
 Rédige une **fiche de révision détaillée, claire et pédagogique** pour le thème "{$title}" en te basant sur le contexte fourni.
 
@@ -172,48 +172,48 @@ Chaque fiche doit compléter les autres déjà générées (pas de répétition 
 ---
 PROMPT;
 
-    $card = $this->generate($prompt, [
-        'max_tokens' => 3000, // ⚡ autorise beaucoup plus de texte
-        'temperature' => 0.2,
-    ]);
+        $card = $this->generate($prompt, [
+            'max_tokens' => 3000, // ⚡ autorise beaucoup plus de texte
+            'temperature' => 0.2,
+        ]);
 
-    return trim($card);
-}
-
-
-/**
- * 2) Génération de l’ensemble des fiches (Intro + fiches + Conclusion)
- */
-public function generateFullRevisionSet(string $context): string
-{
-    // Étape 1 : générer le plan global
-    $plan = $this->generateRevisionPlan($context);
-
-    // Étape 2 : ajouter Intro et Conclusion
-    $titles = array_merge(["Introduction"], $plan, ["Conclusion"]);
-    $cards = [];
-
-    // Étape 3 : générer chaque fiche
-    foreach ($titles as $title) {
-        $card = $this->generateRevisionCard($title, $context, $cards);
-        dd($card);
-        $cards[] = [
-            'title' => $title,
-            'content' => $card,
-        ];
+        return trim($card);
     }
 
-    return $this->assembleRevisionJson($cards);
-}
+
+    /**
+     * 2) Génération de l’ensemble des fiches (Intro + fiches + Conclusion)
+     */
+    public function generateFullRevisionSet(string $context): string
+    {
+        // Étape 1 : générer le plan global
+        $plan = $this->generateRevisionPlan($context);
+
+        // Étape 2 : ajouter Intro et Conclusion
+        $titles = array_merge(["Introduction"], $plan, ["Conclusion"]);
+        $cards = [];
+
+        // Étape 3 : générer chaque fiche
+        foreach ($titles as $title) {
+            $card = $this->generateRevisionCard($title, $context, $cards);
+            dd($card);
+            $cards[] = [
+                'title' => $title,
+                'content' => $card,
+            ];
+        }
+
+        return $this->assembleRevisionJson($cards);
+    }
 
 
-/**
- * 3) Assemblage final en JSON [{title, content}]
- */
-public function assembleRevisionJson(array $cards): string
-{
-    return json_encode($cards, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-}
+    /**
+     * 3) Assemblage final en JSON [{title, content}]
+     */
+    public function assembleRevisionJson(array $cards): string
+    {
+        return json_encode($cards, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
 
 
 
@@ -221,9 +221,9 @@ public function assembleRevisionJson(array $cards): string
 
     // ... tout ton code déjà présent
 
-public function regenerateContent(string $prompt, string $currentContent): string
-{
-   $finalPrompt = <<<PROMPT
+    public function regenerateContent(string $prompt, string $currentContent): string
+    {
+        $finalPrompt = <<<PROMPT
 Tu es un assistant pédagogique.  
 Ta mission est de transformer le contenu fourni selon l'instruction utilisateur.  
 
@@ -253,18 +253,18 @@ Règles obligatoires :
 PROMPT;
 
 
-    // Génération brute
-    $output = $this->generate($finalPrompt, [
-        'max_tokens' => 4000,
-        'temperature' => 0.7,
-    ]);
+        // Génération brute
+        $output = $this->generate($finalPrompt, [
+            'max_tokens' => 4000,
+            'temperature' => 0.7,
+        ]);
 
-    // Nettoyage éventuel des parasites (Markdown, fences, titres ###)
-    $output = preg_replace('/```.*```/sU', '', $output); // supprime les blocs ```...```
-    $output = preg_replace('/^#+\s*/m', '', $output);   // supprime "##", "###" en début de ligne
+        // Nettoyage éventuel des parasites (Markdown, fences, titres ###)
+        $output = preg_replace('/```.*```/sU', '', $output); // supprime les blocs ```...```
+        $output = preg_replace('/^#+\s*/m', '', $output);   // supprime "##", "###" en début de ligne
 
-    return trim($output);
-}
+        return trim($output);
+    }
 
 
 
@@ -276,7 +276,7 @@ PROMPT;
     /**
      * Génère une question pédagogique sur le cours.
      */
-    public function generateFlashcardQuestion(string $courseContent, string $title,string $language, string $level): string
+    public function generateFlashcardQuestion(string $courseContent, string $title, string $language, string $level): string
     {
 
         //  $userLanguage = $userContext->language;
@@ -308,20 +308,20 @@ En te basant uniquement sur le texte suivant, génère une **question pédagogiq
 ────────────────────────────
 PROMPT;
 
-           $card = $this->generate($prompt, [
-        'max_tokens' => 2000, // ⚡ autorise beaucoup plus de texte
-        'temperature' => 0.2,
-    ]);
+        $card = $this->generate($prompt, [
+            'max_tokens' => 2000, // ⚡ autorise beaucoup plus de texte
+            'temperature' => 0.2,
+        ]);
 
-    return trim($card);
+        return trim($card);
     }
 
     /**
      * Génère une réponse pédagogique à partir d’une question et du contenu du cours.
      */
-public function generateFlashcardAnswer(string $courseContent, string $question, string $title, string $language, string $level): string
-{
-    $prompt = <<<PROMPT
+    public function generateFlashcardAnswer(string $courseContent, string $question, string $title, string $language, string $level): string
+    {
+        $prompt = <<<PROMPT
 🎓 **Rôle :**
 Tu es un enseignant expert qui crée des flashcards pédagogiques **visuelles, claires et compatibles avec Anki (version ≥ 23)** à partir d’un extrait du cours intitulé **« {$title} »**.
 
@@ -396,30 +396,30 @@ Tu es un enseignant expert qui crée des flashcards pédagogiques **visuelles, c
 ✅ **Ne renvoie que le HTML final (avec LaTeX vertical pour les longues formules).**
 PROMPT;
 
-    $card = $this->generate($prompt, [
-        'max_tokens' => 2000,
-        'temperature' => 0.2,
-    ]);
+        $card = $this->generate($prompt, [
+            'max_tokens' => 2000,
+            'temperature' => 0.2,
+        ]);
 
-    return trim($card);
-}
+        return trim($card);
+    }
 
 
 
-/**
- * Génère une flashcard complète : question → réponse → format final.
- */
-public function generateFlashcard(string $courseContent, string $title, string $language = 'français', string $level = 'débutant'): array
-{
-    // 1. Génère la question
-    $question = $this->generateFlashcardQuestion($courseContent, $title, $language, $level);
+    /**
+     * Génère une flashcard complète : question → réponse → format final.
+     */
+    public function generateFlashcard(string $courseContent, string $title, string $language = 'français', string $level = 'débutant'): array
+    {
+        // 1. Génère la question
+        $question = $this->generateFlashcardQuestion($courseContent, $title, $language, $level);
 
-    // 2. Génère la réponse
-    $answer = $this->generateFlashcardAnswer($courseContent, $question, $title, $language, $level);
+        // 2. Génère la réponse
+        $answer = $this->generateFlashcardAnswer($courseContent, $question, $title, $language, $level);
 
-    // 3. Assemble la flashcard finale
-    return $this->assembleFlashcard($question, $answer);
-}
+        // 3. Assemble la flashcard finale
+        return $this->assembleFlashcard($question, $answer);
+    }
 
     /**
      * Construit le format JSON final d’une flashcard.
@@ -448,25 +448,20 @@ public function generateFlashcard(string $courseContent, string $title, string $
 
 
     /**
- * Génère une flashcard complète (question + réponse) et retourne le JSON final.
- */
-public function generateFlashcardtest(string $courseContent, string $title, string $language = 'français', string $level = 'débutant'): string
-{
-    // Étape 1 : Génération de la question
-    $question = $this->generateFlashcardQuestion($courseContent, $title, $language, $level);
+     * Génère une flashcard complète (question + réponse) et retourne le JSON final.
+     */
+    public function generateFlashcardtest(string $courseContent, string $title, string $language = 'français', string $level = 'débutant'): string
+    {
+        // Étape 1 : Génération de la question
+        $question = $this->generateFlashcardQuestion($courseContent, $title, $language, $level);
 
-    // Étape 2 : Génération de la réponse
-    $answer = $this->generateFlashcardAnswer($courseContent, $question, $title, $language, $level);
+        // Étape 2 : Génération de la réponse
+        $answer = $this->generateFlashcardAnswer($courseContent, $question, $title, $language, $level);
 
-    // Étape 3 : Assemblage de la flashcard
-    $flashcard = $this->assembleFlashcard($question, $answer);
+        // Étape 3 : Assemblage de la flashcard
+        $flashcard = $this->assembleFlashcard($question, $answer);
 
-    // Étape 4 : Encodage JSON
-    return json_encode($flashcard, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        // Étape 4 : Encodage JSON
+        return json_encode($flashcard, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
 }
-
-
-}
-
-
-

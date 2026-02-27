@@ -46,8 +46,7 @@ class Contact
     #[ORM\OneToMany(targetEntity: Activity::class, mappedBy: 'contact')]
     private Collection $activities;
 
-    #[ORM\ManyToOne(inversedBy: 'contact')]
-    private ?Campany $campany = null;
+
 
     #[ORM\Column(type: Types::ARRAY, nullable: true)]
     private ?array $socialMedia = null;
@@ -79,11 +78,18 @@ class Contact
     #[ORM\ManyToOne(inversedBy: 'contacts')]
     private ?User $account = null;
 
+    /**
+     * @var Collection<int, CampanyContact>
+     */
+    #[ORM\ManyToMany(targetEntity: CampanyContact::class, mappedBy: 'contact')]
+    private Collection $campanyContacts;
+
     public function __construct()
     {
         $this->opportunity = new ArrayCollection();
         $this->activities = new ArrayCollection();
         $this->quotes = new ArrayCollection();
+        $this->campanyContacts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -223,17 +229,7 @@ class Contact
         return $this;
     }
 
-    public function getCampany(): ?Campany
-    {
-        return $this->campany;
-    }
-
-    public function setCampany(?Campany $campany): static
-    {
-        $this->campany = $campany;
-
-        return $this;
-    }
+  
 
     public function getSocialMedia(): ?array
     {
@@ -379,7 +375,7 @@ public function toUser(): User
     // Username
     if (method_exists($user, 'setUsername')) {
         $username = strtolower(trim(($this->lastName ?? '') . '.' . ($this->firstName ?? '')));
-        $user->setUsername($username ?: uniqid('user_'));
+        $user->setLastname($username ?: uniqid('user_'));
     }
 
     //     if (method_exists($user, 'setAccountId')) {
@@ -413,6 +409,33 @@ public function getPrimaryPhone(): ?string
     }
 
     return null;
+}
+
+/**
+ * @return Collection<int, CampanyContact>
+ */
+public function getCampanyContacts(): Collection
+{
+    return $this->campanyContacts;
+}
+
+public function addCampanyContact(CampanyContact $campanyContact): static
+{
+    if (!$this->campanyContacts->contains($campanyContact)) {
+        $this->campanyContacts->add($campanyContact);
+        $campanyContact->addContact($this);
+    }
+
+    return $this;
+}
+
+public function removeCampanyContact(CampanyContact $campanyContact): static
+{
+    if ($this->campanyContacts->removeElement($campanyContact)) {
+        $campanyContact->removeContact($this);
+    }
+
+    return $this;
 }
 
     

@@ -1,14 +1,16 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Events{% endblock %}
+{% block title %}Evenements{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="mb-0">Events</h1>
+  <h1 class="mb-0">Evenements</h1>
 
+  {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
   <a href="{{ path('app_event_new') }}" class="btn btn-primary">
-    Add event
+   Ajouter un événement
   </a>
+  {% endif %}   
 </div>
 
 

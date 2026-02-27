@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\EventCustomer;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -21,7 +22,7 @@ class EventCustomerType extends AbstractType
     {
         $builder
             ->add('title', TextType::class, [
-                'label' => 'Event title',
+                'label' => 'Titre de l\'événement',
                 'attr' => [
                     'class' => 'form-control',
                     'placeholder' => 'Startup Pitch Night',
@@ -40,14 +41,20 @@ class EventCustomerType extends AbstractType
                 'row_attr' => ['class' => 'mb-3'],
             ])
 
-            ->add('theme', TextType::class, [
-                'label' => 'Theme',
-                'attr' => [
-                    'class' => 'form-control',
-                    'placeholder' => 'AI, Fintech, SaaS…',
-                ],
-                'row_attr' => ['class' => 'mb-3'],
-            ])
+->add('theme', ChoiceType::class, [
+    'label' => 'Thème',
+    'choices' => [
+        'Concours' => 'concours',
+        'Rencontre' => 'rencontre',
+        'Appel à projet' => 'appel-a-projet',
+        'Autre' => 'Autre',
+    ],
+    'placeholder' => 'Sélectionnez un thème',
+    'attr' => [
+        'class' => 'form-control',
+    ],
+    'row_attr' => ['class' => 'mb-3'],
+])
 
             ->add('startDate', DateTimeType::class, [
                 'label' => 'Start date & time',

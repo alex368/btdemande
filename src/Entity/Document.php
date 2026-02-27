@@ -3,8 +3,10 @@
 namespace App\Entity;
 
 use App\Repository\DocumentRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity(repositoryClass: DocumentRepository::class)]
 class Document
@@ -34,6 +36,20 @@ class Document
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $Comment = null;
+
+
+    #[ORM\OneToOne(mappedBy: 'document', targetEntity: DocumentRagIndex::class, cascade: ['persist', 'remove'])]
+private ?DocumentRagIndex $documentRagIndex = null;
+
+#[ORM\OneToMany(mappedBy: 'document', targetEntity: DocumentRagChunk::class, cascade: ['persist', 'remove'])]
+private Collection $ragChunks;
+
+
+public function __construct()
+{
+    $this->ragChunks = new ArrayCollection();
+}
+
 
     public function getId(): ?int
     {
@@ -123,4 +139,25 @@ class Document
 
         return $this;
     }
+
+    public function getDocumentRagIndex(): ?DocumentRagIndex
+{
+    return $this->documentRagIndex;
+}
+
+public function setDocumentRagIndex(?DocumentRagIndex $index): self
+{
+    $this->documentRagIndex = $index;
+    if ($index !== null && $index->getDocument() !== $this) {
+        $index->setDocument($this);
+    }
+    return $this;
+}
+
+public function getRagChunks(): Collection
+{
+    return $this->ragChunks;
+}
+
+
 }

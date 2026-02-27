@@ -1,7 +1,25 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
+
 	<main class="col-md-12 col-lg-12 p-2">
+
+	<nav aria-label="breadcrumb">
+				<ol class="breadcrumb">
+					{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
+						<li class="breadcrumb-item">
+							<a href="{{ path('app_campany',{id:campany.id, user})}}">Entreprise</a>
+							
+						</li>
+						{% elseif is_granted('ROLE_CUSTOMER') %}
+						<li class="breadcrumb-item">
+							<a href="#">Entreprise</a>
+						</li>
+					{% endif %}
+					<li class="breadcrumb-item active" aria-current="page">Documents</li>
+				</ol>
+			</nav>
+
 		<div class="container mt-5">
 			<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Documents à fournir pour la demande</h1>
 			<!-- Table des documents basés sur les modèles -->
@@ -109,17 +127,43 @@
 					{% endfor %}
 				</tbody>
 			</table>
+
 			<form method="post" class="d-flex justify-content-end gap-2 mt-4">
-				<button type="submit" name="action" value="save" class="btn btn-primary rounded-0">
-					Enregistrer
-				</button>
-				<button type="submit" name="action" value="cancel" class="btn btn-secondary rounded-0">
-					Annuler
-				</button>
-				<button type="submit" name="action" value="validate" class="btn btn-success rounded-0">
-					Valider
-				</button>
-			</form>
+			{% if request.status == 'Traitement du dossier' %}
+    <button type="submit" name="action" value="suivant"
+        class="btn text-white rounded-0"
+        style="background-color:#1E3A8A;">
+        Suivant
+    </button>
+{% endif %}
+
+
+
+    <button type="submit" name="action" value="save"
+        class="btn text-white rounded-0"
+        style="background-color:#1E3A8A;">
+        Enregistrer
+    </button>
+
+
+    <button type="submit" name="action" value="cancel"
+        class="btn text-white rounded-0"
+        style="background-color:#6B7280;">
+        Annuler
+    </button>
+
+    <button type="submit" name="action" value="validate"
+        class="btn text-white rounded-0"
+        style="background-color:#059669;">
+        Valider
+    </button>
+
+    <button type="submit" name="action" value="send"
+        class="btn text-white rounded-0"
+        style="background-color:#D97706;">
+        Envoyer
+    </button>
+</form>
 		</div>
 	</main>
 {% endblock %}

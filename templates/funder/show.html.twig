@@ -49,8 +49,10 @@
             </table>
 
             <div class="d-flex gap-2 mt-3">
-                <a href="{{ path('app_funder') }}" class="btn btn-secondary">Back</a>
-                <a href="{{ path('app_funder_edit', { id: funders.id }) }}" class="btn btn-warning">Edit</a>
+
+                <a href="{{ path('app_funder') }}" class="btn btn-secondary">Retour</a>
+                            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
+                <a href="{{ path('app_funder_edit', { id: funders.id }) }}" class="btn btn-warning">Modifier</a>
 
                 <form method="post"
                       action="{{ path('app_funder_delete', { id: funders.id }) }}"
@@ -58,6 +60,7 @@
                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ funders.id) }}">
                     <button class="btn btn-danger">Delete</button>
                 </form>
+                {% endif %}
             </div>
 
         </div>

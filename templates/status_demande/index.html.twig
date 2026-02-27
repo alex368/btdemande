@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Statut de la demande{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">
+        Statut de la demande
+    </h1>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            Changer le statut du dossier
+        </div>
+
+        <div class="card-body">
+            <form method="post"
+                  action="{{ path('app_status_demande', {
+                      id: fundingRequest.id,
+                      user: fundingRequest.user.id
+                  }) }}">
+
+                <div class="mb-3">
+                    <label class="form-label">Statut</label>
+                    <select class="form-select" name="status" id="status">
+                        <option value="Attente chargé d'affaires">
+                            Attente chargé d'affaires
+                        </option>
+                        <option value="Dossier clôturé">
+                            Dossier clôturé
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Bloc décision caché par défaut -->
+                <div class="mb-3 d-none" id="decision-block">
+                    <label class="form-label">Décision</label>
+                    <select class="form-select" name="decision">
+                        <option value="validate">Valider</option>
+                        <option value="refuse">Refuser</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Commentaire</label>
+                    <textarea class="form-control"
+                              name="comment"
+                              rows="3"
+                              placeholder="Ajouter un commentaire..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="submit"
+                            name="action"
+                            value="save"
+                            class="btn btn-primary">
+                        Enregistrer
+                    </button>
+
+                    <button type="submit"
+                            name="action"
+                            value="cancel"
+                            class="btn btn-secondary">
+                        Annuler
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const statusSelect = document.getElementById('status');
+    const decisionBlock = document.getElementById('decision-block');
+
+    function toggleDecision() {
+        if (statusSelect.value === 'Dossier clôturé') {
+            decisionBlock.classList.remove('d-none');
+        } else {
+            decisionBlock.classList.add('d-none');
+        }
+    }
+
+    // Vérifie au chargement
+    toggleDecision();
+
+    // Vérifie au changement
+    statusSelect.addEventListener('change', toggleDecision);
+</script>
+
+{% endblock %}

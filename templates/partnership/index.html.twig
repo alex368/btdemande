@@ -7,12 +7,12 @@
 	<div class="container mt-4">
 		<div class="text-end mb-3">
 			<a href="{{path('app_partnership_add')}}" class="btn btn-warning rounded-0">
-				Nouveau partenaire
+				Nouveau Partenaire
 			</a>
 
-			<a href="{{path('app_partnership_import')}}" class="btn btn-warning rounded-0">
+			{# <a href="{{path('app_partnership_import')}}" class="btn btn-warning rounded-0">
 				Import excel
-			</a>
+			</a> #}
 			<h1 class="mb-4">Liste des partenaires</h1>
 
 			<form method="get" class="row g-3 mb-4" action="{{ path('app_partnership') }}">
@@ -68,13 +68,9 @@
 								{{ p.fundingMechanism ? p.fundingMechanism.name : '-' }}
 							</td>
 							<td class="text-center">
-
+ {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
 								<a href="{{ path('app_partnership_edit', { id: p.id }) }}" class="btn btn-sm btn-outline-warning">
 									<i class="bi bi-pencil-square"></i>
-								</a>
-								<a href="{{ path('app_partnership_show', { id: p.id }) }}" class="btn btn-sm btn-info">
-									<i class="bi bi-eye"></i>
-
 								</a>
 								<form method="post" action="{{ path('app_partnership_delete', { id: p.id }) }}" style="display:inline-block" onsubmit="return confirm('Supprimer ce contact ?');">
 									<input type="hidden" name="_token" value="{{ csrf_token('delete-partnership-' ~ p.id) }}">
@@ -82,6 +78,14 @@
 										<i class="bi bi-trash"></i>
 									</button>
 								</form>
+								 {% endif %}
+								<a href="{{ path('app_partnership_show', { id: p.id }) }}" class="btn btn-sm btn-info">
+									<i class="bi bi-eye"></i>
+
+								</a>
+								
+
+
 							</td>
 						</tr>
 					{% else %}

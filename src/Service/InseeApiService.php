@@ -39,4 +39,27 @@ try {
             return null;
         }
     }
+
+
+    public function fetchCompanyBySiren(string $siren): ?array
+{
+    $url = "https://api.insee.fr/api-sirene/3.11/siren/" . $siren;
+
+    try {
+        $response = $this->client->request('GET', $url, [
+            'headers' => [
+                'X-INSEE-Api-Key-Integration' => $this->apiKey,
+                'Accept' => 'application/json',
+            ],
+        ]);
+
+        if ($response->getStatusCode() === 200) {
+            return $response->toArray(); // JSON décodé automatiquement
+        }
+
+        return null;
+    } catch (\Exception $e) {
+        return null;
+    }
+}
 }

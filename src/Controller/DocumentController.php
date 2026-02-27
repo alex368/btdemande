@@ -17,19 +17,21 @@ use Symfony\Component\Routing\Attribute\Route;
 final class DocumentController extends AbstractController
 {
 
-    #[Route('/documents/{id}', name: 'app_document_index', methods: ['GET', 'POST'])]
+    #[Route('/documents/{id}/{user}', name: 'app_document_index', methods: ['GET', 'POST'])]
     public function index(
         FundingRequest $fundingRequest,
         EntityManagerInterface $em,
         Request $request,
-        MailerService $mailerService
+        MailerService $mailerService,
+        int $id,
+        int $user
     ): Response {
         $userTest = $this->getUser(); // utilisateur connecté
 
         if ($request->isMethod('POST')) {
             $action = $request->request->get('action');
 
-            if ($action === 'validate') {
+            if ($action === 'send') {
                 $fundingRequest->setStatus('Attente client');
                 // 🔹 Mail aux utilisateurs de la société liée à la demande
                 $company = $fundingRequest->getCampany();
@@ -67,17 +69,26 @@ final class DocumentController extends AbstractController
                 return $this->redirectToRoute('app_dashboard');
             }
 
+            if ($action === 'suivant') {
+                return $this->redirectToRoute('app_status_demande', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
+            }
+
             if ($action === 'save') {
                 $fundingRequest->setStatus('En cours');
                 $em->flush();
 
-                return $this->redirectToRoute('app_document_index', [
-                    'id' => $fundingRequest->getId()
-                ]);
+                return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
             }
 
             if ($action === 'cancel') {
                 $fundingRequest->setStatus('En cours');
+                $em->flush();
+
+                return $this->redirectToRoute('app_dashboard');
+            }
+
+            if ($action === 'validate') {
+                $fundingRequest->setStatus('Traitement du dossier');
                 $em->flush();
 
                 return $this->redirectToRoute('app_dashboard');
@@ -114,6 +125,8 @@ final class DocumentController extends AbstractController
             'submitted' => $documentMap,
             'customs'   => $customDocuments,
             'test'      => $test,
+            'user'      => $user,
+            'campany'   => $fundingRequest->getCampany(),
         ]);
     }
 
@@ -226,7 +239,7 @@ final class DocumentController extends AbstractController
         $em->flush();
 
         $this->addFlash('success', 'Document supprimé.');
-        return $this->redirectToRoute('app_document_index', ['id' => $fundingRequestId]);
+        return $this->redirectToRoute('app_document_index', ['id' => $fundingRequestId, 'user' => $document->getFundingRequest()->getUser()->getId()]);
     }
 
     #[Route('/document/refuse/{id}', name: 'document_refuse')]
@@ -242,7 +255,7 @@ final class DocumentController extends AbstractController
 
 
         $this->addFlash('success', 'Document supprimé.');
-        return $this->redirectToRoute('app_document_index', ['id' => $fundingRequestId]);
+        return $this->redirectToRoute('app_document_index', ['id' => $fundingRequestId, 'user' => $document->getFundingRequest()->getUser()->getId()]);
     }
 
     #[Route('/document/validate/{id}', name: 'document_validate')]
@@ -258,7 +271,7 @@ final class DocumentController extends AbstractController
 
 
         $this->addFlash('success', 'Document supprimé.');
-        return $this->redirectToRoute('app_document_index', ['id' => $fundingRequestId]);
+        return $this->redirectToRoute('app_document_index', ['id' => $fundingRequestId, 'user' => $document->getFundingRequest()->getUser()->getId()]);
     }
 
 
@@ -305,8 +318,8 @@ final class DocumentController extends AbstractController
 
 
 
-       $fundingRequest = $em->getRepository(FundingRequest::class)->find($id);
-       $company = $fundingRequest->getCampany();
+        $fundingRequest = $em->getRepository(FundingRequest::class)->find($id);
+        $company = $fundingRequest->getCampany();
         $customer = $company->getCustomer();
 
         $users = [];
@@ -314,18 +327,18 @@ final class DocumentController extends AbstractController
         foreach ($customer as $client) {
             $users = $client;
         }
- 
+
 
         $userConnected = $this->getUser();
 
-        if( $userConnected !== $users) {
+        if ($userConnected !== $users) {
             $this->addFlash('error', 'Accès refusé aux documents de cette demande.');
             return $this->redirectToRoute('app_dashboard');
         }
 
 
 
-      
+
         if ($request->isMethod('POST')) {
             $action = $request->request->get('action');
 
@@ -365,7 +378,7 @@ final class DocumentController extends AbstractController
             $em->flush();
 
             $this->addFlash('success', 'Document personnalisé ajouté avec succès.');
-            return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId()]);
+            return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
         }
 
         return $this->render('document/add_custom.html.twig', [
@@ -374,6 +387,3 @@ final class DocumentController extends AbstractController
         ]);
     }
 }
-
-
-

@@ -165,13 +165,13 @@ class ContactType extends AbstractType
             ])
 
             // ENTREPRISE
-            ->add('campany', EntityType::class, [
-                'class' => Campany::class,
-                'choice_label' => 'legalName',
-                'required' => false,
-                'placeholder' => 'Sélectionner une entreprise',
-                'attr' => ['class' => 'form-select']
-            ])
+            // ->add('campany', EntityType::class, [
+            //     'class' => Campany::class,
+            //     'choice_label' => 'legalName',
+            //     'required' => false,
+            //     'placeholder' => 'Sélectionner une entreprise',
+            //     'attr' => ['class' => 'form-select']
+            // ])
 
             // SITE WEB
             ->add('website', TextType::class, [

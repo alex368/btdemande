@@ -28,8 +28,7 @@ class FundingMechanismType extends AbstractType
     'choices' => [
         'Public' => 'public',
         'Private' => 'private',
-        'NGO' => 'ngo',
-        'Banking' => 'banking',
+        'Association' => 'Association',
         'Other' => 'other',
     ],
     'placeholder' => 'Choose a sector',
@@ -47,6 +46,8 @@ class FundingMechanismType extends AbstractType
         'Banque' => 'banque',
         'Concours' => 'concours',
         'ONG' => 'ngo',
+        'Incubateur' => 'incubateur',
+        'Investisseur' => 'investisseur',
     ],
     'placeholder' => 'Choisir un type',
     'attr' => [

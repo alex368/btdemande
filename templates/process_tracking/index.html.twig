@@ -66,20 +66,15 @@
 										{% endif %}
 									</div>
 								</div>
-
-								{# bouton bien en dehors de la timeline #}
 								{% if requests is not empty and request.status == 'Attente client' %}
 									<a class="btn btn-custom w-100" href="{{ path('client_documents', { id: request.id }) }}">
 										Faire ma demande
 									</a>
-								{% elseif requests is not empty and request.status == 'Retour client' %}
+								{% elseif requests is not empty and request.status == 'Retour client' or request.status == 'Traitement du dossier' or request.status == 'Attente chargé d\'affaires' or request.status == 'Dossier cloturé' %}
 									<a class="btn btn-custom w-100" href="{{ path('client_request_tracking', { id: request.id }) }}">
 										Suivre ma demande
 									</a>
-
 								{% endif %}
-
-
 							</div>
 						</div>
 					{% endfor %}

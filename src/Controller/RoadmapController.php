@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\Campany;
 use App\Entity\Roadmap;
-use App\Entity\User;
 use App\Form\MultiroadmapType;
 use App\Form\RoadmapType;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,47 +14,36 @@ use Symfony\Component\Routing\Attribute\Route;
 use App\Service\QuarterService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
-use Knp\Snappy\Pdf as SnappyPdf;
-use PhpOffice\PhpSpreadsheet\Writer\Pdf;
 
 final class RoadmapController extends AbstractController
 {
 
 
-    #[Route('/roadmap/{id}', name: 'app_roadmap')]
-    public function index(EntityManagerInterface $em, QuarterService $quarterService, int $id): Response
+    #[Route('/roadmap/{id}/{user}', name: 'app_roadmap')]
+    public function index(EntityManagerInterface $em, QuarterService $quarterService, int $id,$user): Response
     {
-
-
         $campany = $em->getRepository(Campany::class)->findOneById($id);
+
+        if (!$campany) {
+            throw $this->createNotFoundException("Entreprise #{$id} introuvable.");
+        }
 
         $roadmaps = $em->getRepository(Roadmap::class)->findBy(
             ['campany' => $campany],
-            ['date' => 'ASC'] // tri croissant
+            ['date' => 'ASC']
         );
 
-
-        // On prépare un tableau enrichi avec trimestre
-        $roadmapsWithQuarter = [];
-
-        foreach ($roadmaps as $roadmap) {
-            $roadmapsWithQuarter[] = [
-                'entity'   => $roadmap,
-                'quarter'  => $quarterService->getQuarter($roadmap->getDate()),
-            ];
-        }
-
-
         return $this->render('roadmap/index.html.twig', [
-            'user' => $campany,
-            'roadmaps' => $roadmapsWithQuarter,
+            'campanies' => $campany,
+            'roadmaps'  => $this->buildRoadmapsWithQuarter($roadmaps, $quarterService),
+            'user'      => $user,
         ]);
     }
 
 
 
-    #[Route('/roadmap/new/{id}', name: 'app_new_roadmap')]
-    public function multiRoadmap(Request $request, EntityManagerInterface $em, int $id): Response
+    #[Route('/roadmap/new/{id}/{user}', name: 'app_new_roadmap')]
+    public function multiRoadmap(Request $request, EntityManagerInterface $em, int $id,int $user): Response
     {
         // Récupère l'utilisateur par l'ID
         $campany = $em->getRepository(Campany::class)->find($id);
@@ -78,7 +66,6 @@ final class RoadmapController extends AbstractController
 
             foreach ($submittedRoadmaps as $roadmap) {
                 if ($roadmap instanceof Roadmap) {
-                    // 🔥 On lie la roadmap à l'utilisateur
                     $roadmap->setCampany($campany);
 
                     $em->persist($roadmap);
@@ -89,124 +76,125 @@ final class RoadmapController extends AbstractController
 
             $this->addFlash('success', 'Les roadmaps ont été enregistrées avec succès !');
 
-            return $this->redirectToRoute('app_roadmap', ['id' => $campany->getId()]);
+            return $this->redirectToRoute('app_roadmap', ['id' => $campany->getId(), 'user' => $user]);
         }
 
         return $this->render('roadmap/add.html.twig', [
             'form' => $form->createView(),
-            'user' => $campany
+            'campany' => $campany,
+            'user' => $user,
         ]);
     }
 
     #[Route('/roadmap/edit/{id}', name: 'app_edit_roadmap')]
-public function edit(
-    int $id,
-    Request $request,
-    EntityManagerInterface $em
-): Response
-{
-    $roadmap = $em->getRepository(Roadmap::class)->find($id);
+    public function edit(int $id, Request $request, EntityManagerInterface $em): Response
+    {
+        $roadmap = $em->getRepository(Roadmap::class)->find($id);
 
-    if (!$roadmap) {
-        throw $this->createNotFoundException("Roadmap introuvable");
-    }
+        if (!$roadmap) {
+            throw $this->createNotFoundException("Roadmap introuvable");
+        }
 
-    // Création du formulaire RoadmapType
-    $form = $this->createForm(RoadmapType::class, $roadmap);
+        $form = $this->createForm(RoadmapType::class, $roadmap);
 
-    $form->handleRequest($request);
+        $form->handleRequest($request);
 
-    if ($form->isSubmitted() && $form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
 
-        $em->flush();
+            $this->addFlash('success', 'Roadmap modifiée avec succès !');
 
-        $this->addFlash('success', 'Roadmap modifiée avec succès !');
+            /** @var \App\Entity\User $currentUser */
+            $currentUser = $this->getUser();
 
-        // Redirection vers la fiche entreprise de l'utilisateur
-        return $this->redirectToRoute('app_roadmap', [
-            'id' => $roadmap->getCampany()->getId()
+            return $this->redirectToRoute('app_roadmap', [
+                'id'   => $roadmap->getCampany()->getId(),
+                'user' => $currentUser->getId(),
+            ]);
+        }
+
+        return $this->render('roadmap/edit.html.twig', [
+            'form'    => $form->createView(),
+            'roadmap' => $roadmap,
         ]);
     }
 
-    return $this->render('roadmap/edit.html.twig', [
-        'form' => $form->createView(),
-        'roadmap' => $roadmap,
-    ]);
-}
+    #[Route('/roadmap/delete/{id}', name: 'app_delete_roadmap', methods: ['POST'])]
+    public function delete(int $id, Request $request, EntityManagerInterface $em): Response
+    {
+        $roadmap = $em->getRepository(Roadmap::class)->find($id);
 
-#[Route('/roadmap/delete/{id}', name: 'app_delete_roadmap', methods: ['GET'])]
-public function delete(int $id, EntityManagerInterface $em): Response
-{
-    $roadmap = $em->getRepository(Roadmap::class)->find($id);
+        if (!$roadmap) {
+            throw $this->createNotFoundException("Roadmap introuvable.");
+        }
 
-    if (!$roadmap) {
-        throw $this->createNotFoundException("Roadmap introuvable.");
+        if (!$this->isCsrfTokenValid('delete_roadmap_' . $id, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
+        }
+
+        $campanyId = $roadmap->getCampany()->getId();
+
+        $em->remove($roadmap);
+        $em->flush();
+
+        $this->addFlash('success', 'Roadmap supprimée avec succès.');
+
+        /** @var \App\Entity\User $currentUser */
+        $currentUser = $this->getUser();
+
+        return $this->redirectToRoute('app_roadmap', [
+            'id'   => $campanyId,
+            'user' => $currentUser->getId(),
+        ]);
     }
 
-    $userId = $roadmap->getCampany()->getId();
+    #[Route('/roadmap/{id}/export', name: 'app_roadmap_export')]
+    public function exportRoadmap(EntityManagerInterface $em, QuarterService $quarterService, int $id): Response
+    {
+        $campany = $em->getRepository(Campany::class)->find($id);
 
-    $em->remove($roadmap);
-    $em->flush();
+        if (!$campany) {
+            throw $this->createNotFoundException("Entreprise #{$id} introuvable.");
+        }
 
-    $this->addFlash('success', 'Roadmap supprimée avec succès.');
+        $roadmaps = $em->getRepository(Roadmap::class)->findBy(
+            ['campany' => $campany],
+            ['date' => 'ASC']
+        );
 
-    return $this->redirectToRoute('app_roadmap', ['id' => $userId]);
-}
+        $html = $this->renderView('roadmap/export.html.twig', [
+            'user'     => $campany,
+            'roadmaps' => $this->buildRoadmapsWithQuarter($roadmaps, $quarterService),
+        ]);
 
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->setIsRemoteEnabled(true);
 
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
 
-#[Route('/roadmap/{id}/export', name: 'app_roadmap_export')]
-public function exportRoadmap(
-    EntityManagerInterface $em,
-    QuarterService $quarterService,
-    int $id
-): Response {
-    $campany = $em->getRepository(Campany::class)->find($id);
-
-    $roadmaps = $em->getRepository(Roadmap::class)->findBy(
-        ['campany' => $campany],
-        ['date' => 'ASC']
-    );
-
-    $roadmapsWithQuarter = [];
-    foreach ($roadmaps as $roadmap) {
-        $roadmapsWithQuarter[] = [
-            'entity'  => $roadmap,
-            'quarter' => $quarterService->getQuarter($roadmap->getDate()),
-        ];
+        return new Response(
+            $dompdf->output(),
+            200,
+            [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="roadmap.pdf"',
+            ]
+        );
     }
 
-    // Générer le HTML à partir de Twig
-    $html = $this->renderView('roadmap/export.html.twig', [
-        'user' => $campany,
-        'roadmaps' => $roadmapsWithQuarter,
-    ]);
-
-
-
-$options = new Options();
-$options->set('defaultFont', 'DejaVu Sans');
-$options->setIsRemoteEnabled(true); // Important si tu utilises des images ou CSS externes
-
-$dompdf = new Dompdf($options);
-$dompdf->loadHtml($html);
-$dompdf->setPaper('A4', 'portrait');
-$dompdf->render();
-
-    $dompdf = new Dompdf($options);
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4', 'portrait');
-    $dompdf->render();
-
-    return new Response(
-        $dompdf->output(),
-        200,
-        [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="roadmap.pdf"',
-        ]
-    );
-}
-
-
+    private function buildRoadmapsWithQuarter(array $roadmaps, QuarterService $quarterService): array
+    {
+        $result = [];
+        foreach ($roadmaps as $roadmap) {
+            $result[] = [
+                'entity'  => $roadmap,
+                'quarter' => $quarterService->getQuarter($roadmap->getDate()),
+            ];
+        }
+        return $result;
+    }
 }

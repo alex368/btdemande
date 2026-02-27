@@ -208,7 +208,7 @@
 						<td>{{ contact.occupation ?: '-' }}</td>
 					</tr>
 
-					<tr>
+					{# <tr>
 						<th class="text-muted">Entreprise</th>
 						<td>
 							{% if contact.campany %}
@@ -218,7 +218,7 @@
 								<em>-</em>
 							{% endif %}
 						</td>
-					</tr>
+					</tr> #}
 
 				</table>
 
@@ -249,6 +249,79 @@
 			</div>
 		</div>
 
+{# ===================== ENTREPRISE ===================== #}
+
+		<div class="card mb-4 shadow-sm">
+			<div class="card-header d-flex justify-content-between align-items-center bg-danger text-white fw-bold">
+				<span>
+					<i class="bi bi-bullseye me-2"></i>
+					Entreprise</span>
+    <a href="{{ path('app_campany_contact_create', { id: contact.id }) }}"
+   class="btn btn-light btn-sm">
+    <i class="bi bi-plus-circle"></i> Ajouter
+</a>
+			</div>
+
+    <div class="card-body">
+   
+        {% if campanies is empty %}
+    <p class="text-muted">Aucune entreprise associée.</p>
+{% else %}
+   <ul class="list-group">
+    {% for campany in campanies %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+
+            <div>
+                <strong>{{ campany.legalName }}</strong>
+                {% if campany.siren %}
+                    <div class="text-muted small">
+                        SIREN : {{ campany.siren }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex gap-2">
+
+                {# Voir #}
+                <a href="{{ path('app_campany_contact_show', { id: campany.id }) }}"
+                   class="btn btn-sm btn-outline-info"
+                   title="Voir">
+                    <i class="bi bi-eye"></i>
+                </a>
+
+                {# Modifier #}
+                <a href="{{ path('app_campany_contact_edit', { id: campany.id }) }}"
+                   class="btn btn-sm btn-outline-warning"
+                   title="Modifier">
+                    <i class="bi bi-pencil-square"></i>
+                </a>
+
+                {# Supprimer #}
+                <form method="post"
+                      action="{{ path('app_campany_contact_delete', { id: campany.id }) }}"
+                      onsubmit="return confirm('Supprimer cette entreprise ?');">
+
+                    <input type="hidden"
+                           name="_token"
+                           value="{{ csrf_token('delete-campany-' ~ campany.id) }}">
+
+                    <button class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
+
+            </div>
+        </li>
+    {% else %}
+        <li class="list-group-item text-muted">
+            Aucune entreprise associée.
+        </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+    </div>
+</div>
 
 		{# ===================== OPPORTUNITÉS ===================== #}
 		<div class="card mb-4 shadow-sm">
@@ -522,7 +595,7 @@
 			<div class="card-body">
 
 				{% if quotes is empty %}
-					<p class="text-muted mb-0">Aucun devis.</p>
+					<p class="text-muted mb-0">Aucune discution.</p>
 				{% else %}
 					<ul class="list-group list-group-flush">
 
@@ -581,5 +654,53 @@
 
 	</div>
 
+{# <tr>
+    <th class="text-muted">Entreprise</th>
+    <td>
+        {% if contact.campany %}
+            <i class="bi bi-building me-1"></i>
+            {{ contact.campany.legalName }}
 
+        {% elseif contact.campany is not null and contact.campany.siren is not empty %}
+            <button type="button"
+                    class="btn btn-sm btn-outline-primary ms-2"
+                    onclick="createCampany('{{ contact.campany.siren }}')">
+                <i class="bi bi-cloud-download"></i>
+                Importer depuis INSEE
+            </button>
+
+        {% else %}
+            <span class="text-muted">
+                <i class="bi bi-exclamation-circle me-1"></i>
+                Aucun SIREN renseigné
+            </span>
+        {% endif %}
+    </td>
+</tr> #}
+
+<script>
+function createCampany(siren) {
+
+    if (!siret || siret.length !== 14) {
+        alert('SIRET invalide (14 chiffres requis).');
+        return;
+    }
+
+    fetch('/campany/create-from-siren/' + siren, {
+        method: 'GET'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Entreprise créée : ' + data.legalName);
+            location.reload();
+        } else {
+            alert(data.error || 'Erreur lors de la création.');
+        }
+    })
+    .catch(() => {
+        alert('Erreur serveur.');
+    });
+}
+</script>
 {% endblock %}

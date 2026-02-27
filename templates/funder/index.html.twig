@@ -42,11 +42,16 @@
 						<td>
 							<div class="d-inline-flex gap-2">
 
-								<a href="{{ path('app_funder_show', { id: f.id }) }}" class="btn btn-sm btn-info">
+								
+
+								{% if is_granted('ROLE_CUSTOMER') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_ADMIN') %}
+<a href="{{ path('app_funder_show', { id: f.id }) }}" class="btn btn-sm btn-info">
 									Voir
 								</a>
+{% endif %}
 
-								<a href="{{ path('app_funder_edit', { id: f.id }) }}" class="btn btn-sm btn-warning">
+{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
+ 	<a href="{{ path('app_funder_edit', { id: f.id }) }}" class="btn btn-sm btn-warning">
 									Éditer
 								</a>
 
@@ -57,8 +62,11 @@
 									<button class="btn btn-sm btn-danger">
 										Supprimer
 									</button>
-								</form>
 
+
+							
+								</form>
+{% endif %}
 							</div>
 						</td>
 					</tr>

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Activity;
+use App\Entity\Campany;
 use App\Entity\Contact;
 use App\Entity\Opportunity;
 use App\Entity\Quote;
@@ -12,12 +13,15 @@ use App\Form\ContactType;
 use App\Form\ImportContactsType;
 use App\Form\OpportunityType;
 use App\Repository\ContactRepository;
+use App\Service\CampanyCreatorService;
 use App\Service\ContactConverterService;
 use Doctrine\ORM\EntityManagerInterface;
+use Google\Service\AndroidProvisioningPartner\Company;
 use Knp\Component\Pager\PaginatorInterface;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -122,11 +126,14 @@ final class ContactController extends AbstractController
     public function show(Contact $contact): Response
     {
 
+
         return $this->render('contact/show.html.twig', [
             'contact' => $contact,
             'opportunities' => $contact->getOpportunity(),
             'activities' => $contact->getActivities(),
             'quotes' => $contact->getQuotes(),
+            'campanies' => $contact->getCampanyContacts(),
+           
         ]);
     }
 
@@ -244,7 +251,6 @@ final class ContactController extends AbstractController
             'form' => $form->createView(),
         ]);
     }
-
 #[Route('/contact/{id}/convert-user', name: 'contact_convert_user')]
 public function convertToUser(
     Contact $contact,
@@ -252,46 +258,139 @@ public function convertToUser(
     UserPasswordHasherInterface $passwordHasher
 ): Response {
 
-    // Vérifier qu'un User n'existe pas déjà
-    if (!empty($contact->getEmail()) && is_array($contact->getEmail())) {
+    // Vérifier email existant
+    if ($contact->getEmail()) {
+
         $existing = $em->getRepository(User::class)->findOneBy([
-            'email' => $contact->getEmail()[0]
+            'email' => $contact->getEmail()
         ]);
 
         if ($existing) {
             $this->addFlash('warning', 'Un utilisateur existe déjà pour cet email.');
-            return $this->redirectToRoute('app_contact_show', ['id' => $contact->getId()]);
+            return $this->redirectToRoute('app_contact_show', [
+                'id' => $contact->getId()
+            ]);
         }
     }
 
-    // 1️⃣ Créer un User à partir du Contact
+    // 1️⃣ Création User
     $user = $contact->toUser();
 
-    // 2️⃣ Mot de passe réel
     $hashedPassword = $passwordHasher->hashPassword($user, 'ChangeMe123!');
     $user->setPassword($hashedPassword);
 
-    // 3️⃣ Lier Contact → User si la méthode existe
-    if (method_exists($user, 'setContact')) {
-        $user->setContact($contact);
+    $contact->setAccount($user);
+
+    // 2️⃣ Création Campany(s) via CampanyContact
+    foreach ($contact->getCampanyContacts() as $campanyContact) {
+
+        $campany = new Campany();
+
+        $campany->setLegalName($campanyContact->getLegalName());
+        $campany->setProjetName($campanyContact->getProjectName());
+        $campany->setSiren($campanyContact->getSiren());
+        $campany->setSector($campanyContact->getSector());
+        $campany->setAdress($campanyContact->getAdress());
+        $campany->setCreationDate($campanyContact->getCreationDate());
+        $campany->setStage($campanyContact->getStage());
+        $campany->setLogo($campanyContact->getLogo());
+
+        // 🔥 Liaison ManyToMany propre
+        $user->addCampany($campany);
+
+        $em->persist($campany);
     }
 
-    // 4️⃣ Persister et flush pour créer l'user (accountId du user est déjà positionné dans toUser())
     $em->persist($user);
     $em->flush();
 
-    //assignation du CRM
-    $contact->setAccount($user);
-    $em->flush();
-   
-
-    $this->addFlash('success', 'Le contact a été converti en utilisateur !');
+    $this->addFlash('success', 'Le contact a été converti en utilisateur.');
 
     return $this->redirectToRoute('app_contact_show', [
-        'id' => $contact->getId(),
+        'id' => $contact->getId()
+    ]);
+}
+
+  #[Route('/campany/create', name: 'campany_create', methods: ['POST'])]
+    public function create(
+        Request $request,
+        CampanyCreatorService $creator
+    ): JsonResponse {
+
+        $data = json_decode($request->getContent(), true);
+
+        if (empty($data['legalName']) || empty($data['siren'])) {
+            return new JsonResponse([
+                'error' => 'legalName et siren sont obligatoires'
+            ], 400);
+        }
+
+        $campany = $creator->createFromArray($data);
+
+        return new JsonResponse([
+            'success' => true,
+            'id' => $campany->getId(),
+            'legalName' => $campany->getLegalName()
+        ]);
+    }
+
+
+
+
+
+
+#[Route('/campany/create-from-siret/{siret}', name: 'campany_create_siret', methods: ['GET'])]
+public function createFromSiret(
+    string $siret,
+    CampanyCreatorService $creator
+): JsonResponse {
+    if (strlen($siret) !== 14) {
+        return new JsonResponse([
+            'error' => 'SIRET invalide (14 chiffres requis)'
+        ], 400);
+    }
+
+
+    
+    $campany = $creator->createFromSiret($siret);
+
+    if (!$campany) {
+        return new JsonResponse([
+            'error' => 'Entreprise non trouvée via INSEE'
+        ], 404);
+    }
+    return new JsonResponse([
+        'success' => true,
+        'id' => $campany->getId(),
+        'legalName' => $campany->getLegalName()
     ]);
 }
 
 
+#[Route('/campany/create-from-siren/{siren}', name: 'campany_create_siren', methods: ['GET'])]
+public function createFromSiren(
+    string $siren,
+    CampanyCreatorService $creator
+): JsonResponse {
+
+
+ 
+    $campany = $creator->createFromSiren($siren);
+
+    dd($campany);
+
+    if (!$campany) {
+        return new JsonResponse([
+            'error' => 'Entreprise non trouvée ou SIREN invalide'
+        ], 404);
+    }
+
+    return new JsonResponse([
+        'success' => true,
+        'id' => $campany->getId(),
+        'legalName' => $campany->getLegalName(),
+        'siren' => $campany->getSiren()
+    ]);
+}
 
 }

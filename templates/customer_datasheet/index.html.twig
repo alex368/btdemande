@@ -6,13 +6,28 @@
 {% block body %}
 	<main class="col-md-12 col-lg-12 p-2">
 		<!-- Contenu principal à gauche -->
-
+				<nav aria-label="breadcrumb">
+				<ol class="breadcrumb">
+					{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
+						<li class="breadcrumb-item">
+							<a href="{{ path('app_customer_portal')}}">Portail</a>
+							
+						</li>
+						{% elseif is_granted('ROLE_CUSTOMER') %}
+						<li class="breadcrumb-item">
+							<a href="#">Entreprise</a>
+						</li>
+					{% endif %}
+					<li class="breadcrumb-item active" aria-current="page">Entreprise</li>
+				</ol>
+			</nav>
 		<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Entreprise</h1>
 		<div class="container ">
 			<div class="text-end mb-3">
 				<a href="{{path('app_campany_create',{id:users.id})}}" class="btn btn-warning rounded-0">
 					Nouvelle entreprise
 				</a>
+	
 			</div>
 
 			<div class="d-flex justify-content-between align-items-center mb-4 mt-5"></div>

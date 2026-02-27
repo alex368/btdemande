@@ -15,6 +15,7 @@
 				</form>
 			</div>
 
+
 			{{ form_start(form) }}
 
 			{# Chaque champ avec un id explicite #}
@@ -32,12 +33,12 @@
 			<div class="mb-3">
 				{{ form_label(form.logo, 'Logo', {'label_attr': {'for': form.logo.vars.id}}) }}
 				{{ form_widget(form.logo, {
-        'attr': {
-            'id': form.logo.vars.id,
-            'class': 'form-control',
-            'accept': 'image/*'
-        }
-    }) }}
+					'attr': {
+						'id': form.logo.vars.id,
+						'class': 'form-control',
+						'accept': 'image/*'
+					}
+				}) }}
 				{{ form_errors(form.logo) }}
 			</div>
 
@@ -71,6 +72,12 @@
 				<i class="bi bi-check2-circle me-1"></i>
 				Save
 			</button>
+
+<button type="button" class="btn btn-secondary mt-3" onclick="history.back();">
+    <i class="bi bi-arrow-left-circle me-1"></i>
+    Retour
+</button>
+
 
 			{{ form_end(form) }}
 		</div>

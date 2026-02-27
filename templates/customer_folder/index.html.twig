@@ -30,15 +30,17 @@
                                         </thead>
 
                                         <tbody> 
+                                            {%if findRequest is not empty %}
                                          {% for find in findRequest %}
                                             <tr>                                                                          
                                                 <td>{{find.campany.legalName}}</td>
                                                 <td>{{find.amount}} euros</td>
                                                 <td>{{find.product.name}}</td>
                                                 <td>{{find.status}}</td>
-                                                <td class="text-center"><a href="{{ path('app_document_index', { id: find.id }) }}" class="bi bi-chevron-right"></a></td>                                        
+                                                <td class="text-center"><a href="{{ path('app_document_index', { id: find.id, user: campanyId}) }}" class="bi bi-chevron-right"></a></td>                                        
                                             </tr>
                                                {% endfor %}
+                                            {% endif %}
                                         </tbody>
                                     </table>
                                 </div>

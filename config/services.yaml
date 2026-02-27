@@ -3,6 +3,8 @@ parameters:
     logos_directory: '%kernel.project_dir%/public/uploads/logos'
     documents_path: '%kernel.project_dir%/var/documents'
     app.docs_directory: '%env(resolve:UPLOAD_DIR)%'
+    UPLOAD_DIR_rag: '%kernel.project_dir%/public/uploads/documents'
+
 
     gmail_credentials_path: '%kernel.project_dir%/config/google/credentials.json'
     gmail_token_path: '%kernel.project_dir%/config/google/token.json'
@@ -29,6 +31,14 @@ services:
             $credentialsPath: '%gmail_credentials_path%'
             $tokenPath: '%gmail_token_path%'
 
+
+    App\Command\RdvStartupCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    
+    App\Service\DocumentRagStrictQaService:
+
     App\Service\GmailService:
         arguments:
             $credentialsPath: '%gmail_credentials_path%'
@@ -39,6 +49,16 @@ services:
             $docsDirectory: '%app.docs_directory%'  
             $openAiApiKey: '%env(OPENAI_API_KEY)%'
 
+
+    # --- Ollama Embeddings (LLPhant) ---
+    App\Service\ServiceOllamaEmbeddingGenerator:
+        arguments:
+            $baseUrl: '%env(resolve:OLLAMA_BASE_URL)%'
+            $model: '%env(resolve:OLLAMA_EMBED_MODEL)%'
+            $embeddingLength: '%env(int:OLLAMA_EMBED_DIM)%'
+
+    
+    LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface: '@App\Service\ServiceOllamaEmbeddingGenerator'
 
     App\Schedule\GmailSchedule:
         tags: ['schedule.provider']

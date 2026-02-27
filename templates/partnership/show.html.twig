@@ -128,40 +128,26 @@
 					<tr>
 						<th class="text-muted">Réseaux sociaux</th>
 						<td>
-							{% for s in partnership.linkedin %}
-								{% set url = s starts with 'http' ? s : 'https://' ~ s %}
-								<div
-									class="mb-1">
+						
+							{% if partnership.linkedin is not empty %}
 
-									{# Auto-detection icône #}
-									{% set icon = 'bi-link-45deg' %}
-									{% if 'linkedin' in s %}
-										{% set icon = 'bi-linkedin' %}
-									{% endif %}
-									{% if 'facebook' in s %}
-										{% set icon = 'bi-facebook' %}
-									{% endif %}
-									{% if 'instagram' in s %}
-										{% set icon = 'bi-instagram' %}
-									{% endif %}
-									{% if 'twitter' in s or 'x.com' in s %}
-										{% set icon = 'bi-twitter-x' %}
-									{% endif %}
-									{% if 'youtube' in s %}
-										{% set icon = 'bi-youtube' %}
-									{% endif %}
-									{% if 'tiktok' in s %}
-										{% set icon = 'bi-tiktok' %}
-									{% endif %}
+    {% set clean = partnership.linkedin|trim %}
 
-									<i class="bi {{ icon }} me-1"></i>
-									<a href="{{ s }}" target="_blank" rel="noopener noreferrer">
-										{{ s }}
-									</a>
-								</div>
-							{% else %}
-								<em>Aucun</em>
-							{% endfor %}
+    {% if clean starts with 'http://' or clean starts with 'https://' %}
+        {% set url = clean %}
+    {% else %}
+        {% set url = 'https://' ~ clean %}
+    {% endif %}
+
+    <div class="mb-1">
+        <a href="{{ url }}" target="_blank" rel="noopener noreferrer">
+            {{ clean }}
+        </a>
+    </div>
+
+{% else %}
+    <em>Aucun</em>
+{% endif %}
 						</td>
 					</tr>
 
@@ -196,7 +182,7 @@
 						<i class="bi bi-arrow-left"></i>
 						Retour
 					</a>
-
+ {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
 					<a href="{{ path('app_partnership_edit', {id: partnership.id}) }}" class="btn btn-warning">
 						<i class="bi bi-pencil-square"></i>
 						Modifier
@@ -212,6 +198,7 @@
 							Supprimer
 						</button>
 					</form>
+					{% endif %}
 				</div>
 
 			</div>

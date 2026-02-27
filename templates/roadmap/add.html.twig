@@ -4,6 +4,23 @@
 
 {% block body %}
 <main class="col-md-12 col-lg-12 p-2">
+		<nav aria-label="breadcrumb">
+				<ol class="breadcrumb">
+					{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
+						<li class="breadcrumb-item">
+							<a href="{{ path('app_campany',{id:campany.id, user})}}">Entreprise</a>
+							
+						</li>
+						{% elseif is_granted('ROLE_CUSTOMER') %}
+						<li class="breadcrumb-item">
+							<a href="#">Entreprise</a>
+						</li>
+					{% endif %}
+					<li class="breadcrumb-item active" aria-current="page">Roadmap</li>
+				</ol>
+			</nav>
+
+      
   <h1 class="mb-4">Créer plusieurs Roadmaps</h1>
 
   {{ form_start(form) }}

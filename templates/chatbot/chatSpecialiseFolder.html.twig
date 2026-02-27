@@ -1,0 +1,272 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Assistant Chat{% endblock %}
+
+{% block body %}
+<style>
+  .chat-container { height: 105vh; display: flex; flex-direction: column; }
+  .chat-header { padding: 1rem 1.5rem; border-bottom: 1px solid #dee2e6; background: #fff; }
+  .chat-messages { flex-grow: 1; overflow-y: auto; padding: 1rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; background: #f8f9fa; }
+  .chat-message { max-width: 75%; padding: 0.75rem 1rem; border-radius: 20px; word-break: break-word; line-height: 1.35; }
+  .chat-message.assistant { background-color: #166a5d; color: white; border-bottom-right-radius: 0; align-self: flex-start; }
+  .chat-message.user { background-color: #198754; color: white; border-bottom-left-radius: 0; align-self: flex-end; }
+  .chat-input { padding: 1rem 1.5rem; border-top: 1px solid #dee2e6; background: #fff; }
+
+  .chat-message.assistant p { margin: 0 0 0.6rem 0; }
+  .chat-message.assistant p:last-child { margin-bottom: 0; }
+  .chat-message.assistant ul { margin: 0.5rem 0 0.5rem 1.2rem; }
+  .chat-message.assistant code { background: rgba(0,0,0,0.15); padding: 2px 6px; border-radius: 8px; color: #fff; }
+  .chat-message.assistant pre { background: rgba(0,0,0,0.18); padding: 10px 12px; border-radius: 12px; overflow-x: auto; margin: 0.6rem 0; }
+
+  /* Panel dossier */
+  .ai-panel { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,0.14); border: 1px solid rgba(255,255,255,0.18); }
+  .ai-panel h6 { margin: 0 0 8px 0; font-weight: 700; font-size: 0.95rem; }
+  .ai-panel .dossier-grid { display: grid; gap: 6px; margin-top: 8px; }
+  .ai-panel .dossier-item { padding: 8px 10px; border-radius: 10px; background: rgba(0,0,0,0.14); border: 1px solid rgba(255,255,255,0.12); font-size: 0.88rem; }
+  .ai-panel .dossier-item b { font-weight: 700; display: block; margin-bottom: 2px; opacity: 0.8; }
+  .ai-panel .dossier-item.not-found { opacity: 0.5; font-style: italic; }
+
+  /* Mode selector */
+  .mode-selector { display: flex; gap: 6px; margin-bottom: 8px; }
+  .mode-btn { padding: 4px 12px; border-radius: 999px; border: 1px solid #dee2e6; background: #fff; font-size: 0.85rem; cursor: pointer; transition: all .15s; }
+  .mode-btn.active { background: #166a5d; color: #fff; border-color: #166a5d; }
+
+  /* Pages badge */
+  .pages-badge { display: inline-block; margin-top: 6px; font-size: 0.78rem; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,0.18); }
+</style>
+	<nav aria-label="breadcrumb">
+				<ol class="breadcrumb">
+					{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
+						<li class="breadcrumb-item">
+							<a href="{{ path('app_campany', {id: campanyId, user: userId})}}">Entreprise</a>
+							
+						</li>
+						{% elseif is_granted('ROLE_CUSTOMER') %}
+						<li class="breadcrumb-item">
+							<a href="#">Chat</a>
+						</li>
+					{% endif %}
+					<li class="breadcrumb-item active" aria-current="page">Chat</li>
+				</ol>
+			</nav>
+
+
+<div class="col-lg-12 chat-container" id="chat-root">
+  <div class="chat-header">
+    <h2 class="fw-bold mb-0 d-flex align-items-center">
+      Assistant <span class="badge bg-warning text-dark ms-2">Bêta</span>
+    </h2>
+    <p class="text-muted mb-0">Pose ta question ou analyse le dossier complet.</p>
+  </div>
+
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-message assistant">
+      Bonjour. Choisis un mode et pose ta question.
+    </div>
+  </div>
+
+  <div class="chat-input">
+    <!-- Sélecteur de mode -->
+    <div class="mode-selector">
+      <button type="button" class="mode-btn active" data-mode="simple">Question simple</button>
+      <button type="button" class="mode-btn" data-mode="dossier">Analyse dossier</button>
+      <button type="button" class="mode-btn" data-mode="libre">Question libre</button>
+    </div>
+
+    <form id="chat-form" class="d-flex align-items-center w-100 gap-2 flex-nowrap">
+      <input
+        type="text"
+        name="question"
+        class="form-control rounded-0 px-4"
+        placeholder="Pose ta question ici..."
+        autocomplete="off"
+      >
+      <button
+        type="submit"
+        class="btn btn-primary rounded-0 d-flex align-items-center justify-content-center"
+        style="width: 48px; height: 48px;"
+        aria-label="Envoyer"
+      >
+        <i class="bi bi-send-fill"></i>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const form             = document.getElementById("chat-form");
+  const input            = form.querySelector("input[name='question']");
+  const messagesContainer = document.getElementById("chat-messages");
+  const modeBtns         = document.querySelectorAll(".mode-btn");
+
+  const CUSTOMER_ID = {{ contactId is defined ? contactId|json_encode|raw : 'null' }};
+  const ENDPOINT    = CUSTOMER_ID ? `/api/chat-ai/customer/${CUSTOMER_ID}` : "/api/chat-ai";
+
+  let currentMode = "simple";
+
+  // ── Sélecteur de mode ──────────────────────────────────────────────────────
+  modeBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      modeBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentMode = btn.dataset.mode;
+
+      // En mode dossier, la question n'est pas nécessaire
+      if (currentMode === "dossier") {
+        input.placeholder = "Optionnel en mode dossier (appuie sur Envoyer)";
+        input.removeAttribute("required");
+      } else {
+        input.placeholder = "Pose ta question ici...";
+        input.setAttribute("required", "required");
+      }
+    });
+  });
+
+  // ── Utilitaires ───────────────────────────────────────────────────────────
+  function scrollToBottom() {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  function addMessage(sender) {
+    const div = document.createElement("div");
+    div.classList.add("chat-message", sender);
+    messagesContainer.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+
+  function animateThinking(el) {
+    let dots = 0;
+    el.textContent = "Je réfléchis";
+    return setInterval(() => {
+      dots = (dots + 1) % 4;
+      el.textContent = "Je réfléchis" + ".".repeat(dots);
+    }, 400);
+  }
+
+  // ── Rendu des réponses selon le mode ──────────────────────────────────────
+
+  function renderSimple(el, data) {
+    if (!data.found) {
+      el.textContent = "Je ne sais pas à partir des documents fournis.";
+      return;
+    }
+
+    // Réponse principale en markdown
+    el.innerHTML = marked.parse(data.answer || "");
+
+    // Badge pages si disponibles
+    if (data.pages && data.pages.length > 0) {
+      const badge = document.createElement("span");
+      badge.className = "pages-badge";
+      badge.textContent = "📄 Pages : " + data.pages.map(p => "p." + p).join(", ");
+      el.appendChild(badge);
+    }
+  }
+
+  function renderDossier(el, data) {
+    const answers = data.answers || {};
+    const project = data.project || "";
+    const found   = data.found   ?? 0;
+    const total   = found + (data.not_found ?? 0);
+
+    const panel = document.createElement("div");
+    panel.className = "ai-panel";
+    panel.innerHTML = `<h6>📋 Dossier — ${project} <small style="font-weight:400;opacity:.8">(${found}/${total} réponses trouvées)</small></h6>`;
+
+    const grid = document.createElement("div");
+    grid.className = "dossier-grid";
+
+    for (const [label, answer] of Object.entries(answers)) {
+      const item = document.createElement("div");
+      item.className = "dossier-item" + (answer === null ? " not-found" : "");
+      item.innerHTML = `<b>${label}</b>${answer !== null ? marked.parse(answer) : "Non trouvé dans les documents."}`;
+      grid.appendChild(item);
+    }
+
+    panel.appendChild(grid);
+    el.appendChild(panel);
+    scrollToBottom();
+  }
+
+  function renderLibre(el, data) {
+    el.innerHTML = marked.parse(data.answer || "");
+  }
+
+  // ── Soumission ─────────────────────────────────────────────────────────────
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const question = input.value.trim();
+
+    // En mode dossier, question optionnelle
+    if (currentMode !== "dossier" && !question) return;
+
+    // Message utilisateur
+    const userEl = addMessage("user");
+    userEl.textContent = currentMode === "dossier" && !question
+      ? "Analyse complète du dossier"
+      : question;
+
+    input.value = "";
+    input.focus();
+
+    const botMsg = addMessage("assistant");
+    const thinkingInterval = animateThinking(botMsg);
+
+    // Payload selon le mode
+    const payload = { mode: currentMode, question };
+
+    // En mode dossier, on envoie "dossier" comme question si vide
+    if (currentMode === "dossier" && !question) {
+      payload.question = "dossier";
+    }
+
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+      const rawText     = await res.text();
+
+      let data = {};
+      if (contentType.includes("application/json")) {
+        try { data = rawText ? JSON.parse(rawText) : {}; } catch { data = {}; }
+      } else {
+        data = { error: "Réponse serveur non-JSON", details: rawText.slice(0, 1200) };
+      }
+
+      clearInterval(thinkingInterval);
+      botMsg.textContent = ""; // vide le "Je réfléchis..."
+
+      if (!res.ok || data.error) {
+        botMsg.textContent = "⚠️ " + (data.error || "Erreur serveur.");
+        if (data.details) console.error("Server details:", data.details);
+        return;
+      }
+
+      // Rendu selon le mode retourné par l'API
+      const mode = data.mode || currentMode;
+      if (mode === "simple")  renderSimple(botMsg, data);
+      else if (mode === "dossier") renderDossier(botMsg, data);
+      else renderLibre(botMsg, data);
+
+      scrollToBottom();
+
+    } catch (err) {
+      clearInterval(thinkingInterval);
+      botMsg.textContent = "⚠️ Erreur réseau.";
+      console.error(err);
+    }
+  });
+
+  scrollToBottom();
+});
+</script>
+{% endblock %}

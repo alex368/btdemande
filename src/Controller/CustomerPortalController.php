@@ -25,9 +25,13 @@ public function index(
 
     $queryBuilder = $userRepository->getQueryBuilderByRoleAndSearch('ROLE_CUSTOMER', $search);
 
-    $queryBuilderCampany = $campanyRepository->findAll();
+    // dd($queryBuilder->getQuery()->getResult());
+     //$campanyRepository->findAll();
+@
+    $queryBuilderCampany = $queryBuilder->getQuery()->getResult();
+    // $test = $queryBuilderCampany[0]->getCampanies();
    
-
+    // dd($test);
     $pagination = $paginator->paginate(
         $queryBuilderCampany,
         $request->query->getInt('page', 1),

@@ -1,0 +1,64 @@
+services:
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: symfony_php
+    volumes:
+      - ./:/var/www/html:cached
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: "mysql://btdemande:btdemande@db:3306/btdemande?serverVersion=mariadb-11.4.0&charset=utf8mb4"
+      OLLAMA_BASE_URL: "http://ollama:11434"
+      OLLAMA_CHAT_MODEL: "ministral-3:3b"
+    depends_on:
+      - db
+      - ollama
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "7070:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/nginx:/etc/nginx/conf.d:ro
+    depends_on:
+      - php
+
+  db:
+    image: mariadb:11.4
+    container_name: symfony_db
+    environment:
+      MARIADB_DATABASE: btdemande
+      MARIADB_USER: btdemande
+      MARIADB_PASSWORD: btdemande
+      MARIADB_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: symfony_phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: btdemande
+      PMA_PASSWORD: btdemande
+    ports:
+      - "4040:80"
+    depends_on:
+      - db
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  db_data:
+  ollama_data:

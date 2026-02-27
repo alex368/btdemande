@@ -16,13 +16,16 @@ use Symfony\Component\Routing\Attribute\Route;
 final class FundingRequestController extends AbstractController
 {
     #[Route('/funding')]
-#[Route('/request/new/{id}', name: 'app_funding_request')]
+#[Route('/request/new/{id}/{user}', name: 'app_funding_request')]
 public function new(
     Request $request,
     EntityManagerInterface $em,
     int $id,
+    int $user,
     MailerService $mailerService
 ): Response {
+
+$clientId = $user;
     $fundingRequest = new FundingRequest();
 
     $form = $this->createForm(FundingRequestType::class, $fundingRequest);
@@ -38,8 +41,12 @@ public function new(
         $em->flush();
 
         // ✅ Envoi de mail aux clients de la société
+        
+
         if ($campany) {
             foreach ($campany->getCustomer() as $client) {
+                $clientId = $client->getId();
+
                 if ($client->getEmail()) {
                     $mailerService->send(
                         $client->getEmail(),
@@ -70,11 +77,13 @@ public function new(
 
         $this->addFlash('success', 'Demande de financement enregistrée avec succès.');
 
-        return $this->redirectToRoute('app_campany', ['id' => $id , 'user' => $campany->getCustomer()->first()->getId()]);
+        return $this->redirectToRoute('app_campany', ['id' => $id, 'user' => $clientId]);
     }
 
     return $this->render('funding_request/index.html.twig', [
         'form' => $form->createView(),
+        'campany' => $campany,
+        'user' => $clientId,
     ]);
 }
 

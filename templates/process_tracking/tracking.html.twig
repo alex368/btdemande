@@ -103,13 +103,22 @@
                 {% endif %}
             {% endfor %}
 
-            <ul id="progressbar">
-                {% for step in steps %}
-                    <li class="{% if loop.index0 <= currentIndex %}active{% endif %}">
-                        <b class="font-weight-bold  mt-2">{{ step }}</b>
-                    </li>
-                {% endfor %}
-            </ul>
+         <ul id="progressbar">
+    {% for step in steps %}
+        <li class="{% if loop.index0 <= currentIndex %}active{% endif %}">
+            <b class="font-weight-bold mt-2">{{ step }}</b>
+        </li>
+    {% endfor %}
+</ul>
+
+{% if request.comment is not empty %}
+    <div class="mt-4 px-4">
+        <div class="alert alert-light border shadow-sm">
+            <h5 class="mb-2">Commentaire</h5>
+            <p class="mb-0">{{ request.comment }}</p>
+        </div>
+    </div>
+{% endif %}
         </div>
     </div>
 </main>

@@ -65,9 +65,16 @@
 									<div>{{ m }}</div>
 								{% endfor %}
 							</td>
+
 							<td>
-								{{ c.campany ? c.campany.legalName : '-' }}
-							</td>
+    {% if c.campanyContacts is not empty %}
+        {% for contact in c.campanyContacts %}
+            <div>{{ contact.legalName }}</div>
+        {% endfor %}
+    {% else %}
+        -
+    {% endif %}
+</td>
 							<td class="text-center">
 
 								<a href="{{ path('app_contact_edit', { id: c.id }) }}" class="btn btn-sm btn-outline-warning">
