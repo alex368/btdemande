@@ -5,7 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: symfony_php
     volumes:
       - .:/var/www/html
     environment:
@@ -21,9 +20,8 @@ services:
 
   nginx:
     image: nginx:1.27-alpine
-    container_name: symfony_nginx
     ports:
-      - 7070:80
+      - "7070:80"
     volumes:
       - .:/var/www/html:ro
       - ./docker/nginx:/etc/nginx/conf.d:ro
@@ -31,16 +29,9 @@ services:
       - php
     networks:
       - symfony
-      - dokploy-network
-    labels:
-      traefik.enable=true
-      traefik.http.routers.btdemande-http.rule=Host(`btdemande-btdemande-3clxoz-d2cc8e-187-124-33-225.traefik.me`)
-      traefik.http.routers.btdemande-http.entrypoints=web
-      traefik.http.services.btdemande-http.loadbalancer.server.port=80
 
   db:
     image: mariadb:11.4
-    container_name: symfony_db
     environment:
       MARIADB_DATABASE: btdemande
       MARIADB_USER: btdemande
@@ -53,14 +44,13 @@ services:
 
   phpmyadmin:
     image: phpmyadmin:latest
-    container_name: symfony_phpmyadmin
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
       PMA_USER: btdemande
       PMA_PASSWORD: btdemande
     ports:
-      - 4040:80
+      - "4040:80"
     depends_on:
       - db
     networks:
@@ -68,19 +58,16 @@ services:
 
   ollama:
     image: ollama/ollama:latest
-    container_name: ollama
     ports:
-      - 11434:11434
+      - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     networks:
       - symfony
 
 volumes:
-  db_data: null
-  ollama_data: null
+  db_data:
+  ollama_data:
 
 networks:
-  symfony: null
-  dokploy-network:
-    external: true
+  symfony:
