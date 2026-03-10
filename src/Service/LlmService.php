@@ -196,7 +196,7 @@ PROMPT;
         // Étape 3 : générer chaque fiche
         foreach ($titles as $title) {
             $card = $this->generateRevisionCard($title, $context, $cards);
-            dd($card);
+            //dd($card);
             $cards[] = [
                 'title' => $title,
                 'content' => $card,
