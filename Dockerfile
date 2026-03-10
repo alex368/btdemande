@@ -41,10 +41,8 @@ RUN mkdir -p var/tmp var/cache var/log public/uploads/documents \
 # 9) Install dependencies as root (before switching user)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# 10) Warmup cache and assets in production
-RUN php bin/console cache:warmup --env=prod \
- && php bin/console assets:install --env=prod \
- && chown -R app:app /var/www/html
+# 10) Fix ownership
+RUN chown -R app:app /var/www/html
 
 # 11) Switch to app user
 USER app
