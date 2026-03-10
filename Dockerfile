@@ -39,12 +39,7 @@ RUN mkdir -p var/tmp var/cache var/log public/uploads/documents \
  && chmod -R 755 var public/uploads
 
 # 9) Install dependencies as root (before switching user)
-RUN composer install \
-    --no-dev \
-    --optimize-autoloader \
-    --no-interaction \
-    --classmap-authoritative \
- && composer clear-cache
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # 10) Warmup cache and assets in production
 RUN php bin/console cache:warmup --env=prod \
