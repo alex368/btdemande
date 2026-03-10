@@ -15,36 +15,35 @@ final class CustomerFolderController extends AbstractController
     {
 
         $user = $this->getUser();
-     $repository = $em->getRepository(FundingRequest::class);
+        $repository = $em->getRepository(FundingRequest::class);
 
-if ($this->isGranted('ROLE_ADMIN')) {
-    $findRequests = $repository->findAll();
-} elseif ($this->isGranted('ROLE_COLLABORATOR')) {
-    $findRequests = $repository->findByUser($user);
-} elseif ($this->isGranted('ROLE_CUSTOMER')) {
-    $findRequests = $repository->findByUser($user);
-} else {
-    $findRequests = [];
-}
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $findRequests = $repository->findAll();
+        } elseif ($this->isGranted('ROLE_COLLABORATOR')) {
+            $findRequests = $repository->findByUser($user);
+        } elseif ($this->isGranted('ROLE_CUSTOMER')) {
+            $findRequests = $repository->findByUser($user);
+        } else {
+            $findRequests = [];
+        }
 
-foreach ($findRequests as $request) {
-    $campany = $request->getCampany(); // relation ManyToOne
-    $userCampany = $campany->getCustomer();
-    //$campany->getUser(); // relation ManyToOne  
-}
-//trouver lentreprise du client connecté
-       
+        // Initialize variables
+        $campany = null;
+        $userCampany = null;
 
-
-        // $test = $findRequest->getCampany(); // Force la récupération de la société liée à chaque demande
-        // dd($campanyId);
-
+        // Get company and user company from first request
+        if (!empty($findRequests)) {
+            $firstRequest = $findRequests[0];
+            $campany = $firstRequest->getCampany();
+            if ($campany) {
+                $userCampany = $campany->getCustomer();
+            }
+        }
 
         return $this->render('customer_folder/index.html.twig', [
-            'findRequest' => $findRequests,
-            'campanyId' => $campany->getId(),
+            'findRequests' => $findRequests,
+            'campanyId' => $campany?->getId(),
             'userCampany' => $userCampany,
-
         ]);
     }
 }
