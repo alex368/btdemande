@@ -5,7 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: btdemande_php
     restart: unless-stopped
     volumes:
       - uploads:/var/www/html/public/uploads/documents
@@ -13,29 +12,18 @@ services:
       - public_assets:/var/www/html/public
     environment:
       APP_ENV: prod
-      APP_SECRET: ${APP_SECRET:-change-me-in-production}
       DATABASE_URL: mysql://btdemande:btdemande@db:3306/btdemande?serverVersion=mariadb-11.4.0&charset=utf8mb4
       OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_CHAT_MODEL: ministral-3:3b
       DEFAULT_URI: https://fidelissimo.fr
-      MAILER_DSN: ${MAILER_DSN:-smtp://localhost}
     depends_on:
-      db:
-        condition: service_healthy
-      ollama:
-        condition: service_started
+      - db
+      - ollama
     networks:
       - symfony
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/status"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   nginx:
     image: nginx:1.27-alpine
-    container_name: btdemande_nginx
     restart: unless-stopped
     ports:
       - "7070:80"
@@ -43,81 +31,54 @@ services:
       - public_assets:/var/www/html/public:ro
       - ./docker/nginx:/etc/nginx/conf.d:ro
     depends_on:
-      php:
-        condition: service_healthy
+      - php
     networks:
       - symfony
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   db:
     image: mariadb:11.4
-    container_name: btdemande_db
     restart: unless-stopped
     environment:
       MARIADB_DATABASE: btdemande
       MARIADB_USER: btdemande
       MARIADB_PASSWORD: btdemande
       MARIADB_ROOT_PASSWORD: root
-      MARIADB_INITDB_SKIP_TZINFO: 1
     volumes:
       - db_data:/var/lib/mysql
     networks:
       - symfony
-    healthcheck:
-      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   phpmyadmin:
     image: phpmyadmin:latest
-    container_name: btdemande_phpmyadmin
     restart: unless-stopped
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
       PMA_USER: btdemande
       PMA_PASSWORD: btdemande
-      PMA_ABSOLUTE_URI: http://localhost:4040/
     ports:
       - "4040:80"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     networks:
       - symfony
 
   ollama:
     image: ollama/ollama:latest
-    container_name: btdemande_ollama
     restart: unless-stopped
     ports:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    environment:
-      OLLAMA_HOST: 0.0.0.0:11434
     networks:
       - symfony
-    # Note: Model pull should be done manually:
-    # docker exec btdemande_ollama ollama pull ministral-3:3b
 
 volumes:
   db_data:
-    driver: local
   ollama_data:
-    driver: local
   uploads:
-    driver: local
   var_data:
-    driver: local
   public_assets:
-    driver: local
 
 networks:
   symfony:
-    driver: bridge
