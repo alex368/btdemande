@@ -43,4 +43,5 @@ RUN mkdir -p var/tmp var/cache var/log public/uploads/documents \
 USER app
 
 # 9) Composer install
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# 9) Composer install
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
