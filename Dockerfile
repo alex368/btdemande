@@ -46,7 +46,3 @@ RUN chown -R app:app /var/www/html
 
 # 11) Switch to app user
 USER app
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:9000/status || exit 1
