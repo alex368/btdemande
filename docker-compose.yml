@@ -49,24 +49,18 @@ services:
     networks:
       - symfony
     labels:
-      - traefik.enable=true
+    # Router HTTPS
+    - traefik.http.routers.fidelissimo.rule=Host(`fidelissimo.fr`) || Host(`www.fidelissimo.fr`)
+    - traefik.http.routers.fidelissimo.entrypoints=websecure
+    - traefik.http.routers.fidelissimo.tls.certresolver=letsencrypt
+    - traefik.http.routers.fidelissimo.service=fidelissimo
+    - traefik.http.services.fidelissimo.loadbalancer.server.port=80
 
-      # Router HTTPS
-      - traefik.http.routers.fidelissimo.rule=Host(`fidelissimo.fr`) || Host(`www.fidelissimo.fr`)
-      - traefik.http.routers.fidelissimo.entrypoints=websecure
-      - traefik.http.routers.fidelissimo.tls.certresolver=letsencrypt
-      - traefik.http.routers.fidelissimo.service=fidelissimo
-
-      # Router HTTP -> redirection HTTPS
-      - traefik.http.routers.fidelissimo-http.rule=Host(`fidelissimo.fr`) || Host(`www.fidelissimo.fr`)
-      - traefik.http.routers.fidelissimo-http.entrypoints=web
-      - traefik.http.routers.fidelissimo-http.middlewares=redirect-https
-
-      # Middleware pour redirection HTTPS
-      - traefik.http.middlewares.redirect-https.redirectscheme.scheme=https
-
-      # Service pour Nginx
-      - traefik.http.services.fidelissimo.loadbalancer.server.port=80
+    # Router HTTP → redirection HTTPS
+    - traefik.http.routers.fidelissimo-http.rule=Host(`fidelissimo.fr`) || Host(`www.fidelissimo.fr`)
+    - traefik.http.routers.fidelissimo-http.entrypoints=web
+    - traefik.http.routers.fidelissimo-http.middlewares=redirect-https
+    - traefik.http.middlewares.redirect-https.redirectscheme.scheme=https
 
   db:
     image: mariadb:11.4
