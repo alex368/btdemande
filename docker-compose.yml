@@ -20,8 +20,6 @@ services:
 
   nginx:
     image: nginx:1.27-alpine
-    ports:
-      - "7070:80"
     volumes:
       - .:/var/www/html:ro
       - ./docker/nginx:/etc/nginx/conf.d:ro
@@ -29,6 +27,20 @@ services:
       - php
     networks:
       - symfony
+
+    labels:
+      - traefik.enable=true
+
+      - traefik.http.routers.fidelissimo.rule=Host(`www.fidelissimo.fr`)
+      - traefik.http.routers.fidelissimo.entrypoints=websecure
+      - traefik.http.routers.fidelissimo.tls.certresolver=letsencrypt
+
+      - traefik.http.services.fidelissimo.loadbalancer.server.port=80
+
+      - traefik.http.middlewares.fidelissimo-https.redirectscheme.scheme=https
+      - traefik.http.routers.fidelissimo-http.rule=Host(`www.fidelissimo.fr`)
+      - traefik.http.routers.fidelissimo-http.entrypoints=web
+      - traefik.http.routers.fidelissimo-http.middlewares=fidelissimo-https
 
   db:
     image: mariadb:11.4
@@ -49,17 +61,11 @@ services:
       PMA_PORT: 3306
       PMA_USER: btdemande
       PMA_PASSWORD: btdemande
-    ports:
-      - "4040:80"
-    depends_on:
-      - db
     networks:
       - symfony
 
   ollama:
     image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     networks:
