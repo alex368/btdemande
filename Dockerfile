@@ -29,16 +29,18 @@ COPY docker/php/conf.d/app.ini /usr/local/etc/php/conf.d/app.ini
 
 WORKDIR /var/www/html
 
-# 6) Copie du code + composer install
+# 6) User
+RUN addgroup -g 1000 -S app \
+ && adduser -u 1000 -S app -G app
+
+# 7) Copie du code
 COPY --chown=app:app . .
 
-# 7) User + droits
-RUN addgroup -g 1000 -S app \
- && adduser  -u 1000 -S app -G app \
- && mkdir -p var/tmp var/cache var/log public/uploads/documents \
+# 8) Dossiers nécessaires
+RUN mkdir -p var/tmp var/cache var/log public/uploads/documents \
  && chown -R app:app /var/www/html
 
 USER app
 
-# 8) Composer install automatique
+# 9) Composer install
 RUN composer install --no-dev --optimize-autoloader --no-interaction
