@@ -1,0 +1,95 @@
+FROM php:8.4-fpm-alpine
+
+# ============================================================================
+# 1) DÉPENDANCES RUNTIME + OCR
+# ============================================================================
+RUN apk add --no-cache \
+    bash git curl unzip imagemagick \
+    icu libzip oniguruma \
+    poppler-utils \
+    tesseract-ocr tesseract-ocr-data-fra tesseract-ocr-data-eng
+
+# ============================================================================
+# 2) EXTENSIONS PHP (build + install)
+# ============================================================================
+RUN apk add --no-cache --virtual .build-deps \
+    icu-dev libzip-dev oniguruma-dev \
+    libpng-dev libjpeg-turbo-dev freetype-dev \
+    $PHPIZE_DEPS \
+ && docker-php-ext-configure gd --with-freetype --with-jpeg \
+ && docker-php-ext-install -j"$(nproc)" intl pdo pdo_mysql zip opcache gd \
+ && apk del .build-deps
+
+# ============================================================================
+# 3) CONFIG TESSERACT
+# ============================================================================
+ENV TESSDATA_PREFIX=/usr/share/tessdata
+
+# ============================================================================
+# 4) COMPOSER
+# ============================================================================
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# ============================================================================
+# 5) CONFIG PHP
+# ============================================================================
+COPY docker/php/conf.d/app.ini /usr/local/etc/php/conf.d/app.ini
+
+WORKDIR /var/www/html
+
+# ============================================================================
+# 6) COPIE DU CODE (avant user switch)
+# ============================================================================
+COPY --chown=app:app . .
+
+# ============================================================================
+# 7) CRÉER USER + RÉPERTOIRES (en ROOT encore)
+# ============================================================================
+RUN addgroup -g 1000 -S app \
+ && adduser -u 1000 -S app -G app
+
+# Créer répertoires Symfony nécessaires avec permissions correctes
+RUN mkdir -p var/tmp var/cache var/log \
+    public/uploads/documents \
+ && chown -R app:app /var/www/html \
+ && chmod -R 755 var tmp public/uploads \
+ && chmod -R 777 var/tmp var/cache var/log
+
+# ============================================================================
+# 8) COMPOSER INSTALL (EN ROOT - important pour les droits cache composer)
+# ============================================================================
+# ⚠️  SANS --no-scripts (permet les post-install hooks Symfony)
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction \
+    --no-ansi
+
+# ============================================================================
+# 9) WARMUP CACHE (prod)
+# ============================================================================
+# Optionnel mais recommandé: pré-compiler le cache en prod
+RUN APP_ENV=prod php bin/console cache:warmup --no-warmup
+
+# ============================================================================
+# 10) PERMISSIONS FINALES
+# ============================================================================
+RUN chown -R app:app /var/www/html \
+ && chmod -R g+w var public/uploads
+
+# ============================================================================
+# 11) SWITCH VERS USER APP
+# ============================================================================
+USER app
+
+# ============================================================================
+# 12) HEALTH CHECK (optionnel)
+# ============================================================================
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD php -r "exit(file_exists('/var/www/html/var/cache/prod') ? 0 : 1);"
+
+# ============================================================================
+# 13) ENTRYPOINT
+# ============================================================================
+# Par défaut: php-fpm démarre normalement
+# Aucun entrypoint custom requis (php-fpm gère tout)

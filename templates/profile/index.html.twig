@@ -83,7 +83,18 @@
 				<div class="mb-4 row align-items-center">
 					<div class="col-9">
 						{{ form_label(form.password, 'Mot de passe', {'label_attr': {'class': 'form-label text-uppercase small fw-bold'}}) }}
-						{{ form_widget(form.password, {'attr': {'class': 'form-control', 'id': 'motdepasse'}}) }}
+						<div class="input-group">
+    {{ form_widget(form.password, {'attr': {'class': 'form-control', 'id': 'motdepasse'}}) }}
+    <button type="button" class="btn btn-outline-secondary" id="eye-toggle" onclick="togglePasswordVisibility('motdepasse')">
+        👁️
+    </button>
+</div>
+<script>
+function togglePasswordVisibility(id) {
+    var input = document.getElementById(id);
+    input.type = input.type === 'password' ? 'text' : 'password';
+}
+</script>
 						{{ form_errors(form.password) }}
 					</div>
 					<div class="col-3 mt-4">

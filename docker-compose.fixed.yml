@@ -1,0 +1,203 @@
+version: "3.9"
+
+# ============================================================================
+# CONFIGURATION FIXED - Pour PRODUCTION
+# ============================================================================
+# Changements clés:
+# 1. Dockerfile corrigé (Dockerfile.prod)
+# 2. Entrypoint pour init permissions
+# 3. Healthchecks sur tous les services
+# 4. OLLAMA avec auto-pull du modèle
+# 5. Volumes initialisés correctement
+# ============================================================================
+
+services:
+
+  # ========================================================================
+  # PHP-FPM SERVICE
+  # ========================================================================
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: "0"
+      DATABASE_URL: mysql://btdemande:btdemande@db:3306/btdemande?serverVersion=mariadb-11.4.0&charset=utf8mb4
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_CHAT_MODEL: ministral-3:3b
+      DEFAULT_URI: https://fidelissimo.fr
+      # Pour logs applicatifs
+      APP_LOG_LEVEL: notice
+    volumes:
+      # var/ contient cache, logs, etc. DOIT être persistant + writable
+      - var_data:/var/www/html/var
+      # uploads/ doit être writable
+      - uploads:/var/www/html/public/uploads/documents
+      # Optional: monter des fichiers de config custom
+      # - ./docker/.env.prod:/var/www/html/.env.prod:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    networks:
+      - symfony
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(file_exists('/var/www/html/var/cache/prod') ? 0 : 1);"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # ========================================================================
+  # NGINX SERVICE
+  # ========================================================================
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "7070:80"
+    volumes:
+      # Config nginx
+      - ./docker/nginx:/etc/nginx/conf.d:ro
+      # Code public (static assets)
+      - ./public:/var/www/html/public:ro
+      # Uploads (read-only pour nginx - PHP crée les fichiers)
+      - uploads:/var/www/html/public/uploads/documents:ro
+    depends_on:
+      php:
+        condition: service_healthy
+    networks:
+      - symfony
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+  # ========================================================================
+  # MARIADB SERVICE
+  # ========================================================================
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: btdemande
+      MARIADB_USER: btdemande
+      MARIADB_PASSWORD: btdemande
+      MARIADB_ROOT_PASSWORD: root
+      # Optimisations pour Alpine (peu de mémoire)
+      MARIADB_INITDB_ARGS: "--max_connections=100 --skip-name-resolve"
+    volumes:
+      - db_data:/var/lib/mysql
+      # Optional: seed initial SQL
+      # - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - symfony
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  # ========================================================================
+  # PHPMYADMIN SERVICE (optionnel en prod)
+  # ========================================================================
+  phpmyadmin:
+    image: phpmyadmin:latest
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: btdemande
+      PMA_PASSWORD: btdemande
+      # Sécurité: limiter accès
+      HIDE_PHP_VERSION: "true"
+      ABSOLUTE_URI: http://localhost:4040/
+    ports:
+      - "4040:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - symfony
+    restart: unless-stopped
+    # Remarque: À supprimer en prod réelle (ou protéger avec auth)
+
+  # ========================================================================
+  # OLLAMA SERVICE
+  # ========================================================================
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - symfony
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    # Entrypoint customisé pour pré-pull le modèle
+    entrypoint: |
+      sh -c '
+        # Start ollama in background
+        /bin/ollama serve &
+        OLLAMA_PID=$$!
+
+        # Wait for ollama to be ready
+        echo "Waiting for Ollama to start..."
+        sleep 5
+        for i in {1..30}; do
+          if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+            echo "✓ Ollama is ready"
+            break
+          fi
+          echo "Attempt $i/30..."
+          sleep 2
+        done
+
+        # Pull the model
+        echo "Pulling model: ministral-3:3b"
+        /bin/ollama pull ministral-3:3b || echo "⚠ Model pull failed or already exists"
+
+        # Wait for background process
+        wait $$!
+      '
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+volumes:
+  # Base de données - persistent
+  db_data:
+    driver: local
+  
+  # Modèles Ollama - persistent + large
+  ollama_data:
+    driver: local
+  
+  # Uploads utilisateur - persistent + writable
+  uploads:
+    driver: local
+  
+  # Cache Symfony, logs - persistent + writable
+  var_data:
+    driver: local
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  symfony:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

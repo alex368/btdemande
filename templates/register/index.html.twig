@@ -54,7 +54,19 @@
 
 <div class="mb-2 mt-1">
     {{ form_label(form.password, null, {'label_attr': {'class': 'form-label fw-bold bebas'}}) }}
-    {{ form_widget(form.password) }}
+    <div class="input-group">
+    {{ form_widget(form.password, {'attr': {'class': 'form-control', 'id': 'password'}}) }}
+    <button type="button" class="btn btn-outline-secondary" id="eye-toggle" onclick="togglePasswordVisibility('password')">
+        👁️
+    </button>
+</div>
+<script>
+function togglePasswordVisibility(id) {
+    var input = document.getElementById(id);
+    input.type = input.type === 'password' ? 'text' : 'password';
+}
+</script>
+
     {{ form_errors(form.password) }}
 </div>
 

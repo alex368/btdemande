@@ -1,0 +1,111 @@
+upstream php_fpm {
+    server php:9000;
+}
+
+server {
+    listen 80;
+    server_name _;
+    root /var/www/html/public;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Gzip compression
+    gzip on;
+    gzip_types text/plain text/css text/javascript application/json application/javascript;
+    gzip_min_length 1024;
+    gzip_comp_level 6;
+
+    # Health check endpoint (pour docker healthcheck)
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+
+    # Static files - serve directly
+    location ~* ^/uploads/ {
+        # Uploads are read-only from php volume
+        try_files $uri =404;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Public assets (css, js, images from public/)
+    location ~* ^/.*\.(js|css|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        try_files $uri =404;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Deny access to sensitive files
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
+    # Deny access to sensitive files
+    location ~ /\.env {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
+    location ~ /\.git {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
+    location ~ /\.gitignore {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
+    # All other requests go to PHP-FPM
+    location / {
+        try_files $uri /index.php$is_args$args;
+    }
+
+    location ~ ^/index\.php(/|$) {
+        fastcgi_pass php_fpm;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+
+        # Symfony-specific
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_param PATH_TRANSLATED $realpath_root$fastcgi_path_info;
+
+        # Prevent nginx HTTP 494 error with POST requests without Content-Length
+        fastcgi_param HTTP_CONTENT_LENGTH $content_length;
+
+        # Timeouts
+        fastcgi_connect_timeout 60s;
+        fastcgi_send_timeout 60s;
+        fastcgi_read_timeout 60s;
+
+        # internal redirect to the front controller
+        internal;
+    }
+
+    # Return 404 for all other php files not matching the front controller
+    location ~ \.php$ {
+        return 404;
+    }
+
+    # Logging
+    access_log /var/log/nginx/access.log combined buffer=16k flush=5s;
+    error_log /var/log/nginx/error.log warn;
+
+    # Client timeout
+    client_max_body_size 50M;
+    client_body_timeout 20s;
+    client_header_timeout 20s;
+    send_timeout 20s;
+}

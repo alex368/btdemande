@@ -1,0 +1,99 @@
+FROM php:8.4-fpm-alpine
+
+# ============================================================================
+# 1) DÉPENDANCES RUNTIME + OCR
+# ============================================================================
+RUN apk add --no-cache \
+    bash git curl unzip imagemagick \
+    icu libzip oniguruma \
+    poppler-utils \
+    tesseract-ocr tesseract-ocr-data-fra tesseract-ocr-data-eng
+
+# ============================================================================
+# 2) EXTENSIONS PHP (build + install)
+# ============================================================================
+RUN apk add --no-cache --virtual .build-deps \
+    icu-dev libzip-dev oniguruma-dev \
+    libpng-dev libjpeg-turbo-dev freetype-dev \
+    $PHPIZE_DEPS \
+ && docker-php-ext-configure gd --with-freetype --with-jpeg \
+ && docker-php-ext-install -j"$(nproc)" intl pdo pdo_mysql zip opcache gd \
+ && apk del .build-deps
+
+# ============================================================================
+# 3) CONFIG TESSERACT
+# ============================================================================
+ENV TESSDATA_PREFIX=/usr/share/tessdata
+
+# ============================================================================
+# 4) COMPOSER
+# ============================================================================
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# ============================================================================
+# 5) CONFIG PHP
+# ============================================================================
+COPY docker/php/conf.d/app.ini /usr/local/etc/php/conf.d/app.ini
+
+WORKDIR /var/www/html
+
+# ============================================================================
+# 6) CRÉER USER
+# ============================================================================
+RUN addgroup -g 1000 -S app \
+ && adduser -u 1000 -S app -G app
+
+# ============================================================================
+# 7) COPIE DU CODE (avec ownership)
+# ============================================================================
+COPY --chown=app:app . .
+
+# ============================================================================
+# 8) RÉPERTOIRES NÉCESSAIRES (en ROOT)
+# ============================================================================
+RUN mkdir -p var/tmp var/cache var/log \
+    public/uploads/documents
+
+# ============================================================================
+# 9) COMPOSER INSTALL (sans --no-scripts)
+# ============================================================================
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction \
+    --no-ansi
+
+# ============================================================================
+# 10) CACHE WARMUP
+# ============================================================================
+ENV APP_ENV=prod
+RUN php bin/console cache:warmup --env=prod
+
+# ============================================================================
+# 11) ENTRÉE: SCRIPT D'INIT PERMISSIONS + PHP-FPM
+# ============================================================================
+COPY docker/scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
+RUN chmod +x /usr/local/bin/docker-entrypoint
+
+# ============================================================================
+# 12) PERMISSIONS FINALES (en ROOT)
+# ============================================================================
+# L'entrypoint les ajustera au démarrage pour les volumes
+RUN chown -R app:app /var/www/html
+
+# ============================================================================
+# 13) SWITCH USER
+# ============================================================================
+USER app
+
+# ============================================================================
+# 14) HEALTHCHECK
+# ============================================================================
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD php -r "exit(file_exists('/var/www/html/var/cache/prod') ? 0 : 1);"
+
+# ============================================================================
+# 15) ENTRYPOINT
+# ============================================================================
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint"]
+CMD ["php-fpm"]
