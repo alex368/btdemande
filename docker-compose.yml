@@ -15,7 +15,7 @@ services:
       DATABASE_URL: mysql://btdemande:btdemande@db:3306/btdemande?serverVersion=mariadb-11.4.0&charset=utf8mb4
       OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_CHAT_MODEL: ministral-3:3b
-      DEFAULT_URI: https://fidelissimo.fr
+      DEFAULT_URI: https://fidelissimo.com
     depends_on:
       - db
       - ollama
