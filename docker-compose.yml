@@ -4,14 +4,14 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        APP_ENV: ${APP_ENV:-prod}
+        APP_ENV: ${APP_ENV:-dev}
     restart: unless-stopped
     volumes:
       - uploads:/var/www/html/public/uploads/documents
       - var_data:/var/www/html/var
       - public_assets:/var/www/html/public
     environment:
-      APP_ENV: ${APP_ENV:-prod}
+      APP_ENV: ${APP_ENV:-dev}
       APP_SECRET: ${APP_SECRET:-}
       API_JWT_SECRET: ${API_JWT_SECRET:-}
       DATABASE_URL: ${DOCKER_DATABASE_URL:-mysql://btdemande:btdemande@db:3306/btdemande?serverVersion=mariadb-11.4.0&charset=utf8mb4}
@@ -99,8 +99,6 @@ services:
   ollama:
     image: ollama/ollama:latest
     restart: unless-stopped
-    ports:
-      - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     networks:
