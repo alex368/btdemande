@@ -2,41 +2,62 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Repository\CampanyContactRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
+#[ApiResource(operations: [
+    new Get(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+    new GetCollection(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+    new Post(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+    new Patch(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+], normalizationContext: ['groups' => ['campany_contact:read']], denormalizationContext: ['groups' => ['campany_contact:write']])]
 #[ORM\Entity(repositoryClass: CampanyContactRepository::class)]
 class CampanyContact
 {
+    #[Groups(['campany_contact:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups(['campany_contact:read', 'campany_contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $legalName = null;
 
+    #[Groups(['campany_contact:read', 'campany_contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $sector = null;
 
+    #[Groups(['campany_contact:read', 'campany_contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $adress = null;
 
+    #[Groups(['campany_contact:read', 'campany_contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $siren = null;
 
+    #[Groups(['campany_contact:read', 'campany_contact:write'])]
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTime $creationDate = null;
 
+    #[Groups(['campany_contact:read', 'campany_contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $stage = null;
 
+    #[Groups(['campany_contact:read', 'campany_contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $logo = null;
 
+    #[Groups(['campany_contact:read', 'campany_contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $projectName = null;
 

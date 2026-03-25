@@ -49,6 +49,12 @@ services:
             $docsDirectory: '%app.docs_directory%'  
             $openAiApiKey: '%env(OPENAI_API_KEY)%'
 
+    App\Service\LlmService:
+        arguments:
+            $apiKey: '%env(APP_LLM_OPENAI_API_KEY)%'
+            $baseUrl: '%env(APP_LLM_OPENAI_API_BASE_URL)%'
+            $model: '%env(APP_LLM_OPENAI_MODEL)%'
+
 
     # --- Ollama Embeddings (LLPhant) ---
     App\Service\ServiceOllamaEmbeddingGenerator:
@@ -62,3 +68,7 @@ services:
 
     App\Schedule\GmailSchedule:
         tags: ['schedule.provider']
+
+    App\Security\ApiJwtTokenManager:
+        arguments:
+            $secret: '%env(API_JWT_SECRET)%'

@@ -11,24 +11,35 @@ class LlmService
 {
     private OpenAIChat $chat;
 
-    public function __construct()
+    public function __construct(
+        private readonly string $apiKey,
+        private readonly string $baseUrl,
+        private readonly string $model,
+    )
     {
-        // Config pour OpenAI (ChatGPT)
+        if ('' === trim($this->apiKey)) {
+            return;
+        }
+
         $config = new OpenAIConfig();
-        $config->apiKey = $_ENV['OPENAI_API_KEY']; // ⚡ plus fiable que getenv()
-        $config->url = $_ENV['OPENAI_API_BASE_URL'] ?? 'https://api.openai.com/v1';
-        $config->model = 'gpt-4o-mini'; // ou gpt-4o, selon ton besoin
+        $config->apiKey = $this->apiKey;
+        $config->url = $this->baseUrl;
+        $config->model = $this->model;
 
         $this->chat = new OpenAIChat($config);
     }
     public function generate(string $prompt, array $options = []): string
     {
+        $this->assertConfigured();
+
         return $this->chat->generateText($prompt, $options);
     }
 
 
     public function getChat(): OpenAIChat
     {
+        $this->assertConfigured();
+
         return $this->chat;
     }
 
@@ -213,6 +224,13 @@ PROMPT;
     public function assembleRevisionJson(array $cards): string
     {
         return json_encode($cards, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
+
+    private function assertConfigured(): void
+    {
+        if (!isset($this->chat)) {
+            throw new \RuntimeException('APP_LLM_OPENAI_API_KEY is not configured.');
+        }
     }
 
 

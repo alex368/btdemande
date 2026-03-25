@@ -2,39 +2,60 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Repository\PartnershipRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
+#[ApiResource(operations: [
+    new Get(security: "is_granted('IS_AUTHENTICATED_FULLY')"),
+    new GetCollection(security: "is_granted('IS_AUTHENTICATED_FULLY')"),
+    new Post(security: "is_granted('ROLE_ADMIN')"),
+    new Patch(security: "is_granted('ROLE_ADMIN')"),
+], normalizationContext: ['groups' => ['partnership:read']], denormalizationContext: ['groups' => ['partnership:write']])]
 #[ORM\Entity(repositoryClass: PartnershipRepository::class)]
 class Partnership
 {
+    #[Groups(['partnership:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups(['partnership:read', 'partnership:write'])]
     #[ORM\Column(length: 255)]
     private ?string $lastname = null;
 
+    #[Groups(['partnership:read', 'partnership:write'])]
     #[ORM\Column(length: 255)]
     private ?string $firstname = null;
 
+    #[Groups(['partnership:read', 'partnership:write'])]
     #[ORM\Column(length: 255)]
     private ?string $salutation = null;
 
+    #[Groups(['partnership:read', 'partnership:write'])]
     #[ORM\Column(length: 255)]
     private ?string $linkedin = null;
 
+    #[Groups(['partnership:read', 'partnership:write'])]
     #[ORM\Column(length: 255)]
     private ?string $occupation = null;
 
+    #[Groups(['partnership:read', 'partnership:write'])]
     #[ORM\Column(type: Types::ARRAY, nullable: true)]
     private ?array $email = null;
 
+    #[Groups(['partnership:read', 'partnership:write'])]
     #[ORM\Column(type: Types::ARRAY, nullable: true)]
     private ?array $mobilePhone = null;
 
+    #[Groups(['partnership:read', 'partnership:write'])]
     #[ORM\ManyToOne(inversedBy: 'partnerships')]
     private ?FundingMechanism $fundingMechanism = null;
 

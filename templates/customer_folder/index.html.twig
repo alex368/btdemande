@@ -30,8 +30,8 @@
                                         </thead>
 
                                         <tbody> 
-                                            {%if findRequest is not empty %}
-                                         {% for find in findRequest %}
+                                            {% if findRequests is not empty %}
+                                         {% for find in findRequests %}
                                             <tr>                                                                          
                                                 <td>{{find.campany.legalName}}</td>
                                                 <td>{{find.amount}} euros</td>

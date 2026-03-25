@@ -1,5 +1,7 @@
 FROM php:8.4-fpm-alpine
 
+ARG APP_ENV=dev
+
 # 1) Runtime dependencies + OCR
 RUN apk add --no-cache \
     bash git curl unzip \
@@ -39,10 +41,17 @@ RUN mkdir -p var/tmp var/cache var/log public/uploads/documents \
  && chmod -R 755 var public/uploads
 
 # 9) Install dependencies as root (before switching user)
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+RUN if [ "$APP_ENV" = "prod" ]; then \
+      composer install --no-dev --optimize-autoloader --no-interaction --no-scripts; \
+    else \
+      composer install --optimize-autoloader --no-interaction --no-scripts; \
+    fi
 
 # 10) Fix ownership
 RUN chown -R app:app /var/www/html
 
 # 11) Switch to app user
 USER app
+
+ENTRYPOINT ["bash", "docker/scripts/docker-entrypoint.sh"]
+CMD ["php-fpm"]

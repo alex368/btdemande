@@ -2,35 +2,54 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Repository\CampanyRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
+#[ApiResource(operations: [
+    new Get(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+    new GetCollection(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+    new Post(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+    new Patch(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+], normalizationContext: ['groups' => ['campany:read']], denormalizationContext: ['groups' => ['campany:write']])]
 #[ORM\Entity(repositoryClass: CampanyRepository::class)]
 class Campany
 {
+    #[Groups(['campany:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups(['campany:read', 'campany:write'])]
     #[ORM\Column(length: 255)]
     private ?string $legalName = null;
 
+    #[Groups(['campany:read', 'campany:write'])]
     #[ORM\Column(length: 255)]
     private ?string $sector = null;
 
+    #[Groups(['campany:read', 'campany:write'])]
     #[ORM\Column(length: 255)]
     private ?string $adress = null;
 
+    #[Groups(['campany:read', 'campany:write'])]
     #[ORM\Column(length: 255)]
     private ?string $siren = null;
 
+    #[Groups(['campany:read', 'campany:write'])]
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTime $CreationDate = null;
 
+    #[Groups(['campany:read', 'campany:write'])]
     #[ORM\Column(length: 255)]
     private ?string $Stage = null;
 
@@ -46,6 +65,7 @@ class Campany
     #[ORM\OneToMany(targetEntity: FundingRequest::class, mappedBy: 'campany')]
     private Collection $fundingRequests;
 
+    #[Groups(['campany:read', 'campany:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $logo = null;
 
@@ -61,6 +81,7 @@ class Campany
     #[ORM\OneToMany(targetEntity: Contact::class, mappedBy: 'campany')]
     private Collection $contact;
 
+    #[Groups(['campany:read', 'campany:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $projetName = null;
 

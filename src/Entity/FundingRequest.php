@@ -7,10 +7,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: FundingRequestRepository::class)]
 class FundingRequest
 {
+    #[Groups(['document:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -19,6 +21,7 @@ class FundingRequest
     #[ORM\ManyToOne(inversedBy: 'fundingRequests')]
     private ?Campany $campany = null;
 
+    #[Groups(['document:read'])]
     #[ORM\Column]
     private ?int $amount = null;
 
@@ -32,6 +35,7 @@ class FundingRequest
     #[ORM\JoinColumn(nullable: false)]
     private ?Product $product = null;
 
+    #[Groups(['document:read'])]
     #[ORM\Column(length: 255)]
     private ?string $status = null;
 

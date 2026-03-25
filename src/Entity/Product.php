@@ -2,23 +2,38 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Repository\ProductRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
+#[ApiResource(operations: [
+    new Get(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+    new GetCollection(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+    new Post(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+    new Patch(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+], normalizationContext: ['groups' => ['product:read']], denormalizationContext: ['groups' => ['product:write']])]
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 class Product
 {
+    #[Groups(['product:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups(['product:read', 'product:write'])]
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
+    #[Groups(['product:read', 'product:write'])]
     #[ORM\Column(type: Types::TEXT)]
     private ?string $productDescription = null;
 
@@ -40,9 +55,11 @@ class Product
     #[ORM\OneToMany(targetEntity: Roadmap::class, mappedBy: 'product')]
     private Collection $roadmaps;
 
+    #[Groups(['product:read', 'product:write'])]
     #[ORM\ManyToOne(inversedBy: 'product')]
     private ?FundingMechanism $fundingMechanism = null;
 
+    #[Groups(['product:read', 'product:write'])]
     #[ORM\Column(length: 255)]
     private ?string $typeProduct = null;
 

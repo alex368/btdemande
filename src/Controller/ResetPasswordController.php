@@ -24,7 +24,7 @@ final class ResetPasswordController extends AbstractController
     public function index(Request $request, MailerService $mailerService)
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_landing_page');
+            return $this->redirectToRoute('app_login');
         }
 
         if ($request->get('email')) {

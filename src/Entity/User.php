@@ -73,6 +73,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: ResetPassword::class, mappedBy: 'user')]
     private Collection $resetPasswords;
 
+    /**
+     * @var Collection<int, ApiKey>
+     */
+    #[ORM\OneToMany(targetEntity: ApiKey::class, mappedBy: 'user', orphanRemoval: true)]
+    private Collection $apiKeys;
+
 
     public function __construct()
     {
@@ -81,6 +87,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->opportunities = new ArrayCollection();
         $this->contacts = new ArrayCollection();
         $this->resetPasswords = new ArrayCollection();
+        $this->apiKeys = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -347,6 +354,34 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * @return Collection<int, ApiKey>
+     */
+    public function getApiKeys(): Collection
+    {
+        return $this->apiKeys;
+    }
+
+    public function addApiKey(ApiKey $apiKey): static
+    {
+        if (!$this->apiKeys->contains($apiKey)) {
+            $this->apiKeys->add($apiKey);
+            $apiKey->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeApiKey(ApiKey $apiKey): static
+    {
+        if ($this->apiKeys->removeElement($apiKey)) {
+            if ($apiKey->getUser() === $this) {
+                $apiKey->setUser(null);
+            }
+        }
+
+        return $this;
+    }
 
    
 

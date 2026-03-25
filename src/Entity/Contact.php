@@ -2,35 +2,54 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Repository\ContactRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
+#[ApiResource(operations: [
+    new Get(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+    new GetCollection(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+    new Post(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+    new Patch(security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR')"),
+], normalizationContext: ['groups' => ['contact:read']], denormalizationContext: ['groups' => ['contact:write']])]
 #[ORM\Entity(repositoryClass: ContactRepository::class)]
 class Contact
 {
+    #[Groups(['contact:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups(['contact:read', 'contact:write'])]
     #[ORM\Column(length: 255)]
     private ?string $salutation = null;
 
+    #[Groups(['contact:read', 'contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $lastName = null;
 
+    #[Groups(['contact:read', 'contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $firstName = null;
 
+    #[Groups(['contact:read', 'contact:write'])]
     #[ORM\Column(type: Types::ARRAY, nullable: true)]
     private ?array $email = null;
 
+    #[Groups(['contact:read', 'contact:write'])]
     #[ORM\Column(type: Types::ARRAY, nullable: true)]
     private ?array $phone = null;
 
+    #[Groups(['contact:read', 'contact:write'])]
     #[ORM\Column(type: Types::ARRAY, nullable: true)]
     private ?array $mobilePhone = null;
 
@@ -48,24 +67,31 @@ class Contact
 
 
 
+    #[Groups(['contact:read', 'contact:write'])]
     #[ORM\Column(type: Types::ARRAY, nullable: true)]
     private ?array $socialMedia = null;
 
+    #[Groups(['contact:read', 'contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $country = null;
 
+    #[Groups(['contact:read', 'contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $adress = null;
 
+    #[Groups(['contact:read', 'contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $city = null;
 
+    #[Groups(['contact:read', 'contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $website = null;
 
+    #[Groups(['contact:read', 'contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $occupation = null;
 
+    #[Groups(['contact:read', 'contact:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $zipCode = null;
 

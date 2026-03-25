@@ -5,13 +5,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        APP_ENV: dev
     restart: unless-stopped
     volumes:
       - uploads:/var/www/html/public/uploads/documents
       - var_data:/var/www/html/var
       - public_assets:/var/www/html/public
     environment:
-      APP_ENV: prod
+      APP_ENV: dev
       DATABASE_URL: mysql://btdemande:btdemande@db:3306/btdemande?serverVersion=mariadb-11.4.0&charset=utf8mb4
       OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_CHAT_MODEL: ministral-3:3b
