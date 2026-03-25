@@ -1,26 +1,48 @@
-version: "3.9"
-
 services:
   php:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        APP_ENV: dev
+        APP_ENV: ${APP_ENV:-prod}
     restart: unless-stopped
     volumes:
       - uploads:/var/www/html/public/uploads/documents
       - var_data:/var/www/html/var
       - public_assets:/var/www/html/public
     environment:
-      APP_ENV: dev
-      DATABASE_URL: mysql://btdemande:btdemande@db:3306/btdemande?serverVersion=mariadb-11.4.0&charset=utf8mb4
-      OLLAMA_BASE_URL: http://ollama:11434
-      OLLAMA_CHAT_MODEL: ministral-3:3b
-      DEFAULT_URI: https://fidelissimo.com
+      APP_ENV: ${APP_ENV:-prod}
+      APP_SECRET: ${APP_SECRET:-}
+      API_JWT_SECRET: ${API_JWT_SECRET:-}
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-mysql://btdemande:btdemande@db:3306/btdemande?serverVersion=mariadb-11.4.0&charset=utf8mb4}
+      MAILER_DSN: ${MAILER_DSN:-null://null}
+      MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:-doctrine://default?auto_setup=0}
+      UPLOAD_DIR: ${UPLOAD_DIR:-uploads/documents}
+      UPLOAD_DIR_rag: ${UPLOAD_DIR_rag:-public/uploads/documents}
+      APP_LLM_OPENAI_API_KEY: ${APP_LLM_OPENAI_API_KEY:-}
+      APP_LLM_OPENAI_API_BASE_URL: ${APP_LLM_OPENAI_API_BASE_URL:-https://api.openai.com/v1}
+      APP_LLM_OPENAI_MODEL: ${APP_LLM_OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_CHAT_MODEL: ${OLLAMA_CHAT_MODEL:-ministral-3:3b}
+      DEFAULT_URI: ${DEFAULT_URI:-https://fidelissimo.com}
+      INSEE_API_KEY: ${INSEE_API_KEY:-}
+      WKHTMLTOPDF_PATH: ${WKHTMLTOPDF_PATH:-/usr/local/bin/wkhtmltopdf}
+      WKHTMLTOIMAGE_PATH: ${WKHTMLTOIMAGE_PATH:-/usr/local/bin/wkhtmltoimage}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          php -r '$$fp = @fsockopen("127.0.0.1", 9000, $$errno, $$errstr, 1); if (!$$fp) { fwrite(STDERR, ($$errstr ? $$errstr : "php-fpm not ready") . PHP_EOL); exit(1); } fclose($$fp);'
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
     depends_on:
-      - db
-      - ollama
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
     networks:
       - symfony
 
@@ -33,7 +55,8 @@ services:
       - public_assets:/var/www/html/public:ro
       - ./docker/nginx:/etc/nginx/conf.d:ro
     depends_on:
-      - php
+      php:
+        condition: service_healthy
     networks:
       - symfony
 
@@ -47,6 +70,14 @@ services:
       MARIADB_ROOT_PASSWORD: root
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mariadb-admin ping -h 127.0.0.1 -uroot -p$$MARIADB_ROOT_PASSWORD --silent
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
     networks:
       - symfony
 

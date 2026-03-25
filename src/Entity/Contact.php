@@ -104,6 +104,9 @@ class Contact
     #[ORM\ManyToOne(inversedBy: 'contacts')]
     private ?User $account = null;
 
+    #[ORM\ManyToOne(inversedBy: 'contact')]
+    private ?Campany $campany = null;
+
     /**
      * @var Collection<int, CampanyContact>
      */
@@ -381,6 +384,18 @@ public function getAccount(): ?User
 public function setAccount(?User $account): static
 {
     $this->account = $account;
+
+    return $this;
+}
+
+public function getCampany(): ?Campany
+{
+    return $this->campany;
+}
+
+public function setCampany(?Campany $campany): static
+{
+    $this->campany = $campany;
 
     return $this;
 }
