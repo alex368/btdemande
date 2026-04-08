@@ -28,11 +28,18 @@ final class DocumentController extends AbstractController
     ): Response {
         $userTest = $this->getUser(); // utilisateur connecté
         $documents = $em->getRepository(Document::class)->findByFundingRequest($fundingRequest->getId());
-        $allDocumentsValid = !empty($documents) && array_reduce(
+        $validDocumentsCount = array_reduce(
             $documents,
-            fn(bool $carry, Document $doc) => $carry && $doc->isStatus() && !empty($doc->getFilename()),
-            true
+            static function (int $count, Document $doc): int {
+                if ($doc->isStatus() === true && !empty($doc->getFilename())) {
+                    ++$count;
+                }
+
+                return $count;
+            },
+            0
         );
+        $allDocumentsValid = \count($documents) > 0 && $validDocumentsCount === \count($documents);
 
         if ($request->isMethod('POST')) {
             $action = $request->request->get('action');
