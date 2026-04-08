@@ -75,12 +75,6 @@ class Campany
     #[ORM\OneToMany(targetEntity: Roadmap::class, mappedBy: 'campany')]
     private Collection $roadmaps;
 
-    /**
-     * @var Collection<int, Contact>
-     */
-    #[ORM\OneToMany(targetEntity: Contact::class, mappedBy: 'campany')]
-    private Collection $contact;
-
     #[Groups(['campany:read', 'campany:write'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $projetName = null;
@@ -90,7 +84,6 @@ class Campany
         $this->customer = new ArrayCollection();
         $this->fundingRequests = new ArrayCollection();
         $this->roadmaps = new ArrayCollection();
-        $this->contact = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -260,36 +253,6 @@ class Campany
             // set the owning side to null (unless already changed)
             if ($roadmap->getCampany() === $this) {
                 $roadmap->setCampany(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Contact>
-     */
-    public function getContact(): Collection
-    {
-        return $this->contact;
-    }
-
-    public function addContact(Contact $contact): static
-    {
-        if (!$this->contact->contains($contact)) {
-            $this->contact->add($contact);
-            $contact->setCampany($this);
-        }
-
-        return $this;
-    }
-
-    public function removeContact(Contact $contact): static
-    {
-        if ($this->contact->removeElement($contact)) {
-            // set the owning side to null (unless already changed)
-            if ($contact->getCampany() === $this) {
-                $contact->setCampany(null);
             }
         }
 
