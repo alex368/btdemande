@@ -97,6 +97,26 @@ fi
 # 3) OPTIONNEL: RUN MIGRATIONS (si souhaité)
 # ============================================================================
 
+# ============================================================================
+# 3.bis) S'ASSURER QUE LES ASSETS EASYADMIN SONT DISPONIBLES EN PROD
+# ============================================================================
+
+if [ "$APP_ENV" = "prod" ] && [ -f /var/www/html/bin/console ]; then
+  if ! ls /var/www/html/public/bundles/easyadmin/app*.css >/dev/null 2>&1; then
+    echo "[INIT] EasyAdmin assets missing in public/bundles. Installing bundle assets..."
+    php /var/www/html/bin/console assets:install public --env=prod --no-interaction \
+      || echo "[WARN] assets:install failed, continuing..."
+  fi
+
+  if [ ! -f /var/www/html/public/assets/manifest.json ]; then
+    echo "[INIT] Asset mapper manifest missing. Compiling asset map..."
+    php /var/www/html/bin/console importmap:install --env=prod --no-interaction \
+      || echo "[WARN] importmap:install failed, continuing..."
+    php /var/www/html/bin/console asset-map:compile --env=prod --no-interaction \
+      || echo "[WARN] asset-map:compile failed, continuing..."
+  fi
+fi
+
 # Décommenter si vous voulez auto-run les migrations au démarrage
 # if [ "$APP_ENV" = "prod" ] && [ -f /var/www/html/bin/console ]; then
 #   echo "[INIT] Running database migrations..."
