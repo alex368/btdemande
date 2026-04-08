@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DoctrineMigrations;
 
+use Doctrine\DBAL\Schema\AbstractSchemaManager;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
@@ -19,7 +20,10 @@ final class Version20260216091534 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        // this up() migration is auto-generated, please modify it to your needs
+        if ($this->getSchemaManager()->tablesExist(['product', 'funding_request', 'user'])) {
+            return;
+        }
+
         $this->addSql('CREATE TABLE activity (id INT AUTO_INCREMENT NOT NULL, contact_id INT DEFAULT NULL, type VARCHAR(255) NOT NULL, description LONGTEXT NOT NULL, activity_date DATETIME NOT NULL, status VARCHAR(255) NOT NULL, INDEX IDX_AC74095AE7A1254A (contact_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('CREATE TABLE add_on_product (id INT AUTO_INCREMENT NOT NULL, quote_item_id INT DEFAULT NULL, title VARCHAR(255) NOT NULL, description LONGTEXT NOT NULL, price DOUBLE PRECISION NOT NULL, percentage DOUBLE PRECISION NOT NULL, INDEX IDX_B85CE6B7FD80FADA (quote_item_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('CREATE TABLE campany (id INT AUTO_INCREMENT NOT NULL, legal_name VARCHAR(255) NOT NULL, sector VARCHAR(255) NOT NULL, adress VARCHAR(255) NOT NULL, siren VARCHAR(255) NOT NULL, creation_date DATE NOT NULL, stage VARCHAR(255) NOT NULL, logo VARCHAR(255) DEFAULT NULL, projet_name VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
@@ -67,7 +71,10 @@ final class Version20260216091534 extends AbstractMigration
 
     public function down(Schema $schema): void
     {
-        // this down() migration is auto-generated, please modify it to your needs
+        if (!$this->getSchemaManager()->tablesExist(['activity'])) {
+            return;
+        }
+
         $this->addSql('ALTER TABLE activity DROP FOREIGN KEY FK_AC74095AE7A1254A');
         $this->addSql('ALTER TABLE add_on_product DROP FOREIGN KEY FK_B85CE6B7FD80FADA');
         $this->addSql('ALTER TABLE campany_user DROP FOREIGN KEY FK_9C88E7A15F59C144');
@@ -111,5 +118,10 @@ final class Version20260216091534 extends AbstractMigration
         $this->addSql('DROP TABLE service_product');
         $this->addSql('DROP TABLE `user`');
         $this->addSql('DROP TABLE messenger_messages');
+    }
+
+    private function getSchemaManager(): AbstractSchemaManager
+    {
+        return $this->connection->createSchemaManager();
     }
 }
