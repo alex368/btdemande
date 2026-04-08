@@ -36,6 +36,9 @@ $clientId = $user;
     if ($form->isSubmitted() && $form->isValid()) {
         $fundingRequest->setCampany($campany);
         $fundingRequest->setStatus('En cours');
+        if (null === $fundingRequest->getCreatedAt()) {
+            $fundingRequest->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Europe/Paris')));
+        }
         
         $em->persist($fundingRequest);
         $em->flush();
@@ -70,6 +73,19 @@ $clientId = $user;
                 'emails/funding_created_collaborator.html.twig',
                 [
                     'user'    => $collaborator,
+                    'request' => $fundingRequest,
+                ]
+            );
+        }
+
+        $assistant = $fundingRequest->getAssistant();
+        if ($assistant instanceof User && $assistant->getEmail()) {
+            $mailerService->send(
+                $assistant->getEmail(),
+                'Vous avez été ajouté comme assistant sur un dossier',
+                'emails/funding_created_collaborator.html.twig',
+                [
+                    'user' => $assistant,
                     'request' => $fundingRequest,
                 ]
             );

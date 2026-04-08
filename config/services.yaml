@@ -3,6 +3,7 @@ parameters:
     logos_directory: '%kernel.project_dir%/public/uploads/logos'
     documents_path: '%kernel.project_dir%/var/documents'
     app.docs_directory: '%env(resolve:UPLOAD_DIR)%'
+    app.maintenance_mode: '%env(bool:APP_MAINTENANCE_MODE)%'
     UPLOAD_DIR_rag: '%kernel.project_dir%/public/uploads/documents'
 
 
@@ -35,6 +36,10 @@ services:
     App\Command\RdvStartupCommand:
         arguments:
             $projectDir: '%kernel.project_dir%'
+
+    App\EventSubscriber\MaintenanceModeSubscriber:
+        arguments:
+            $maintenanceMode: '%app.maintenance_mode%'
 
     
     App\Service\DocumentRagStrictQaService:

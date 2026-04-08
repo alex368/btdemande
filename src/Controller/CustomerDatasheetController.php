@@ -92,7 +92,7 @@ final class CustomerDatasheetController extends AbstractController
             $entityManager->flush();
 
             $this->addFlash('success', 'Company created and linked to user!');
-            return $this->redirectToRoute('app_customer_portal');
+            return $this->redirectToRoute('app_campany', ['id' => $campany->getId(), 'user' => $user->getId()]);
         }
 
         return $this->render('customer_datasheet/create.html.twig', [
@@ -119,17 +119,33 @@ final class CustomerDatasheetController extends AbstractController
         $form = $this->createForm(CampanyType::class, $campany);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
+            $currentLogo = $campany->getLogo();
             $logoFile = $form->get('logo')->getData();
 
             if ($logoFile) {
                 $newFilename = uniqid('logo_', true) . '.' . $logoFile->guessExtension();
-                $logoFile->move($this->getParameter('logos_directory'), $newFilename);
-                $campany->setLogo($newFilename);
+                try {
+                    $logoFile->move($this->getParameter('logos_directory'), $newFilename);
+                    $campany->setLogo($newFilename);
+                } catch (FileException $e) {
+                    $this->addFlash('danger', 'Le logo n\'a pas pu être envoyé.');
+                    return $this->redirectToRoute('app_campany_edit', ['id' => $campany->getId()]);
+                }
+            } else {
+                $campany->setLogo($currentLogo);
             }
 
             $entityManager->flush();
 
             $this->addFlash('success', 'Entreprise mise a jour !');
+            $customer = $campany->getCustomer()->first();
+            if ($customer instanceof User) {
+                return $this->redirectToRoute('app_campany', [
+                    'id' => $campany->getId(),
+                    'user' => $customer->getId(),
+                ]);
+            }
+
             return $this->redirectToRoute('app_customer_portal');
         }
 

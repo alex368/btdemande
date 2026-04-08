@@ -72,7 +72,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{% for doc in test %}
+					{% for doc in documents %}
 						<tr>
 							<td class="col-2">
 								{% if doc.title%}
@@ -129,7 +129,7 @@
 			</table>
 
 			<form method="post" class="d-flex justify-content-end gap-2 mt-4">
-			{% if request.status == 'Traitement du dossier' %}
+			{% if allDocumentsValid %}
     <button type="submit" name="action" value="suivant"
         class="btn text-white rounded-0"
         style="background-color:#1E3A8A;">
@@ -145,17 +145,12 @@
         Enregistrer
     </button>
 
-
-    <button type="submit" name="action" value="cancel"
+    <button type="button"
         class="btn text-white rounded-0"
-        style="background-color:#6B7280;">
+        style="background-color:#6B7280;"
+        data-bs-toggle="modal"
+        data-bs-target="#cancelRequestModal">
         Annuler
-    </button>
-
-    <button type="submit" name="action" value="validate"
-        class="btn text-white rounded-0"
-        style="background-color:#059669;">
-        Valider
     </button>
 
     <button type="submit" name="action" value="send"
@@ -164,6 +159,26 @@
         Envoyer
     </button>
 </form>
+
+<div class="modal fade" id="cancelRequestModal" tabindex="-1" aria-labelledby="cancelRequestModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content rounded-0">
+			<div class="modal-header">
+				<h5 class="modal-title" id="cancelRequestModalLabel">Annuler la demande</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+			</div>
+			<div class="modal-body">
+				Cette action supprimera la demande et les documents deja rattaches. Voulez-vous continuer ?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-outline-secondary rounded-0" data-bs-dismiss="modal">Retour</button>
+				<form method="post">
+					<button type="submit" name="action" value="cancel" class="btn btn-danger rounded-0">Confirmer l'annulation</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
 		</div>
 	</main>
 {% endblock %}

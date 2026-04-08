@@ -36,10 +36,10 @@
 						<table class="table  align-middle mb-0">
 							<thead class="table-primary text-white">
 								<tr>
-									<th>Entreprise</th>
 									<th>Nom</th>
 									<th>Prénom</th>
 									<th>Numéro</th>
+									<th>Référent</th>
 									<th>Détail</th>
 								</tr>
 							</thead>
@@ -51,18 +51,16 @@
 							</pre>
 								{% for customer in pagination %}
 									<tr>
-										{# <td>{{ campany.legalName }}</td> #}
-										{# <td>#</td> #}
-										{% if customer.campanies is not empty %}
-										{% for campany in customer.campanies %}
-											<td>{{ campany.legalName }}</td>
-										{% endfor %}
-										{% else %}
-											<td>-</td>
-										{% endif %}	
 										<td>{{ customer.lastname }}</td>
 										<td>{{ customer.name }}</td>
 										<td>{{ customer.number }}</td>
+										<td>
+											{% if customer.referent %}
+												{{ customer.referent.lastname }} {{ customer.referent.name }}
+											{% else %}
+												-
+											{% endif %}
+										</td>
 										<td class="text-end">
 												<a href="{{ path('app_customer_datasheet', { id: customer.id }) }}" class="text-decoration-none">
 													<i class="bi bi-chevron-right"></i>

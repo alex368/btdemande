@@ -55,6 +55,55 @@ class FundingMechanismType extends AbstractType
     ],
 ])
 
+->add('country', TextType::class, [
+    'label' => 'Pays',
+    'required' => false,
+    'attr' => [
+        'class' => 'form-control',
+    ],
+])
+
+->add('region', TextType::class, [
+    'label' => 'Région',
+    'required' => false,
+    'attr' => [
+        'class' => 'form-control',
+    ],
+])
+
+->add('city', TextType::class, [
+    'label' => 'Ville',
+    'required' => false,
+    'attr' => [
+        'class' => 'form-control',
+    ],
+])
+
+->add('postalCode', TextType::class, [
+    'label' => 'Code postal',
+    'required' => false,
+    'attr' => [
+        'class' => 'form-control',
+    ],
+])
+
+->add('address', TextType::class, [
+    'label' => 'Adresse',
+    'required' => false,
+    'attr' => [
+        'class' => 'form-control',
+    ],
+])
+
+->add('projectType', TextType::class, [
+    'label' => 'Type de projet',
+    'required' => false,
+    'attr' => [
+        'class' => 'form-control',
+        'placeholder' => 'Ex: innovation, industrie, digital, export...',
+    ],
+])
+
 
 
 ->add('description', TextareaType::class, [

@@ -41,6 +41,8 @@ RUN mkdir -p var/tmp var/cache var/log public/uploads/documents \
  && chmod -R 755 var public/uploads
 
 # 9) Install dependencies as root (before switching user)
+RUN git config --global --add safe.directory /var/www/html
+
 RUN if [ "$APP_ENV" = "prod" ]; then \
       composer install --no-dev --optimize-autoloader --no-interaction --no-scripts; \
     else \

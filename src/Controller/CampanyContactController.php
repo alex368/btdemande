@@ -92,7 +92,7 @@ final class CampanyContactController extends AbstractController
 
 
 
-    #[Route('/customer/campany/edit/{id}', name: 'app_campany_contact_edit')]
+    #[Route('/contact/campany/edit/{id}', name: 'app_campany_contact_edit')]
     public function editCampany(
         int $id,
         Request $request,

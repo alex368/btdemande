@@ -28,6 +28,36 @@
                 </tr>
 
                 <tr>
+                    <th>Pays</th>
+                    <td>{{ funders.country ?: '-' }}</td>
+                </tr>
+
+                <tr>
+                    <th>Région</th>
+                    <td>{{ funders.region ?: '-' }}</td>
+                </tr>
+
+                <tr>
+                    <th>Ville</th>
+                    <td>{{ funders.city ?: '-' }}</td>
+                </tr>
+
+                <tr>
+                    <th>Code postal</th>
+                    <td>{{ funders.postalCode ?: '-' }}</td>
+                </tr>
+
+                <tr>
+                    <th>Adresse</th>
+                    <td>{{ funders.address ?: '-' }}</td>
+                </tr>
+
+                <tr>
+                    <th>Type de projet</th>
+                    <td>{{ funders.projectType ?: '-' }}</td>
+                </tr>
+
+                <tr>
                     <th>Description</th>
                  <td>{{ funders.description|raw }}</td>
 

@@ -134,14 +134,24 @@
 
 					<div
 						class="col-lg-6">
-						<!-- Répartition -->
-						<div class="card p-3 shadow border-0">
-							<h5 class="text-start mb-3 text-color-blue">Répartition des financeurs</h5>
-							<div style="height: 260px;" class="d-flex justify-content-center align-items-center">
-								<canvas id="pieChart"></canvas>
+						<div class="row g-4">
+							<div class="col-12">
+								<div class="card p-3 shadow border-0">
+									<h5 class="text-start mb-3 text-color-blue">Dossiers en cours</h5>
+									<div style="height: 260px;" class="d-flex justify-content-center align-items-center">
+										<canvas id="ongoingPieChart"></canvas>
+									</div>
+								</div>
+							</div>
+							<div class="col-12">
+								<div class="card p-3 shadow border-0">
+									<h5 class="text-start mb-3 text-color-blue">Dossiers validés de l'année</h5>
+									<div style="height: 260px;" class="d-flex justify-content-center align-items-center">
+										<canvas id="validatedPieChart"></canvas>
+									</div>
+								</div>
 							</div>
 						</div>
-						<!-- Répartition -->
 					</div>
 
 				</div>
@@ -384,42 +394,10 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-	document.addEventListener('DOMContentLoaded', function () { // 1. Sélection dynamique des données Twig
-{% if requestsCustomer is defined and requestsCustomer|length > 0 %}
-const requests = [{% for request in requestsCustomer %}
-{
-name: "{{ request.product.name|e('js') }}",
-amount: {{ request.amount|default(0) }}
-}
-{% if not loop.last %},{% endif %}{% endfor %}];
-{% elseif requests is defined and requests|length > 0 %}
-const requests = [{% for request in requests %}
-{
-name: "{{ request.product.name|e('js') }}",
-amount: {{ request.amount|default(0) }}
-}
-{% if not loop.last %},{% endif %}{% endfor %}];
-{% else %}
-const requests = [];{% endif %}
+	document.addEventListener('DOMContentLoaded', function () {
+const ongoingFinanceurs = {{ ongoingFinanceurData|json_encode|raw }};
+const validatedFinanceurs = {{ validatedFinanceurData|json_encode|raw }};
 
-
-// 2. Regroupement des montants par financeur
-const financeurs = {};
-requests.forEach(item => {
-const name = item.name || 'Non défini';
-const amount = Number(item.amount) || 0;
-
-if (financeurs[name]) {
-financeurs[name] += amount;
-} else {
-financeurs[name] = amount;
-}
-});
-
-// 3. Préparation des données pour Chart.js
-const labels = Object.keys(financeurs);
-const data = Object.values(financeurs);
-// 4. Couleurs (adaptables)
 const backgroundColors = [
 '#FBBB3B',
 '#272E80',
@@ -427,42 +405,56 @@ const backgroundColors = [
 '#038BC2',
 '#E7226F',
 '#6F42C1',
-'#198754'
+'#198754',
+'#0EA5E9'
 ];
 
-// 5. Initialisation du graphique
-const pieCtx = document.getElementById('pieChart').getContext('2d');
-new Chart(pieCtx, {
-type: 'pie',
-data: {
-labels: labels,
-datasets: [
-{
-data: data,
-backgroundColor: backgroundColors.slice(0, labels.length)
+function renderPieChart(canvasId, dataset, emptyLabel) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        return;
+    }
+
+    const labels = Object.keys(dataset);
+    const values = Object.values(dataset);
+
+    new Chart(canvas.getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: labels.length ? labels : [emptyLabel],
+            datasets: [{
+                data: values.length ? values : [1],
+                backgroundColor: labels.length ? backgroundColors.slice(0, labels.length) : ['#D1D5DB']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            if (!labels.length) {
+                                return emptyLabel;
+                            }
+
+                            return context.label + ' : ' + context.raw + ' dossier(s)';
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
-]
-},
-options: {
-responsive: true,
-maintainAspectRatio: false,
-plugins: {
-legend: {
-position: 'right',
-labels: {
-usePointStyle: true,
-pointStyle: 'circle'
-}
-},
-tooltip: {
-callbacks: {
-label: function (context) {
-return context.label + ' : ' + context.raw + ' €';
-}
-}
-}
-}
-}
-});
+
+renderPieChart('ongoingPieChart', ongoingFinanceurs, 'Aucun dossier en cours');
+renderPieChart('validatedPieChart', validatedFinanceurs, 'Aucun dossier validé');
 });
 </script></body>{% endblock %}

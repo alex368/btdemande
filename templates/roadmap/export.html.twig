@@ -78,7 +78,7 @@
 <body>
 
 
-    <h1>La Roadmap Financière</h1>
+    <h1>Roadmap Financiere{% if campany is defined %} - {{ campany.legalName }}{% endif %}</h1>
 
     <div class="timeline-container">
         {% for r in roadmaps %}
@@ -89,7 +89,7 @@
                 <div class="label-box">
                     <span class="year-badge">{{ roadmap.date|date('Y') }}</span>
                     <div class="label-title">
-                        {{ roadmap.product.name }}
+                        {{ roadmap.product ? roadmap.product.name : 'Produit non defini' }}
                     </div>
                     <div class="label-text">
                         Trimestre : <strong>{{ r.quarter }}</strong><br>

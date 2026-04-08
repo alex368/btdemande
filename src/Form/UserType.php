@@ -4,11 +4,13 @@ namespace App\Form;
 // src/Form/UserType.php
 
 use App\Entity\User;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\Extension\Core\Type\{
     TextType, EmailType, PasswordType, TelType, ChoiceType
 };
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Validator\Constraints\{
     NotBlank, Length, Regex, Email as EmailConstraint
 };
@@ -61,6 +63,23 @@ class UserType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'Le numéro est requis.'),
                     new Regex(pattern: '/^0[1-9](\d{2}){4}$/', message: 'Numéro invalide (format FR attendu).')
+                ],
+            ])
+            ->add('referent', EntityType::class, [
+                'class' => User::class,
+                'choice_label' => fn(User $user) => trim(sprintf('%s %s', $user->getLastname(), $user->getName())),
+                'label' => 'Référent',
+                'required' => false,
+                'placeholder' => 'Sélectionner un référent',
+                'query_builder' => function (EntityRepository $er) {
+                    return $er->createQueryBuilder('u')
+                        ->where('u.roles LIKE :admin OR u.roles LIKE :collaborator')
+                        ->setParameter('admin', '%ROLE_ADMIN%')
+                        ->setParameter('collaborator', '%ROLE_COLLABORATOR%')
+                        ->orderBy('u.lastname', 'ASC');
+                },
+                'attr' => [
+                    'class' => 'form-select border-0 rounded-0 shadow py-3 px-4 fs-5 mb-3',
                 ],
             ])
             ->add('password', PasswordType::class, [

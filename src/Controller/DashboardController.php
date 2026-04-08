@@ -22,6 +22,8 @@ final class DashboardController extends AbstractController
 
         $todayStart = new \DateTimeImmutable('today', $tz);
         $tomorrowStart = $todayStart->modify('+1 day');
+        $yearStart = new \DateTimeImmutable('first day of january this year midnight', $tz);
+        $yearEnd = $yearStart->modify('+1 year');
 
         $eventsToday = $eventRepository->createQueryBuilder('e')
             ->andWhere('e.startDate < :tomorrowStart')
@@ -97,6 +99,48 @@ final class DashboardController extends AbstractController
         $pretHonneurTotal = array_sum(array_map(fn($fr) => $fr->getAmount(), $buildQb("Pret d'honneur")->getQuery()->getResult()));
         $totalAccorde     = $subventionTotal + $pretTotal + $pretHonneurTotal;
 
+        $baseFinanceurQb = $em->getRepository(FundingRequest::class)->createQueryBuilder('fr')
+            ->join('fr.product', 'p')
+            ->join('p.fundingMechanism', 'fm');
+
+        if ($this->isGranted('ROLE_COLLABORATOR')) {
+            $baseFinanceurQb
+                ->andWhere('fr.user = :currentUser')
+                ->setParameter('currentUser', $this->getUser());
+        } elseif ($this->isGranted('ROLE_CUSTOMER')) {
+            $baseFinanceurQb
+                ->join('fr.campany', 'c')
+                ->join('c.customer', 'cu')
+                ->andWhere('cu = :currentUser')
+                ->setParameter('currentUser', $this->getUser());
+        }
+
+        $ongoingRequests = (clone $baseFinanceurQb)
+            ->andWhere('fr.status != :validatedStatus')
+            ->setParameter('validatedStatus', 'Validé')
+            ->getQuery()
+            ->getResult();
+
+        $validatedThisYearRequests = (clone $baseFinanceurQb)
+            ->andWhere('fr.status = :validatedStatus')
+            ->andWhere('(fr.createdAt IS NULL OR (fr.createdAt >= :yearStart AND fr.createdAt < :yearEnd))')
+            ->setParameter('validatedStatus', 'Validé')
+            ->setParameter('yearStart', $yearStart)
+            ->setParameter('yearEnd', $yearEnd)
+            ->getQuery()
+            ->getResult();
+
+        $groupByFinanceur = static function (array $items): array {
+            $counts = [];
+
+            foreach ($items as $item) {
+                $label = $item->getProduct()?->getFundingMechanism()?->getName() ?? 'Non défini';
+                $counts[$label] = ($counts[$label] ?? 0) + 1;
+            }
+
+            return $counts;
+        };
+
 
 
         return $this->render('dashboard/index.html.twig', [
@@ -107,7 +151,8 @@ final class DashboardController extends AbstractController
             'pretTotal'        => $pretTotal,
             'pretHonneurTotal' => $pretHonneurTotal,
             'totalAccorde'     => $totalAccorde,
-
+            'ongoingFinanceurData' => $groupByFinanceur($ongoingRequests),
+            'validatedFinanceurData' => $groupByFinanceur($validatedThisYearRequests),
         ]);
     }
 }

@@ -43,11 +43,17 @@ class FundingRequest
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
+    #[ORM\ManyToOne]
+    private ?User $assistant = null;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $comment = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $decision = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $createdAt = null;
 
     public function __construct()
     {
@@ -149,6 +155,18 @@ class FundingRequest
         return $this;
     }
 
+    public function getAssistant(): ?User
+    {
+        return $this->assistant;
+    }
+
+    public function setAssistant(?User $assistant): static
+    {
+        $this->assistant = $assistant;
+
+        return $this;
+    }
+
     public function getComment(): ?string
     {
         return $this->comment;
@@ -169,6 +187,18 @@ class FundingRequest
     public function setDecision(?string $decision): static
     {
         $this->decision = $decision;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(?\DateTimeImmutable $createdAt): static
+    {
+        $this->createdAt = $createdAt;
 
         return $this;
     }

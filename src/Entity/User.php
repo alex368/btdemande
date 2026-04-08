@@ -43,6 +43,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private ?string $number = null;
 
+    #[ORM\ManyToOne]
+    private ?User $referent = null;
+
     /**
      * @var Collection<int, Campany>
      */
@@ -203,6 +206,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setNumber(string $number): static
     {
         $this->number = $number;
+
+        return $this;
+    }
+
+    public function getReferent(): ?User
+    {
+        return $this->referent;
+    }
+
+    public function setReferent(?User $referent): static
+    {
+        $this->referent = $referent;
 
         return $this;
     }

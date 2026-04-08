@@ -27,6 +27,12 @@ final class DocumentController extends AbstractController
         int $user
     ): Response {
         $userTest = $this->getUser(); // utilisateur connecté
+        $documents = $em->getRepository(Document::class)->findByFundingRequest($fundingRequest->getId());
+        $allDocumentsValid = !empty($documents) && array_reduce(
+            $documents,
+            fn(bool $carry, Document $doc) => $carry && $doc->isStatus() && !empty($doc->getFilename()),
+            true
+        );
 
         if ($request->isMethod('POST')) {
             $action = $request->request->get('action');
@@ -70,6 +76,11 @@ final class DocumentController extends AbstractController
             }
 
             if ($action === 'suivant') {
+                if (!$allDocumentsValid) {
+                    $this->addFlash('danger', 'Tous les documents doivent etre valides avant de passer a l\'etape suivante.');
+                    return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
+                }
+
                 return $this->redirectToRoute('app_status_demande', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
             }
 
@@ -81,26 +92,19 @@ final class DocumentController extends AbstractController
             }
 
             if ($action === 'cancel') {
-                $fundingRequest->setStatus('En cours');
+                foreach ($fundingRequest->getDocuments() as $document) {
+                    $em->remove($document);
+                }
+                $em->remove($fundingRequest);
                 $em->flush();
 
-                return $this->redirectToRoute('app_dashboard');
-            }
-
-            if ($action === 'validate') {
-                $fundingRequest->setStatus('Traitement du dossier');
-                $em->flush();
-
+                $this->addFlash('success', 'La demande a ete annulee.');
                 return $this->redirectToRoute('app_dashboard');
             }
         }
 
         // 🔹 Documents déjà assignés
         $submittedDocuments = $fundingRequest->getDocuments();
-
-
-
-        $test = $em->getRepository(Document::class)->findByFundingRequest($fundingRequest->getId());
         $documentMap = [];
         $customDocuments = [];
 
@@ -124,9 +128,10 @@ final class DocumentController extends AbstractController
             'templates' => $documentTemplates,
             'submitted' => $documentMap,
             'customs'   => $customDocuments,
-            'test'      => $test,
+            'documents' => $documents,
             'user'      => $user,
             'campany'   => $fundingRequest->getCampany(),
+            'allDocumentsValid' => $allDocumentsValid,
         ]);
     }
 
@@ -147,6 +152,7 @@ final class DocumentController extends AbstractController
             $this->addFlash('success', 'Document modifié avec succès.');
             return $this->redirectToRoute('app_document_index', [
                 'id' => $document->getFundingRequest()->getId(),
+                'user' => $document->getFundingRequest()->getUser()->getId(),
             ]);
         }
 
@@ -220,7 +226,10 @@ final class DocumentController extends AbstractController
             $em->flush();
 
             $this->addFlash('success', 'Documents assignés avec succès.');
-            return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId()]);
+            return $this->redirectToRoute('app_document_index', [
+                'id' => $fundingRequest->getId(),
+                'user' => $fundingRequest->getUser()->getId(),
+            ]);
         }
 
         return $this->render('document/assign.html.twig', [

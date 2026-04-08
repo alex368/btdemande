@@ -11,15 +11,15 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Requirement\Requirement;
 use App\Service\QuarterService;
-use Dompdf\Dompdf;
-use Dompdf\Options;
+use App\Service\PdfGenerator;
 
 final class RoadmapController extends AbstractController
 {
 
 
-    #[Route('/roadmap/{id}/{user}', name: 'app_roadmap')]
+    #[Route('/roadmap/{id}/{user}', name: 'app_roadmap', requirements: ['id' => Requirement::DIGITS, 'user' => Requirement::DIGITS])]
     public function index(EntityManagerInterface $em, QuarterService $quarterService, int $id,$user): Response
     {
         $campany = $em->getRepository(Campany::class)->findOneById($id);
@@ -42,7 +42,7 @@ final class RoadmapController extends AbstractController
 
 
 
-    #[Route('/roadmap/new/{id}/{user}', name: 'app_new_roadmap')]
+    #[Route('/roadmap/new/{id}/{user}', name: 'app_new_roadmap', requirements: ['id' => Requirement::DIGITS, 'user' => Requirement::DIGITS])]
     public function multiRoadmap(Request $request, EntityManagerInterface $em, int $id,int $user): Response
     {
         // Récupère l'utilisateur par l'ID
@@ -86,7 +86,7 @@ final class RoadmapController extends AbstractController
         ]);
     }
 
-    #[Route('/roadmap/edit/{id}', name: 'app_edit_roadmap')]
+    #[Route('/roadmap/edit/{id}', name: 'app_edit_roadmap', requirements: ['id' => Requirement::DIGITS])]
     public function edit(int $id, Request $request, EntityManagerInterface $em): Response
     {
         $roadmap = $em->getRepository(Roadmap::class)->find($id);
@@ -119,7 +119,7 @@ final class RoadmapController extends AbstractController
         ]);
     }
 
-    #[Route('/roadmap/delete/{id}', name: 'app_delete_roadmap', methods: ['POST'])]
+    #[Route('/roadmap/delete/{id}', name: 'app_delete_roadmap', methods: ['POST'], requirements: ['id' => Requirement::DIGITS])]
     public function delete(int $id, Request $request, EntityManagerInterface $em): Response
     {
         $roadmap = $em->getRepository(Roadmap::class)->find($id);
@@ -148,8 +148,8 @@ final class RoadmapController extends AbstractController
         ]);
     }
 
-    #[Route('/roadmap/{id}/export', name: 'app_roadmap_export')]
-    public function exportRoadmap(EntityManagerInterface $em, QuarterService $quarterService, int $id): Response
+    #[Route('/roadmap/export/{id}', name: 'app_roadmap_export', requirements: ['id' => Requirement::DIGITS])]
+    public function exportRoadmap(EntityManagerInterface $em, QuarterService $quarterService, PdfGenerator $pdfGenerator, int $id): Response
     {
         $campany = $em->getRepository(Campany::class)->find($id);
 
@@ -162,26 +162,15 @@ final class RoadmapController extends AbstractController
             ['date' => 'ASC']
         );
 
-        $html = $this->renderView('roadmap/export.html.twig', [
-            'user'     => $campany,
-            'roadmaps' => $this->buildRoadmapsWithQuarter($roadmaps, $quarterService),
-        ]);
-
-        $options = new Options();
-        $options->set('defaultFont', 'DejaVu Sans');
-        $options->setIsRemoteEnabled(true);
-
-        $dompdf = new Dompdf($options);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-
         return new Response(
-            $dompdf->output(),
+            $pdfGenerator->generatePdf('roadmap/export.html.twig', [
+                'campany' => $campany,
+                'roadmaps' => $this->buildRoadmapsWithQuarter($roadmaps, $quarterService),
+            ]),
             200,
             [
                 'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="roadmap.pdf"',
+                'Content-Disposition' => sprintf('inline; filename="roadmap-%d.pdf"', $campany->getId()),
             ]
         );
     }

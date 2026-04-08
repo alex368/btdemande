@@ -33,29 +33,9 @@ final class ProductController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Gestion des fichiers uploadés pour chaque document
-            foreach ($form->get('documentTemplates') as $documentForm) {
-                $uploadedFile = $documentForm->get('filename')->getData();
-
-                if ($uploadedFile) {
-                    $originalFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
-                    $safeFilename = $slugger->slug($originalFilename);
-                    $newFilename = $safeFilename . '-' . uniqid() . '.' . $uploadedFile->guessExtension();
-
-                    try {
-                        $uploadedFile->move(
-                            $this->getParameter('documents_directory'), // défini dans services.yaml
-                            $newFilename
-                        );
-                    } catch (FileException $e) {
-                        $this->addFlash('danger', 'Erreur lors de l\'upload du fichier.');
-                        return $this->redirectToRoute('app_product_create');
-                    }
-
-                    // Trouve l'objet DocumentTemplate correspondant
-                    $document = $documentForm->getData();
-                    $document->setTemplate($newFilename);
-                }
+            if (!$this->handleDocumentTemplates($product, $form->get('documentTemplates'), $slugger)) {
+                $this->addFlash('danger', 'Erreur lors de l\'upload du fichier.');
+                return $this->redirectToRoute('app_product_create');
             }
 
             $em->persist($product);
@@ -81,29 +61,9 @@ final class ProductController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Gérer les fichiers uploadés
-            foreach ($form->get('documentTemplates') as $documentForm) {
-                $uploadedFile = $documentForm->get('filename')->getData();
-
-                if ($uploadedFile) {
-                    $originalFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
-                    $safeFilename = $slugger->slug($originalFilename);
-                    $newFilename = $safeFilename . '-' . uniqid() . '.' . $uploadedFile->guessExtension();
-
-                    try {
-                        $uploadedFile->move(
-                            $this->getParameter('documents_directory'),
-                            $newFilename
-                        );
-                    } catch (FileException $e) {
-                        $this->addFlash('danger', 'Erreur lors de l\'upload du fichier.');
-                        return $this->redirectToRoute('app_product_edit', ['id' => $product->getId()]);
-                    }
-
-                    // Met à jour le template du document
-                    $document = $documentForm->getData();
-                    $document->setTemplate($newFilename);
-                }
+            if (!$this->handleDocumentTemplates($product, $form->get('documentTemplates'), $slugger)) {
+                $this->addFlash('danger', 'Erreur lors de l\'upload du fichier.');
+                return $this->redirectToRoute('app_product_edit', ['id' => $product->getId()]);
             }
 
             $em->flush();
@@ -147,5 +107,44 @@ public function show(Product $product): Response
     ]);
 }
 
+private function handleDocumentTemplates(Product $product, iterable $documentForms, SluggerInterface $slugger): bool
+{
+    foreach ($documentForms as $documentForm) {
+        $document = $documentForm->getData();
+        $uploadedFile = $documentForm->get('filename')->getData();
+
+        if (!$document) {
+            continue;
+        }
+
+        $title = trim((string) $document->getTitle());
+        $description = trim((string) $document->getDescription());
+
+        if ($title === '' && $description === '' && !$uploadedFile) {
+            $product->removeDocumentTemplate($document);
+            continue;
+        }
+
+        if ($description === '') {
+            $document->setDescription('');
+        }
+
+        if ($uploadedFile) {
+            $originalFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeFilename = (string) $slugger->slug($originalFilename ?: 'document');
+            $newFilename = $safeFilename . '-' . uniqid() . '.' . $uploadedFile->guessExtension();
+
+            try {
+                $uploadedFile->move($this->getParameter('documents_directory'), $newFilename);
+            } catch (FileException $e) {
+                return false;
+            }
+
+            $document->setTemplate($newFilename);
+        }
+    }
+
+    return true;
+}
 
 }

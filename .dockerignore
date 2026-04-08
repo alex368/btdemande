@@ -1,0 +1,13 @@
+.git
+.github
+.idea
+.vscode
+node_modules
+var
+vendor
+public/uploads
+docker-compose*.yml
+compose*.yml
+*.log
+tmp
+.DS_Store

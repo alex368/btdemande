@@ -23,21 +23,88 @@ public function index(
     EntityManagerInterface $em, 
     PaginatorInterface $paginator
 ): Response {
+    $search = trim((string) $request->query->get('q', ''));
+    $sector = trim((string) $request->query->get('sector', ''));
+    $type = trim((string) $request->query->get('type', ''));
+    $projectType = trim((string) $request->query->get('projectType', ''));
 
-    // Récupération de la query (query builder recommandé)
-    $query = $em->getRepository(FundingMechanism::class)
-                ->createQueryBuilder('f')   // alias f
-                ->orderBy('f.id', 'DESC'); // optionnel
+    $repository = $em->getRepository(FundingMechanism::class);
 
-    // Pagination
+    $query = $repository
+        ->createQueryBuilder('f')
+        ->orderBy('f.id', 'DESC');
+
+    if ($search !== '') {
+        $query
+            ->andWhere('f.name LIKE :search OR f.description LIKE :search')
+            ->setParameter('search', '%' . $search . '%');
+    }
+
+    if ($sector !== '') {
+        $query
+            ->andWhere('f.sector = :sector')
+            ->setParameter('sector', $sector);
+    }
+
+    if ($type !== '') {
+        $query
+            ->andWhere('f.type = :type')
+            ->setParameter('type', $type);
+    }
+
+    if ($projectType !== '') {
+        $query
+            ->andWhere('f.projectType LIKE :projectType')
+            ->setParameter('projectType', '%' . $projectType . '%');
+    }
+
     $funders = $paginator->paginate(
-        $query,                                // Query, pas findAll()
-        $request->query->getInt('page', 1),    // Page courante
-        10                                     // Nombre d’éléments par page
+        $query,
+        $request->query->getInt('page', 1),
+        10
     );
+
+    $funders->setParam('q', $search);
+    $funders->setParam('sector', $sector);
+    $funders->setParam('type', $type);
+    $funders->setParam('projectType', $projectType);
+
+    $sectorChoices = $repository
+        ->createQueryBuilder('f')
+        ->select('DISTINCT f.sector')
+        ->where('f.sector IS NOT NULL')
+        ->andWhere("f.sector <> ''")
+        ->orderBy('f.sector', 'ASC')
+        ->getQuery()
+        ->getSingleColumnResult();
+
+    $typeChoices = $repository
+        ->createQueryBuilder('f')
+        ->select('DISTINCT f.type')
+        ->where('f.type IS NOT NULL')
+        ->andWhere("f.type <> ''")
+        ->orderBy('f.type', 'ASC')
+        ->getQuery()
+        ->getSingleColumnResult();
+
+    $projectTypeChoices = $repository
+        ->createQueryBuilder('f')
+        ->select('DISTINCT f.projectType')
+        ->where('f.projectType IS NOT NULL')
+        ->andWhere("f.projectType <> ''")
+        ->orderBy('f.projectType', 'ASC')
+        ->getQuery()
+        ->getSingleColumnResult();
 
     return $this->render('funder/index.html.twig', [
         'funders' => $funders,
+        'search' => $search,
+        'selectedSector' => $sector,
+        'selectedType' => $type,
+        'selectedProjectType' => $projectType,
+        'sectorChoices' => $sectorChoices,
+        'typeChoices' => $typeChoices,
+        'projectTypeChoices' => $projectTypeChoices,
     ]);
 }
     #[Route('/funder/add', name: 'app_funder_add')]

@@ -30,9 +30,9 @@ class FundingRequestType extends AbstractType
             ->add('user', EntityType::class, [
     'class' => User::class,
     'choice_label' => function (User $user) {
-        return $user->getName(); // ou getUsername(), selon ton entité
+        return trim(sprintf('%s %s', $user->getLastname(), $user->getName()));
     },
-    'label' => 'Collaborateur',
+    'label' => 'Responsable du dossier',
     'query_builder' => function (EntityRepository $er) {
         return $er->createQueryBuilder('u')
             ->where('u.roles LIKE :role') // Si tu filtres par rôle
@@ -45,6 +45,22 @@ class FundingRequestType extends AbstractType
     ],
     'row_attr' => ['class' => 'mb-3'],
 ])
+            ->add('assistant', EntityType::class, [
+                'class' => User::class,
+                'choice_label' => fn(User $user) => trim(sprintf('%s %s', $user->getLastname(), $user->getName())),
+                'label' => 'Assistant du dossier',
+                'query_builder' => function (EntityRepository $er) {
+                    return $er->createQueryBuilder('u')
+                        ->where('u.roles LIKE :admin OR u.roles LIKE :collaborator')
+                        ->setParameter('admin', '%ROLE_ADMIN%')
+                        ->setParameter('collaborator', '%ROLE_COLLABORATOR%')
+                        ->orderBy('u.lastname', 'ASC');
+                },
+                'placeholder' => 'Sélectionnez un assistant',
+                'required' => false,
+                'attr' => ['class' => 'form-select'],
+                'row_attr' => ['class' => 'mb-3'],
+            ])
             ->add('product', EntityType::class, [
                 'label' => 'Produit de financement',
                 'class' => Product::class,

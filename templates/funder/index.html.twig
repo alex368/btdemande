@@ -6,20 +6,64 @@
 {% block body %}
 	<div class="container mt-4">
 		<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Liste des financeurs</h1>
-		<div class="text-end mb-3">
+		<div class="d-flex justify-content-end mb-3">
 			{% if is_granted('ROLE_ADMIN') %}
 				<a href="{{path('app_funder_add')}}" class="btn btn-warning rounded-0">
 					Nouveau financeur
 				</a>
 			{% endif %}
 		</div>
+		<form method="get" action="{{ path('app_funder') }}" class="row g-3 align-items-end mb-4">
+			<div class="col-md-4">
+				<label for="q" class="form-label">Recherche</label>
+				<input
+					type="search"
+					id="q"
+					name="q"
+					class="form-control"
+					placeholder="Nom ou description..."
+					value="{{ search }}"
+				>
+			</div>
+			<div class="col-md-2">
+				<label for="sector" class="form-label">Secteur</label>
+				<select id="sector" name="sector" class="form-select">
+					<option value="">Tous les secteurs</option>
+					{% for sector in sectorChoices %}
+						<option value="{{ sector }}" {% if selectedSector == sector %}selected{% endif %}>{{ sector }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-md-2">
+				<label for="type" class="form-label">Type</label>
+				<select id="type" name="type" class="form-select">
+					<option value="">Tous les types</option>
+					{% for type in typeChoices %}
+						<option value="{{ type }}" {% if selectedType == type %}selected{% endif %}>{{ type }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-md-2">
+				<label for="projectType" class="form-label">Projet</label>
+				<select id="projectType" name="projectType" class="form-select">
+					<option value="">Tous les projets</option>
+					{% for projectType in projectTypeChoices %}
+						<option value="{{ projectType }}" {% if selectedProjectType == projectType %}selected{% endif %}>{{ projectType }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-md-2 d-flex gap-2">
+				<button type="submit" class="btn btn-primary w-100">Filtrer</button>
+				<a href="{{ path('app_funder') }}" class="btn btn-outline-secondary w-100">Reset</a>
+			</div>
+		</form>
 		<table class="table align-middle table-striped">
 			<thead class="table-light">
 				<tr>
 					<th style="width: 120px;">Logo</th>
-					<th>Name</th>
-					<th>Sector</th>
-					<th>Type</th>
+					<th>{{ knp_pagination_sortable(funders, 'Nom', 'f.name') }}</th>
+					<th>{{ knp_pagination_sortable(funders, 'Secteur', 'f.sector') }}</th>
+					<th>{{ knp_pagination_sortable(funders, 'Type', 'f.type') }}</th>
 					<th style="width: 220px;">Outil</th>
 				</tr>
 			</thead>

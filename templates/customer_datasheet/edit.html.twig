@@ -85,12 +85,12 @@ document.getElementById('siret').addEventListener('change', function () {
 
   const clearCompanyFields = () => {
     const ids = [
-      'campany_legalName',
-      'campany_siren',
-      'campany_sector',
-      'campany_adress',
-      'campany_stage',
-      'campany_creationDate',
+      'legalName',
+      'sirenField',
+      'sector',
+      'adress',
+      'stage',
+      'creationDate',
     ];
     ids.forEach(id => {
       const el = document.getElementById(id);
@@ -121,12 +121,12 @@ document.getElementById('siret').addEventListener('change', function () {
         else console.warn(`Champ introuvable : #${id}`);
       };
 
-      setFieldValue('campany_legalName', data.legalName);
-      setFieldValue('campany_siren', data.siren);
-      setFieldValue('campany_sector', data.sector);
-      setFieldValue('campany_adress', data.adress);
-      setFieldValue('campany_stage', data.stage);
-      setFieldValue('campany_creationDate', data.creationDate);
+      setFieldValue('legalName', data.legalName);
+      setFieldValue('sirenField', data.siren);
+      setFieldValue('sector', data.sector);
+      setFieldValue('adress', data.adress);
+      setFieldValue('stage', data.stage);
+      setFieldValue('creationDate', data.creationDate);
     })
     .catch(err => {
       alert(err.message);
