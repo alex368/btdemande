@@ -94,7 +94,7 @@ final class DashboardController extends AbstractController
 
         $baseFinanceurQb = $em->getRepository(FundingRequest::class)->createQueryBuilder('fr')
             ->join('fr.product', 'p')
-            ->join('p.fundingMechanism', 'fm');
+            ->leftJoin('p.fundingMechanism', 'fm');
 
         if ($this->isGranted('ROLE_COLLABORATOR')) {
             $baseFinanceurQb
@@ -110,7 +110,8 @@ final class DashboardController extends AbstractController
 
         $ongoingRequests = (clone $baseFinanceurQb)
             ->andWhere('fr.status = :ongoingStatus')
-            ->andWhere('(fr.createdAt IS NULL OR (fr.createdAt >= :yearStart AND fr.createdAt < :yearEnd))')
+            ->andWhere('fr.createdAt >= :yearStart')
+            ->andWhere('fr.createdAt < :yearEnd')
             ->setParameter('ongoingStatus', FundingRequest::STATUS_IN_PROGRESS)
             ->setParameter('yearStart', $yearStart)
             ->setParameter('yearEnd', $yearEnd)
@@ -120,7 +121,8 @@ final class DashboardController extends AbstractController
         $validatedThisYearRequests = (clone $baseFinanceurQb)
             ->andWhere('fr.status = :closedStatus')
             ->andWhere('fr.decision = :validatedDecision')
-            ->andWhere('(fr.createdAt IS NULL OR (fr.createdAt >= :yearStart AND fr.createdAt < :yearEnd))')
+            ->andWhere('fr.createdAt >= :yearStart')
+            ->andWhere('fr.createdAt < :yearEnd')
             ->setParameter('closedStatus', FundingRequest::STATUS_CLOSED)
             ->setParameter('validatedDecision', FundingRequest::DECISION_VALIDATED)
             ->setParameter('yearStart', $yearStart)
