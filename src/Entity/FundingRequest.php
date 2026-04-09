@@ -9,10 +9,9 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
-if (!class_exists(FundingRequest::class, false)) {
-    #[ORM\Entity(repositoryClass: FundingRequestRepository::class)]
-    class FundingRequest
-    {
+#[ORM\Entity(repositoryClass: FundingRequestRepository::class)]
+class FundingRequest
+{
     public const STATUS_IN_PROGRESS = 'En cours';
     public const STATUS_WAITING_CLIENT = 'Attente client';
     public const STATUS_BACK_FROM_CLIENT = 'Retour client';
@@ -243,6 +242,5 @@ if (!class_exists(FundingRequest::class, false)) {
             self::STATUS_WAITING_ACCOUNT_MANAGER,
             self::STATUS_CLOSED,
         ];
-    }
     }
 }

@@ -63,7 +63,7 @@ final class DashboardController extends AbstractController
 
 
 
-
+  $currentUser = $this->getUser();
 
 
 
@@ -79,9 +79,11 @@ final class DashboardController extends AbstractController
             if ($this->isGranted('ROLE_ADMIN')) {
                 // Admin : toutes les demandes validées
             } elseif ($this->isGranted('ROLE_COLLABORATOR')) {
+                 $currentUser = $this->getUser();
                 $qb->andWhere('fr.user = :user')
                     ->setParameter('user', $currentUser);
             } elseif ($this->isGranted('ROLE_CUSTOMER')) {
+                  $currentUser = $this->getUser();
                 $qb->join('fr.campany', 'c')
                     ->join('c.customer', 'cu')
                     ->andWhere('cu = :user')
@@ -90,6 +92,9 @@ final class DashboardController extends AbstractController
 
             return $qb;
         };
+
+
+     
 
         $subventionTotal  = array_sum(array_map(fn($fr) => $fr->getAmount(), $buildQb('Subvention')->getQuery()->getResult()));
         $pretTotal        = array_sum(array_map(fn($fr) => $fr->getAmount(), $buildQb('Pret')->getQuery()->getResult()));
@@ -141,7 +146,7 @@ final class DashboardController extends AbstractController
             return $counts;
         };
 
-
+   dump($groupByFinanceur, $ongoingRequests, $validatedThisYearRequests,$baseFinanceurQb->getDQL());
 
         return $this->render('dashboard/index.html.twig', [
             'events'           => $eventsToday,
@@ -153,6 +158,8 @@ final class DashboardController extends AbstractController
             'totalAccorde'     => $totalAccorde,
             'ongoingFinanceurData' => $groupByFinanceur($ongoingRequests),
             'validatedFinanceurData' => $groupByFinanceur($validatedThisYearRequests),
+            'statusWaitingClient' => FundingRequest::STATUS_WAITING_CLIENT,
+            'statusBackFromClient' => FundingRequest::STATUS_BACK_FROM_CLIENT,
         ]);
     }
 }
