@@ -38,6 +38,7 @@ final class DashboardController extends AbstractController
             ->getResult();
 
         $requests = [];
+        $requestsCustomer = [];
 
 
         if ($this->isGranted('ROLE_ADMIN')) {
@@ -57,15 +58,7 @@ final class DashboardController extends AbstractController
                 ->orderBy('fr.id', 'DESC')
                 ->getQuery()
                 ->getResult();
-
-            
         }
-
-
-
-  $currentUser = $this->getUser();
-
-
 
         $buildQb = function (string $type) use ($em): QueryBuilder {
             $qb = $em->getRepository(FundingRequest::class)->createQueryBuilder('fr')
@@ -79,11 +72,9 @@ final class DashboardController extends AbstractController
             if ($this->isGranted('ROLE_ADMIN')) {
                 // Admin : toutes les demandes validées
             } elseif ($this->isGranted('ROLE_COLLABORATOR')) {
-                 $currentUser = $this->getUser();
                 $qb->andWhere('fr.user = :user')
                     ->setParameter('user', $currentUser);
             } elseif ($this->isGranted('ROLE_CUSTOMER')) {
-                  $currentUser = $this->getUser();
                 $qb->join('fr.campany', 'c')
                     ->join('c.customer', 'cu')
                     ->andWhere('cu = :user')
@@ -146,12 +137,13 @@ final class DashboardController extends AbstractController
             return $counts;
         };
 
-   dump($groupByFinanceur, $ongoingRequests, $validatedThisYearRequests,$baseFinanceurQb->getDQL());
+        $dashboardRequests = $this->isGranted('ROLE_CUSTOMER') ? $requestsCustomer : $requests;
 
         return $this->render('dashboard/index.html.twig', [
             'events'           => $eventsToday,
             'requests'         => $requests,
-            'requestsCustomer' => $requestsCustomer ?? [],
+            'requestsCustomer' => $requestsCustomer,
+            'dashboardRequests' => $dashboardRequests,
             'subventionTotal'  => $subventionTotal,
             'pretTotal'        => $pretTotal,
             'pretHonneurTotal' => $pretHonneurTotal,
