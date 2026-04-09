@@ -75,7 +75,7 @@ final class DashboardController extends AbstractController
                 ->join('fr.product', 'p')
                 ->andWhere('fr.status = :status')
                 ->andWhere('p.typeProduct = :type')
-                ->setParameter('status', 'Validé')
+                ->setParameter('status', FundingRequest::STATUS_VALIDATED)
                 ->setParameter('type', $type)
                 ->orderBy('fr.id', 'DESC');
 
@@ -117,14 +117,14 @@ final class DashboardController extends AbstractController
 
         $ongoingRequests = (clone $baseFinanceurQb)
             ->andWhere('fr.status != :validatedStatus')
-            ->setParameter('validatedStatus', 'Validé')
+            ->setParameter('validatedStatus', FundingRequest::STATUS_VALIDATED)
             ->getQuery()
             ->getResult();
 
         $validatedThisYearRequests = (clone $baseFinanceurQb)
             ->andWhere('fr.status = :validatedStatus')
             ->andWhere('(fr.createdAt IS NULL OR (fr.createdAt >= :yearStart AND fr.createdAt < :yearEnd))')
-            ->setParameter('validatedStatus', 'Validé')
+            ->setParameter('validatedStatus', FundingRequest::STATUS_VALIDATED)
             ->setParameter('yearStart', $yearStart)
             ->setParameter('yearEnd', $yearEnd)
             ->getQuery()

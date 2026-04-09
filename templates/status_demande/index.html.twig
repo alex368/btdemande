@@ -23,12 +23,11 @@
                 <div class="mb-3">
                     <label class="form-label">Statut</label>
                     <select class="form-select" name="status" id="status">
-                        <option value="Attente chargé d'affaires">
-                            Attente chargé d'affaires
-                        </option>
-                        <option value="Dossier clôturé">
-                            Dossier clôturé
-                        </option>
+                        {% for statusOption in statusOptions %}
+                            <option value="{{ statusOption }}" {% if fundingRequest.status == statusOption %}selected{% endif %}>
+                                {{ statusOption }}
+                            </option>
+                        {% endfor %}
                     </select>
                 </div>
 
@@ -73,9 +72,10 @@
 <script>
     const statusSelect = document.getElementById('status');
     const decisionBlock = document.getElementById('decision-block');
+    const closedStatus = {{ closedStatus|json_encode|raw }};
 
     function toggleDecision() {
-        if (statusSelect.value === 'Dossier clôturé') {
+        if (statusSelect.value === closedStatus) {
             decisionBlock.classList.remove('d-none');
         } else {
             decisionBlock.classList.add('d-none');

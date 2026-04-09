@@ -66,11 +66,11 @@
 										{% endif %}
 									</div>
 								</div>
-								{% if requests is not empty and request.status == 'Attente client' %}
+								{% if requests is not empty and request.status == waitingClientStatus %}
 									<a class="btn btn-custom w-100" href="{{ path('client_documents', { id: request.id }) }}">
 										Faire ma demande
 									</a>
-								{% elseif requests is not empty and request.status == 'Retour client' or request.status == 'Traitement du dossier' or request.status == 'Attente chargé d\'affaires' or request.status == 'Dossier cloturé' %}
+								{% elseif requests is not empty and request.status in trackingStatuses %}
 									<a class="btn btn-custom w-100" href="{{ path('client_request_tracking', { id: request.id }) }}">
 										Suivre ma demande
 									</a>

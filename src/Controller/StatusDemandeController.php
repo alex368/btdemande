@@ -29,6 +29,13 @@ if ($request->isMethod('POST')) {
 
 
     if ($action === 'save') {
+        if (!in_array($status, FundingRequest::getBackOfficeStatusChoices(), true)) {
+            $this->addFlash('danger', 'Statut de dossier invalide.');
+            return $this->redirectToRoute('app_status_demande', [
+                'id' => $fundingRequest->getId(),
+                'user' => $fundingRequest->getUser()->getId(),
+            ]);
+        }
 
         $fundingRequest->setStatus($status);
 
@@ -36,11 +43,11 @@ if ($request->isMethod('POST')) {
         $fundingRequest->setComment($comment);
 
         if ($decision === 'validate') {
-            $fundingRequest->setDecision('Validé');
+            $fundingRequest->setDecision(FundingRequest::DECISION_VALIDATED);
         }
 
         if ($decision === 'refuse') {
-            $fundingRequest->setDecision('Refusé');
+            $fundingRequest->setDecision(FundingRequest::DECISION_REFUSED);
         }
 
         $em->flush();
@@ -55,6 +62,8 @@ if ($request->isMethod('POST')) {
   
         return $this->render('status_demande/index.html.twig', [
             'fundingRequest' => $fundingRequest,
+            'statusOptions' => FundingRequest::getBackOfficeStatusChoices(),
+            'closedStatus' => FundingRequest::STATUS_CLOSED,
         ]);
     }
 }

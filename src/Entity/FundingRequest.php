@@ -12,6 +12,17 @@ use Symfony\Component\Serializer\Attribute\Groups;
 #[ORM\Entity(repositoryClass: FundingRequestRepository::class)]
 class FundingRequest
 {
+    public const STATUS_IN_PROGRESS = 'En cours';
+    public const STATUS_WAITING_CLIENT = 'Attente client';
+    public const STATUS_BACK_FROM_CLIENT = 'Retour client';
+    public const STATUS_PROCESSING = 'Traitement du dossier';
+    public const STATUS_WAITING_ACCOUNT_MANAGER = "Attente chargé d'affaires";
+    public const STATUS_CLOSED = 'Dossier clôturé';
+    public const STATUS_VALIDATED = 'Validé';
+
+    public const DECISION_VALIDATED = 'Validé';
+    public const DECISION_REFUSED = 'Refusé';
+
     #[Groups(['document:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -201,5 +212,35 @@ class FundingRequest
         $this->createdAt = $createdAt;
 
         return $this;
+    }
+
+    /**
+     * Statuts visibles dans le suivi client.
+     *
+     * @return list<string>
+     */
+    public static function getTrackingStatuses(): array
+    {
+        return [
+            self::STATUS_IN_PROGRESS,
+            self::STATUS_WAITING_CLIENT,
+            self::STATUS_BACK_FROM_CLIENT,
+            self::STATUS_PROCESSING,
+            self::STATUS_WAITING_ACCOUNT_MANAGER,
+            self::STATUS_CLOSED,
+        ];
+    }
+
+    /**
+     * Statuts de fin de traitement (back-office).
+     *
+     * @return list<string>
+     */
+    public static function getBackOfficeStatusChoices(): array
+    {
+        return [
+            self::STATUS_WAITING_ACCOUNT_MANAGER,
+            self::STATUS_CLOSED,
+        ];
     }
 }

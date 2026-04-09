@@ -45,7 +45,7 @@ final class DocumentController extends AbstractController
             $action = $request->request->get('action');
 
             if ($action === 'send') {
-                $fundingRequest->setStatus('Attente client');
+                $fundingRequest->setStatus(FundingRequest::STATUS_WAITING_CLIENT);
                 // 🔹 Mail aux utilisateurs de la société liée à la demande
                 $company = $fundingRequest->getCampany();
                 if ($company) {
@@ -92,7 +92,7 @@ final class DocumentController extends AbstractController
             }
 
             if ($action === 'save') {
-                $fundingRequest->setStatus('En cours');
+                $fundingRequest->setStatus(FundingRequest::STATUS_IN_PROGRESS);
                 $em->flush();
 
                 return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
@@ -359,7 +359,7 @@ final class DocumentController extends AbstractController
             $action = $request->request->get('action');
 
             if ($action === 'validate') {
-                $fundingRequest->setStatus('Retour client');
+                $fundingRequest->setStatus(FundingRequest::STATUS_BACK_FROM_CLIENT);
 
                 $em->flush();
 

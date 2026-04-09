@@ -35,7 +35,7 @@ $clientId = $user;
 
     if ($form->isSubmitted() && $form->isValid()) {
         $fundingRequest->setCampany($campany);
-        $fundingRequest->setStatus('En cours');
+        $fundingRequest->setStatus(FundingRequest::STATUS_IN_PROGRESS);
         if (null === $fundingRequest->getCreatedAt()) {
             $fundingRequest->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Europe/Paris')));
         }

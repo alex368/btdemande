@@ -86,15 +86,6 @@
         <div class="card shadow-sm border-0">
             {# Liste des étapes #}
 
-            {% set steps = [
-                'En cours',
-                'Attente client',
-                'Retour client',
-                'Traitement du dossier',
-                "Attente chargé d'affaires",
-                'Dossier cloturé'
-            ] %}
-
             {# Trouver l’index du statut actuel #}
             {% set currentIndex = -1 %}
             {% for s in steps %}

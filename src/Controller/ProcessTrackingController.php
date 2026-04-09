@@ -50,6 +50,8 @@ final class ProcessTrackingController extends AbstractController
         // ⚠️ On sort du foreach et on fait le render ici
         return $this->render('process_tracking/index.html.twig', [
             'trackingData' => $campanyTrackingData, // c’est ce qu’on a construit
+            'waitingClientStatus' => FundingRequest::STATUS_WAITING_CLIENT,
+            'trackingStatuses' => FundingRequest::getTrackingStatuses(),
         ]);
     }
 
@@ -59,8 +61,8 @@ public function tracking(FundingRequest $fundingRequest): Response
 {
     return $this->render('process_tracking/tracking.html.twig', [
         'request' => $fundingRequest,
+        'steps' => FundingRequest::getTrackingStatuses(),
     ]);
 }
 
 }
-
