@@ -11,6 +11,7 @@ use App\Entity\Product;
 use App\Entity\PromoCode;
 use App\Entity\SubscriptionPlan;
 use App\Entity\User;
+use App\Entity\UserSessionEvent;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
@@ -48,7 +49,9 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToCrud('Mécanismes de financement', 'fas fa-money-bill-wave', FundingMechanism::class);
         yield MenuItem::linkToCrud('Partenaires', 'fas fa-handshake', Partnership::class);
         yield MenuItem::linkToCrud('Produits', 'fas fa-box', Product::class);
-         yield MenuItem::linkToCrud('Entreprises', 'fas fa-building', Campany::class);
+        yield MenuItem::linkToCrud('Entreprises', 'fas fa-building', Campany::class);
+        yield MenuItem::linkToCrud('Traçabilité', 'fas fa-shoe-prints', UserSessionEvent::class)
+            ->setPermission('ROLE_SUPER_ADMIN');
 
     }
 }

@@ -28,7 +28,20 @@
                             <tr>
                                 <td>{{ find.campany ? find.campany.legalName : '—' }}</td>
                                 <td>{{ find.amount|default(0)|number_format(0, ',', ' ') }} €</td>
-                                <td>{{ find.product ? find.product.name : '—' }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if find.product and find.product.fundingMechanism and find.product.fundingMechanism.logo %}
+                                            <img
+                                                src="{{ asset('uploads/logos/' ~ find.product.fundingMechanism.logo) }}"
+                                                alt="Logo {{ find.product.fundingMechanism.name }}"
+                                                width="28"
+                                                height="28"
+                                                style="object-fit:contain;"
+                                            >
+                                        {% endif %}
+                                        <span>{{ find.product ? find.product.name : '—' }}</span>
+                                    </div>
+                                </td>
                                 <td>{{ find.displayStatus }}</td>
                                 <td>
                                     {% set progressIndex = find.trackingProgressIndex %}

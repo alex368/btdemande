@@ -320,10 +320,52 @@ thead {
                 }
             });
         });
-    }pip
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         enhanceEditors();
+    });
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const trackUrl = '{{ path('app_user_event_track') }}';
+
+        const sendTrackingEvent = (payload) => {
+            const body = JSON.stringify(payload);
+
+            if (navigator.sendBeacon) {
+                const blob = new Blob([body], { type: 'application/json' });
+                navigator.sendBeacon(trackUrl, blob);
+                return;
+            }
+
+            fetch(trackUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body,
+                keepalive: true,
+            }).catch(() => {});
+        };
+
+        document.body.addEventListener('click', (event) => {
+            const target = event.target.closest('button, a, [role="button"], [data-track]');
+            if (!target) {
+                return;
+            }
+
+            const text = (target.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 120);
+            const actionName = target.getAttribute('data-track') || text || target.tagName.toLowerCase();
+
+            sendTrackingEvent({
+                eventType: 'button_click',
+                actionName,
+                page: window.location.pathname,
+                href: target.getAttribute('href') || null,
+                target: target.tagName.toLowerCase(),
+                route: '{{ app.request.attributes.get('_route')|default('') }}',
+            });
+        }, { capture: true });
     });
     </script>
     </body>
