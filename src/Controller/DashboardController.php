@@ -16,7 +16,10 @@ final class DashboardController extends AbstractController
     #[Route('/dashboard', name: 'app_dashboard')]
     public function index(EventCustomerRepository $eventRepository, EntityManagerInterface $em): Response
     {
-
+        $currentUser = $this->getUser();
+        if (!$currentUser instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
 
         $tz = new \DateTimeZone('Europe/Paris');
 
@@ -34,12 +37,6 @@ final class DashboardController extends AbstractController
             ->getQuery()
             ->getResult();
 
-        $id = $this->getUser();
-        $user = $em->getRepository(User::class)->findOneById($id);
-
-
-
-
         $requests = [];
 
 
@@ -47,7 +44,7 @@ final class DashboardController extends AbstractController
             $requests = $em->getRepository(FundingRequest::class)->findAll();
         } elseif ($this->isGranted('ROLE_COLLABORATOR')) {
             $requests = $em->getRepository(FundingRequest::class)->findBy(
-                ['user' => $user->getId()],
+                ['user' => $currentUser],
                 ['id' => 'DESC']
             );
         } elseif ($this->isGranted('ROLE_CUSTOMER')) {
@@ -56,7 +53,7 @@ final class DashboardController extends AbstractController
                 ->join('fr.campany', 'c')
                 ->join('c.customer', 'cu')
                 ->where('cu = :user')
-                ->setParameter('user', $this->getUser())
+                ->setParameter('user', $currentUser)
                 ->orderBy('fr.id', 'DESC')
                 ->getQuery()
                 ->getResult();
@@ -83,12 +80,12 @@ final class DashboardController extends AbstractController
                 // Admin : toutes les demandes validées
             } elseif ($this->isGranted('ROLE_COLLABORATOR')) {
                 $qb->andWhere('fr.user = :user')
-                    ->setParameter('user', $this->getUser());
+                    ->setParameter('user', $currentUser);
             } elseif ($this->isGranted('ROLE_CUSTOMER')) {
                 $qb->join('fr.campany', 'c')
                     ->join('c.customer', 'cu')
                     ->andWhere('cu = :user')
-                    ->setParameter('user', $this->getUser());
+                    ->setParameter('user', $currentUser);
             }
 
             return $qb;
@@ -106,18 +103,21 @@ final class DashboardController extends AbstractController
         if ($this->isGranted('ROLE_COLLABORATOR')) {
             $baseFinanceurQb
                 ->andWhere('fr.user = :currentUser')
-                ->setParameter('currentUser', $this->getUser());
+                ->setParameter('currentUser', $currentUser);
         } elseif ($this->isGranted('ROLE_CUSTOMER')) {
             $baseFinanceurQb
                 ->join('fr.campany', 'c')
                 ->join('c.customer', 'cu')
                 ->andWhere('cu = :currentUser')
-                ->setParameter('currentUser', $this->getUser());
+                ->setParameter('currentUser', $currentUser);
         }
 
         $ongoingRequests = (clone $baseFinanceurQb)
-            ->andWhere('fr.status != :validatedStatus')
-            ->setParameter('validatedStatus', FundingRequest::STATUS_VALIDATED)
+            ->andWhere('fr.status NOT IN (:finishedStatuses)')
+            ->setParameter('finishedStatuses', [
+                FundingRequest::STATUS_VALIDATED,
+                FundingRequest::STATUS_CLOSED,
+            ])
             ->getQuery()
             ->getResult();
 

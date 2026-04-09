@@ -15,6 +15,18 @@ final class ProcessTrackingController extends AbstractController
     #[Route('/process/tracking/{id}', name: 'app_process_tracking')]
     public function index(int $id, EntityManagerInterface $em): Response
     {
+        $currentUser = $this->getUser();
+        if (!$currentUser instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        if (
+            !$this->isGranted('ROLE_ADMIN')
+            && !$this->isGranted('ROLE_COLLABORATOR')
+            && !$this->isGranted('ROLE_CUSTOMER')
+        ) {
+            throw $this->createAccessDeniedException('Acces refuse.');
+        }
 
         // Récupérer l'utilisateur
         $user = $em->getRepository(User::class)->find($id);
@@ -22,6 +34,13 @@ final class ProcessTrackingController extends AbstractController
         // Vérification de l'existence de l'utilisateur
         if (!$user) {
             throw $this->createNotFoundException('User not found.');
+        }
+
+        if (
+            !$this->isGranted('ROLE_ADMIN')
+            && (int) $user->getId() !== (int) $currentUser->getId()
+        ) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas consulter ce suivi.');
         }
 
         // Récupérer les campanies liées
@@ -57,12 +76,38 @@ final class ProcessTrackingController extends AbstractController
 
 
     #[Route('/client/request/{id}/tracking', name: 'client_request_tracking')]
-public function tracking(FundingRequest $fundingRequest): Response
-{
-    return $this->render('process_tracking/tracking.html.twig', [
-        'request' => $fundingRequest,
-        'steps' => FundingRequest::getTrackingStatuses(),
-    ]);
-}
+    public function tracking(FundingRequest $fundingRequest): Response
+    {
+        $currentUser = $this->getUser();
+        if (!$currentUser instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        $canAccess = false;
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $canAccess = true;
+        } elseif ($this->isGranted('ROLE_COLLABORATOR')) {
+            $canAccess = $fundingRequest->getUser()?->getId() === $currentUser->getId();
+        } elseif ($this->isGranted('ROLE_CUSTOMER')) {
+            $company = $fundingRequest->getCampany();
+            if ($company) {
+                foreach ($company->getCustomer() as $customer) {
+                    if ($customer->getId() === $currentUser->getId()) {
+                        $canAccess = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!$canAccess) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas consulter cette demande.');
+        }
+
+        return $this->render('process_tracking/tracking.html.twig', [
+            'request' => $fundingRequest,
+            'steps' => FundingRequest::getTrackingStatuses(),
+        ]);
+    }
 
 }
