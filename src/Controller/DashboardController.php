@@ -109,18 +109,20 @@ final class DashboardController extends AbstractController
         }
 
         $ongoingRequests = (clone $baseFinanceurQb)
-            ->andWhere('fr.status NOT IN (:finishedStatuses)')
-            ->setParameter('finishedStatuses', [
-                FundingRequest::STATUS_VALIDATED,
-                FundingRequest::STATUS_CLOSED,
-            ])
+            ->andWhere('fr.status = :ongoingStatus')
+            ->andWhere('(fr.createdAt IS NULL OR (fr.createdAt >= :yearStart AND fr.createdAt < :yearEnd))')
+            ->setParameter('ongoingStatus', FundingRequest::STATUS_IN_PROGRESS)
+            ->setParameter('yearStart', $yearStart)
+            ->setParameter('yearEnd', $yearEnd)
             ->getQuery()
             ->getResult();
 
         $validatedThisYearRequests = (clone $baseFinanceurQb)
-            ->andWhere('fr.status = :validatedStatus')
+            ->andWhere('fr.status = :closedStatus')
+            ->andWhere('fr.decision = :validatedDecision')
             ->andWhere('(fr.createdAt IS NULL OR (fr.createdAt >= :yearStart AND fr.createdAt < :yearEnd))')
-            ->setParameter('validatedStatus', FundingRequest::STATUS_VALIDATED)
+            ->setParameter('closedStatus', FundingRequest::STATUS_CLOSED)
+            ->setParameter('validatedDecision', FundingRequest::DECISION_VALIDATED)
             ->setParameter('yearStart', $yearStart)
             ->setParameter('yearEnd', $yearEnd)
             ->getQuery()
