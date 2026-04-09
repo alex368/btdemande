@@ -9,6 +9,11 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
+if (\defined('__APP_ENTITY_FUNDINGREQUEST_DECLARING__')) {
+    return;
+}
+\define('__APP_ENTITY_FUNDINGREQUEST_DECLARING__', true);
+
 #[ORM\Entity(repositoryClass: FundingRequestRepository::class)]
 class FundingRequest
 {
