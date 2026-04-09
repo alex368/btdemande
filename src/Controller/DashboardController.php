@@ -60,7 +60,7 @@ final class DashboardController extends AbstractController
                 ->getResult();
         }
 
-        $buildQb = function (string $type) use ($em): QueryBuilder {
+        $buildQb = function (string $type) use ($em, $currentUser): QueryBuilder {
             $qb = $em->getRepository(FundingRequest::class)->createQueryBuilder('fr')
                 ->join('fr.product', 'p')
                 ->andWhere('fr.status = :status')
