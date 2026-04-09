@@ -37,82 +37,44 @@ final class DashboardController extends AbstractController
             ->getQuery()
             ->getResult();
 
-        $requests = [];
-        $requestsCustomer = [];
+        $requestsQb = $em->getRepository(FundingRequest::class)->createQueryBuilder('fr')
+            ->orderBy('fr.id', 'DESC');
+        $this->applyRoleScope($requestsQb, $currentUser);
+        $dashboardRequests = $requestsQb->getQuery()->getResult();
 
-
-        if ($this->isGranted('ROLE_ADMIN')) {
-            $requests = $em->getRepository(FundingRequest::class)->findAll();
-        } elseif ($this->isGranted('ROLE_COLLABORATOR')) {
-            $requests = $em->getRepository(FundingRequest::class)->findBy(
-                ['user' => $currentUser],
-                ['id' => 'DESC']
-            );
-        } elseif ($this->isGranted('ROLE_CUSTOMER')) {
-            $requestsCustomer = $em->getRepository(FundingRequest::class)
-                ->createQueryBuilder('fr')
-                ->join('fr.campany', 'c')
-                ->join('c.customer', 'cu')
-                ->where('cu = :user')
-                ->setParameter('user', $currentUser)
-                ->orderBy('fr.id', 'DESC')
-                ->getQuery()
-                ->getResult();
-        }
-
-        $buildQb = function (string $type) use ($em, $currentUser): QueryBuilder {
+        $buildValidatedAmountQb = function (string $type) use ($em, $currentUser): QueryBuilder {
             $qb = $em->getRepository(FundingRequest::class)->createQueryBuilder('fr')
                 ->join('fr.product', 'p')
-                ->andWhere('fr.status = :status')
+                ->andWhere('fr.status = :closedStatus')
+                ->andWhere('fr.decision = :validatedDecision')
                 ->andWhere('p.typeProduct = :type')
-                ->setParameter('status', FundingRequest::STATUS_VALIDATED)
+                ->andWhere('fr.createdAt IS NOT NULL')
+                ->setParameter('closedStatus', FundingRequest::STATUS_CLOSED)
+                ->setParameter('validatedDecision', FundingRequest::DECISION_VALIDATED)
                 ->setParameter('type', $type)
                 ->orderBy('fr.id', 'DESC');
 
-            if ($this->isGranted('ROLE_ADMIN')) {
-                // Admin : toutes les demandes validées
-            } elseif ($this->isGranted('ROLE_COLLABORATOR')) {
-                $qb->andWhere('fr.user = :user')
-                    ->setParameter('user', $currentUser);
-            } elseif ($this->isGranted('ROLE_CUSTOMER')) {
-                $qb->join('fr.campany', 'c')
-                    ->join('c.customer', 'cu')
-                    ->andWhere('cu = :user')
-                    ->setParameter('user', $currentUser);
-            }
+            $this->applyRoleScope($qb, $currentUser);
 
             return $qb;
         };
 
-
-     
-
-        $subventionTotal  = array_sum(array_map(fn($fr) => $fr->getAmount(), $buildQb('Subvention')->getQuery()->getResult()));
-        $pretTotal        = array_sum(array_map(fn($fr) => $fr->getAmount(), $buildQb('Pret')->getQuery()->getResult()));
-        $pretHonneurTotal = array_sum(array_map(fn($fr) => $fr->getAmount(), $buildQb("Pret d'honneur")->getQuery()->getResult()));
+        $subventionTotal  = array_sum(array_map(fn($fr) => $fr->getAmount(), $buildValidatedAmountQb('Subvention')->getQuery()->getResult()));
+        $pretTotal        = array_sum(array_map(fn($fr) => $fr->getAmount(), $buildValidatedAmountQb('Pret')->getQuery()->getResult()));
+        $pretHonneurTotal = array_sum(array_map(fn($fr) => $fr->getAmount(), $buildValidatedAmountQb("Pret d'honneur")->getQuery()->getResult()));
         $totalAccorde     = $subventionTotal + $pretTotal + $pretHonneurTotal;
 
         $baseFinanceurQb = $em->getRepository(FundingRequest::class)->createQueryBuilder('fr')
             ->join('fr.product', 'p')
             ->leftJoin('p.fundingMechanism', 'fm');
-
-        if ($this->isGranted('ROLE_COLLABORATOR')) {
-            $baseFinanceurQb
-                ->andWhere('fr.user = :currentUser')
-                ->setParameter('currentUser', $currentUser);
-        } elseif ($this->isGranted('ROLE_CUSTOMER')) {
-            $baseFinanceurQb
-                ->join('fr.campany', 'c')
-                ->join('c.customer', 'cu')
-                ->andWhere('cu = :currentUser')
-                ->setParameter('currentUser', $currentUser);
-        }
+        $this->applyRoleScope($baseFinanceurQb, $currentUser);
 
         $ongoingRequests = (clone $baseFinanceurQb)
-            ->andWhere('fr.status = :ongoingStatus')
+            ->andWhere('fr.status = :inProgressStatus')
+            ->andWhere('fr.createdAt IS NOT NULL')
             ->andWhere('fr.createdAt >= :yearStart')
             ->andWhere('fr.createdAt < :yearEnd')
-            ->setParameter('ongoingStatus', FundingRequest::STATUS_IN_PROGRESS)
+            ->setParameter('inProgressStatus', FundingRequest::STATUS_IN_PROGRESS)
             ->setParameter('yearStart', $yearStart)
             ->setParameter('yearEnd', $yearEnd)
             ->getQuery()
@@ -121,6 +83,7 @@ final class DashboardController extends AbstractController
         $validatedThisYearRequests = (clone $baseFinanceurQb)
             ->andWhere('fr.status = :closedStatus')
             ->andWhere('fr.decision = :validatedDecision')
+            ->andWhere('fr.createdAt IS NOT NULL')
             ->andWhere('fr.createdAt >= :yearStart')
             ->andWhere('fr.createdAt < :yearEnd')
             ->setParameter('closedStatus', FundingRequest::STATUS_CLOSED)
@@ -141,12 +104,8 @@ final class DashboardController extends AbstractController
             return $counts;
         };
 
-        $dashboardRequests = $this->isGranted('ROLE_CUSTOMER') ? $requestsCustomer : $requests;
-
         return $this->render('dashboard/index.html.twig', [
             'events'           => $eventsToday,
-            'requests'         => $requests,
-            'requestsCustomer' => $requestsCustomer,
             'dashboardRequests' => $dashboardRequests,
             'subventionTotal'  => $subventionTotal,
             'pretTotal'        => $pretTotal,
@@ -156,6 +115,28 @@ final class DashboardController extends AbstractController
             'validatedFinanceurData' => $groupByFinanceur($validatedThisYearRequests),
             'statusWaitingClient' => FundingRequest::STATUS_WAITING_CLIENT,
             'statusBackFromClient' => FundingRequest::STATUS_BACK_FROM_CLIENT,
+            'trackingStatuses' => FundingRequest::getTrackingStatuses(),
         ]);
+    }
+
+    private function applyRoleScope(QueryBuilder $qb, User $currentUser): void
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return;
+        }
+
+        if ($this->isGranted('ROLE_COLLABORATOR')) {
+            $qb->andWhere('fr.user = :currentUser')
+                ->setParameter('currentUser', $currentUser);
+
+            return;
+        }
+
+        if ($this->isGranted('ROLE_CUSTOMER')) {
+            $qb->join('fr.campany', 'c')
+                ->join('c.customer', 'cu')
+                ->andWhere('cu = :currentUser')
+                ->setParameter('currentUser', $currentUser);
+        }
     }
 }

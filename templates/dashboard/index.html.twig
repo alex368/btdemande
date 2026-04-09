@@ -111,23 +111,28 @@
                         </div>
                         <div class="text-center">{{ request.product.name }}</div>
                         <div>
-                            <span class="badge badge-custom fw-bold">{{ request.status }}</span>
+                            <span class="badge badge-custom fw-bold">{{ request.displayStatus }}</span>
                         </div>
                         <p class="mb-2">Etat d’avancement</p>
-                        <div class="card border-0 p-2 mb-3 text-center" style="background-color: #214995;">
-                            <div class="timeline">
-                                <div class="timeline-step">
-                                    <div class="fw-bold small text-start">Complétude du dossier</div>
-                                    <div class="small text-start">04/04/2025</div>
-                                </div>
-                                <div class="timeline-step">
-                                    <div class="fw-bold small text-start">En cours</div>
-                                    <div class="small text-start">04/04/2025</div>
-                                </div>
-                                <div class="timeline-step">
-                                    <div class="fw-bold small text-start">En attente de décision</div>
-                                    <div class="small text-start">04/04/2025</div>
-                                </div>
+                        {% set progressIndex = request.trackingProgressIndex %}
+                        {% set totalSteps = trackingStatuses|length %}
+                        {% set percent = progressIndex >= 0 ? ((progressIndex + 1) / totalSteps * 100)|round(0, 'floor') : 0 %}
+                        <div class="card border-0 p-2 mb-3 text-start" style="background-color: #214995;">
+                            <div class="text-white small mb-2">Étape actuelle: {{ request.displayStatus }}</div>
+                            <div class="progress mb-2" style="height: 8px;">
+                                <div
+                                    class="progress-bar"
+                                    role="progressbar"
+                                    style="width: {{ percent }}%; background-color:#FBBB3B;"
+                                    aria-valuenow="{{ percent }}"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                ></div>
+                            </div>
+                            <div class="d-flex justify-content-between text-white-50 small">
+                                <span>Début</span>
+                                <span>{{ percent }}%</span>
+                                <span>Clôture</span>
                             </div>
                         </div>
 

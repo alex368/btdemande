@@ -87,12 +87,7 @@
             {# Liste des étapes #}
 
             {# Trouver l’index du statut actuel #}
-            {% set currentIndex = -1 %}
-            {% for s in steps %}
-                {% if s == request.status %}
-                    {% set currentIndex = loop.index0 %}
-                {% endif %}
-            {% endfor %}
+            {% set currentIndex = request.trackingProgressIndex %}
 
          <ul id="progressbar">
     {% for step in steps %}
@@ -105,8 +100,15 @@
 {% if request.comment is not empty %}
     <div class="mt-4 px-4">
         <div class="alert alert-light border shadow-sm">
+            <h5 class="mb-2">Statut: {{ request.displayStatus }}</h5>
             <h5 class="mb-2">Commentaire</h5>
             <p class="mb-0">{{ request.comment }}</p>
+        </div>
+    </div>
+{% else %}
+    <div class="mt-4 px-4">
+        <div class="alert alert-light border shadow-sm">
+            <h5 class="mb-0">Statut: {{ request.displayStatus }}</h5>
         </div>
     </div>
 {% endif %}

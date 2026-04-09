@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Campany;
 use App\Entity\FundingRequest;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,47 +27,40 @@ final class ProcessTrackingController extends AbstractController
             throw $this->createAccessDeniedException('Acces refuse.');
         }
 
-        // Récupérer l'utilisateur
         $user = $em->getRepository(User::class)->find($id);
-
-        // Vérification de l'existence de l'utilisateur
         if (!$user) {
             throw $this->createNotFoundException('User not found.');
         }
 
         if (
-            !$this->isGranted('ROLE_ADMIN')
+            ($this->isGranted('ROLE_COLLABORATOR') || $this->isGranted('ROLE_CUSTOMER'))
             && (int) $user->getId() !== (int) $currentUser->getId()
         ) {
             throw $this->createAccessDeniedException('Vous ne pouvez pas consulter ce suivi.');
         }
 
-        // Récupérer les campanies liées
-        $campanies = $user->getCampanies(); // ou ->getCompanies() si c’est le bon nom
-
-        // Construire un tableau avec chaque campany + ses FundingRequests
+        $campanies = $user->getCampanies();
         $campanyTrackingData = [];
 
         foreach ($campanies as $campany) {
-    $requests = $em->getRepository(FundingRequest::class)->findBy([
-        'campany' => $campany,
-    ]);
+            $requests = $em->getRepository(FundingRequest::class)->findBy([
+                'campany' => $campany,
+            ], [
+                'id' => 'DESC',
+            ]);
 
+            if (\count($requests) === 0) {
+                continue;
+            }
 
-    if (count($requests) === 0) {
-        continue; // ⚠️ on saute cette campany si aucune demande
-    }
+            $campanyTrackingData[] = [
+                'campany'  => $campany,
+                'requests' => $requests,
+            ];
+        }
 
-    $campanyTrackingData[] = [
-        'campany'  => $campany,
-        'requests' => $requests,
-    ];
-}
-
-
-        // ⚠️ On sort du foreach et on fait le render ici
         return $this->render('process_tracking/index.html.twig', [
-            'trackingData' => $campanyTrackingData, // c’est ce qu’on a construit
+            'trackingData' => $campanyTrackingData,
             'waitingClientStatus' => FundingRequest::STATUS_WAITING_CLIENT,
             'trackingStatuses' => FundingRequest::getTrackingStatuses(),
         ]);
@@ -109,5 +101,4 @@ final class ProcessTrackingController extends AbstractController
             'steps' => FundingRequest::getTrackingStatuses(),
         ]);
     }
-
 }

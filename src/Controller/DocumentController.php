@@ -31,7 +31,7 @@ final class DocumentController extends AbstractController
         $validDocumentsCount = array_reduce(
             $documents,
             static function (int $count, Document $doc): int {
-                if ($doc->isStatus() === true && !empty($doc->getFilename())) {
+                if ($doc->isStatus() === true) {
                     ++$count;
                 }
 

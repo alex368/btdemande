@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ status_code }} - Fidelissimo</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon/favicon.ico') }}">
+    <style>
+        :root {
+            --brand-blue: #163a70;
+            --brand-blue-2: #214995;
+            --brand-gold: #fbbb3b;
+            --ink: #1f2937;
+            --muted: #6b7280;
+            --paper: #ffffff;
+            --bg-a: #f4efe2;
+            --bg-b: #eef2ff;
+            --bg-c: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(1100px 480px at -5% -10%, rgba(37, 99, 235, 0.20), transparent 65%),
+                radial-gradient(900px 460px at 105% 115%, rgba(251, 191, 36, 0.26), transparent 60%),
+                linear-gradient(165deg, var(--bg-a) 0%, var(--bg-b) 48%, var(--bg-c) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .error-shell {
+            width: min(980px, 100%);
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            background: var(--paper);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 18px 65px rgba(22, 58, 112, 0.22);
+        }
+
+        .left {
+            background: linear-gradient(160deg, var(--brand-blue) 0%, var(--brand-blue-2) 60%, #0f766e 100%);
+            color: #fff;
+            padding: 36px 28px;
+            position: relative;
+        }
+
+        .left::after {
+            content: "";
+            position: absolute;
+            inset: auto -30% -25% auto;
+            width: 240px;
+            height: 240px;
+            border-radius: 999px;
+            background: rgba(251, 187, 59, 0.22);
+            filter: blur(1px);
+        }
+
+        .code {
+            font-size: 72px;
+            line-height: 1;
+            margin: 12px 0;
+            font-weight: 800;
+        }
+
+        .left p {
+            margin: 0;
+            opacity: 0.9;
+            line-height: 1.45;
+        }
+
+        .right {
+            padding: 36px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #fef3c7;
+            color: #92400e;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            color: var(--brand-blue);
+            font-size: 32px;
+            line-height: 1.2;
+        }
+
+        .desc {
+            margin: 0 0 20px;
+            color: var(--muted);
+            line-height: 1.6;
+            max-width: 56ch;
+        }
+
+        .stack {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .stack li {
+            border-left: 4px solid rgba(33, 73, 149, 0.22);
+            padding: 8px 12px;
+            background: #f8fafc;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .btn {
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-weight: 700;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--brand-gold);
+            color: #1b2e56;
+        }
+
+        .btn-secondary {
+            border-color: #cbd5e1;
+            color: #334155;
+            background: #fff;
+        }
+
+        .meta {
+            margin-top: 16px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        @media (max-width: 900px) {
+            .error-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .left,
+            .right {
+                padding: 28px 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% set statusPrefix = status_code // 100 %}
+    {% set defaultBadge = statusPrefix == 5 ? 'Incident serveur' : (statusPrefix == 4 ? 'Action impossible' : (statusPrefix == 3 ? 'Redirection' : 'Information')) %}
+    {% set defaultTitle = statusPrefix == 5 ? 'Oups, une erreur technique est survenue' : (statusPrefix == 4 ? 'La page demandée est indisponible' : (statusPrefix == 3 ? 'Cette ressource a changé d’adresse' : 'Réponse système')) %}
+    {% set defaultMessage = statusPrefix == 5
+        ? 'Nos équipes ont été notifiées. Tu peux réessayer dans un instant.'
+        : (statusPrefix == 4
+            ? 'Vérifie l’URL ou retourne sur une page connue.'
+            : (statusPrefix == 3
+                ? 'Le navigateur attend une redirection. Tu peux revenir à l’accueil.'
+                : 'Le serveur a retourné une réponse inattendue.')) %}
+    {% set title = error_title|default(defaultTitle) %}
+    {% set message = error_message|default(defaultMessage) %}
+    {% set badgeText = error_badge|default(defaultBadge) %}
+
+    <section class="error-shell" role="alert" aria-live="assertive">
+        <aside class="left">
+            <img src="{{ asset('image/logo.png') }}" alt="Logo Fidelissimo" width="88">
+            <div class="code">{{ status_code }}</div>
+            <p>{{ status_text ?: 'Erreur' }}</p>
+        </aside>
+        <div class="right">
+            <span class="badge">{{ badgeText }}</span>
+            <h1>{{ title }}</h1>
+            <p class="desc">{{ message }}</p>
+
+            <ul class="stack">
+                <li>Retourne au tableau de bord pour reprendre ton flux.</li>
+                <li>Recharge la page après quelques secondes.</li>
+                <li>Si ça persiste, contacte le support Fidelissimo.</li>
+            </ul>
+
+            <div class="actions">
+                <a href="/dashboard" class="btn btn-primary">Retour au dashboard</a>
+                <a href="/" class="btn btn-secondary">Accueil</a>
+            </div>
+            <div class="meta">Code {{ status_code }} • Fidelissimo</div>
+        </div>
+    </section>
+</body>
+</html>

@@ -23,6 +23,27 @@ class FundingRequest
     public const DECISION_VALIDATED = 'Validé';
     public const DECISION_REFUSED = 'Refusé';
 
+    private const STATUS_ALIASES = [
+        'en cours' => self::STATUS_IN_PROGRESS,
+        'attente client' => self::STATUS_WAITING_CLIENT,
+        'retour client' => self::STATUS_BACK_FROM_CLIENT,
+        'traitement du dossier' => self::STATUS_PROCESSING,
+        "attente chargé d'affaires" => self::STATUS_WAITING_ACCOUNT_MANAGER,
+        'dossier clôturé' => self::STATUS_CLOSED,
+        'dossier cloturé' => self::STATUS_CLOSED,
+        'validé' => self::STATUS_VALIDATED,
+        'valide' => self::STATUS_VALIDATED,
+    ];
+
+    private const DECISION_ALIASES = [
+        'validé' => self::DECISION_VALIDATED,
+        'valide' => self::DECISION_VALIDATED,
+        'validée' => self::DECISION_VALIDATED,
+        'refusé' => self::DECISION_REFUSED,
+        'refuse' => self::DECISION_REFUSED,
+        'refusée' => self::DECISION_REFUSED,
+    ];
+
     #[Groups(['document:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -149,7 +170,7 @@ class FundingRequest
 
     public function setStatus(string $status): static
     {
-        $this->status = $status;
+        $this->status = self::normalizeStatus($status);
 
         return $this;
     }
@@ -197,7 +218,7 @@ class FundingRequest
 
     public function setDecision(?string $decision): static
     {
-        $this->decision = $decision;
+        $this->decision = self::normalizeDecision($decision);
 
         return $this;
     }
@@ -242,5 +263,61 @@ class FundingRequest
             self::STATUS_WAITING_ACCOUNT_MANAGER,
             self::STATUS_CLOSED,
         ];
+    }
+
+    public static function normalizeStatus(string $status): string
+    {
+        $normalized = trim($status);
+        $key = mb_strtolower($normalized);
+
+        return self::STATUS_ALIASES[$key] ?? $normalized;
+    }
+
+    public static function normalizeDecision(?string $decision): ?string
+    {
+        if ($decision === null) {
+            return null;
+        }
+
+        $normalized = trim($decision);
+        if ($normalized === '') {
+            return null;
+        }
+
+        $key = mb_strtolower($normalized);
+
+        return self::DECISION_ALIASES[$key] ?? $normalized;
+    }
+
+    public function getDisplayStatus(): ?string
+    {
+        if ($this->status === null) {
+            return null;
+        }
+
+        if (
+            self::normalizeStatus($this->status) === self::STATUS_CLOSED
+            && self::normalizeDecision($this->decision) === self::DECISION_VALIDATED
+        ) {
+            return self::STATUS_VALIDATED;
+        }
+
+        return $this->status;
+    }
+
+    public function getTrackingProgressIndex(): int
+    {
+        if ($this->status === null) {
+            return -1;
+        }
+
+        $status = self::normalizeStatus($this->status);
+        if ($status === self::STATUS_VALIDATED) {
+            $status = self::STATUS_CLOSED;
+        }
+
+        $index = array_search($status, self::getTrackingStatuses(), true);
+
+        return $index === false ? -1 : $index;
     }
 }

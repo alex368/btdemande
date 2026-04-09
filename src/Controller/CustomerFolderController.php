@@ -4,46 +4,52 @@ namespace App\Controller;
 
 use App\Entity\FundingRequest;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class CustomerFolderController extends AbstractController
 {
     #[Route('/customer/folder', name: 'app_customer_folder')]
-    public function index(EntityManagerInterface $em): Response
+    public function index(
+        EntityManagerInterface $em,
+        PaginatorInterface $paginator,
+        Request $request
+    ): Response
     {
-
         $user = $this->getUser();
-        $repository = $em->getRepository(FundingRequest::class);
+        $qb = $em->getRepository(FundingRequest::class)->createQueryBuilder('fr')
+            ->leftJoin('fr.campany', 'c')
+            ->leftJoin('fr.product', 'p')
+            ->addSelect('c', 'p')
+            ->orderBy('fr.id', 'DESC');
 
         if ($this->isGranted('ROLE_ADMIN')) {
-            $findRequests = $repository->findAll();
+            // admin: tout
         } elseif ($this->isGranted('ROLE_COLLABORATOR')) {
-            $findRequests = $repository->findByUser($user);
+            $qb->andWhere('fr.user = :currentUser')
+                ->setParameter('currentUser', $user);
         } elseif ($this->isGranted('ROLE_CUSTOMER')) {
-            $findRequests = $repository->findByUser($user);
+            $qb->leftJoin('c.customer', 'cu')
+                ->andWhere('cu = :currentUser')
+                ->setParameter('currentUser', $user);
         } else {
-            $findRequests = [];
+            $qb->andWhere('1 = 0');
         }
 
-        // Initialize variables
-        $campany = null;
-        $userCampany = null;
+        $findRequests = $paginator->paginate(
+            $qb,
+            $request->query->getInt('page', 1),
+            10
+        );
 
-        // Get company and user company from first request
-        if (!empty($findRequests)) {
-            $firstRequest = $findRequests[0];
-            $campany = $firstRequest->getCampany();
-            if ($campany) {
-                $userCampany = $campany->getCustomer();
-            }
-        }
+        $trackingStatuses = FundingRequest::getTrackingStatuses();
 
         return $this->render('customer_folder/index.html.twig', [
             'findRequests' => $findRequests,
-            'campanyId' => $campany?->getId(),
-            'userCampany' => $userCampany,
+            'trackingStatuses' => $trackingStatuses,
         ]);
     }
 }

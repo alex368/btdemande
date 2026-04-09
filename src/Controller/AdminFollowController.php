@@ -8,10 +8,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class AdminFollowController extends AbstractController
 {
- #[Route('/adminz/follow', name: 'app_admin_follow')]
+    #[Route('/adminz/follow', name: 'app_admin_follow')]
+    #[IsGranted('ROLE_ADMIN')]
     public function index(EntityManagerInterface $em): Response
     {
         // ===========================

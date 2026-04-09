@@ -1,86 +1,74 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello ProcessTrackingController!
-{% endblock %}
+{% block title %}Suivi des dossiers{% endblock %}
 
 {% block body %}
-	<!-- Contenu principal à droite -->
-	<main class="col-md-12 col-lg-12 p-2">
+<main class="col-md-12 col-lg-12 p-2">
+	<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Suivi des dossiers</h1>
 
+	<div class="container text-center mt-2">
+		<div class="row g-4 align-items-stretch">
+			{% for tracking in trackingData %}
+				{% set campany = tracking.campany %}
+				{% set requests = tracking.requests %}
+				{% set mainRequest = requests|first %}
 
-		<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Suivi des dossiers</h1>
+				<div class="col-12 col-md-6 col-lg-3">
+					<div class="card border-0 shadow p-3 text-center h-100">
+						{% if mainRequest and mainRequest.product and mainRequest.product.fundingMechanism %}
+							<img src="{{ asset('uploads/logos/' ~ mainRequest.product.fundingMechanism.logo )}}" alt="Logo" width="40" class="me-2">
+						{% endif %}
 
-
-		<div class="container text-center mt-2">
-			<div class="row g-4 align-items-stretch">
-
-
-				<div class="row">
-					{% for tracking in trackingData %}
-
-
-						{% set campany = tracking.campany %}
-						{% set requests = tracking.requests %}
-
-						<div class="col-lg-3">
-							<div class="card border-0 shadow p-3 text-center">
-
-								{% for request in tracking.requests %}
-
-									<img src="{{ asset('uploads/logos/' ~ request.product.fundingMechanism.logo )}}" alt="Logo" width="40" class="me-2">
-								{% endfor %}
-								{# <div class="d-flex align-items-start text-center mb-2">
-																	<img src="https://upload.wikimedia.org/wikipedia/fr/9/91/Logo_CIC_2006.svg" alt="Logo CIC" width="40" class="me-2">
-																</div> #}
-
-								<div class="text-center fw-bold">{{ campany.legalName }}</div>
-	{% for request in tracking.requests %}
-								<div>
-									<span class="badge badge-custom fw-bold">{{ request.status }}</span>
-								</div>
-									{% endfor %}
-								<p class="mb-2">État d’avancement</p>
-
-								<div class="card border-0 p-2 mb-3 text-center" style="background-color: #214995;">
-									<div class="timeline">
-										{% if requests is not empty %}
-											{# on prend juste la première demande pour la timeline #}
-											{% set request = requests|first %}
-
-											<div class="timeline-step">
-												<div class="fw-bold small text-start">Complétude du dossier</div>
-												<div class="small text-start">12/02/2025</div>
-											</div>
-											<div class="timeline-step">
-												<div class="fw-bold small text-start">En cours</div>
-												<div class="small text-start">18/02/2025</div>
-											</div>
-											<div class="timeline-step">
-												<div class="fw-bold small text-start">En attente de décision</div>
-												<div class="small text-start">25/02/2025</div>
-											</div>
-										{% else %}
-											<div class="timeline-step">
-												<div class="small text-center text-white">Aucune demande trouvée</div>
-											</div>
-										{% endif %}
-									</div>
-								</div>
-								{% if requests is not empty and request.status == waitingClientStatus %}
-									<a class="btn btn-custom w-100" href="{{ path('client_documents', { id: request.id }) }}">
-										Faire ma demande
-									</a>
-								{% elseif requests is not empty and request.status in trackingStatuses %}
-									<a class="btn btn-custom w-100" href="{{ path('client_request_tracking', { id: request.id }) }}">
-										Suivre ma demande
-									</a>
-								{% endif %}
+						<div class="text-center fw-bold">{{ campany.legalName }}</div>
+						{% if mainRequest %}
+							<div>
+								<span class="badge badge-custom fw-bold">{{ mainRequest.displayStatus }}</span>
+							</div>
+						{% endif %}
+						<p class="mb-2">État d’avancement</p>
+						{% if mainRequest %}
+							{% set progressIndex = mainRequest.trackingProgressIndex %}
+							{% set totalSteps = trackingStatuses|length %}
+							{% set percent = progressIndex >= 0 ? ((progressIndex + 1) / totalSteps * 100)|round(0, 'floor') : 0 %}
+						{% else %}
+							{% set percent = 0 %}
+						{% endif %}
+						<div class="card border-0 p-2 mb-3 text-start" style="background-color: #214995;">
+							<div class="text-white small mb-2">
+								Étape actuelle: {{ mainRequest ? mainRequest.displayStatus : '—' }}
+							</div>
+							<div class="progress mb-2" style="height: 8px;">
+								<div
+									class="progress-bar"
+									role="progressbar"
+									style="width: {{ percent }}%; background-color:#FBBB3B;"
+									aria-valuenow="{{ percent }}"
+									aria-valuemin="0"
+									aria-valuemax="100"
+								></div>
+							</div>
+							<div class="d-flex justify-content-between text-white-50 small">
+								<span>Début</span>
+								<span>{{ percent }}%</span>
+								<span>Clôture</span>
 							</div>
 						</div>
-					{% endfor %}
 
+						{% if mainRequest and mainRequest.status == waitingClientStatus %}
+							<a class="btn btn-custom w-100" href="{{ path('client_documents', { id: mainRequest.id }) }}">
+								Faire ma demande
+							</a>
+						{% elseif mainRequest and mainRequest.status in trackingStatuses %}
+							<a class="btn btn-custom w-100" href="{{ path('client_request_tracking', { id: mainRequest.id }) }}">
+								Suivre ma demande
+							</a>
+						{% endif %}
+					</div>
 				</div>
-
-
-			</main>
-		{% endblock %}
+			{% else %}
+				<div class="col-12 text-muted">Aucun dossier à suivre.</div>
+			{% endfor %}
+		</div>
+	</div>
+</main>
+{% endblock %}
