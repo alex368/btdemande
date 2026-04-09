@@ -9,10 +9,6 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
-if (class_exists(FundingRequest::class, false)) {
-    return;
-}
-
 #[ORM\Entity(repositoryClass: FundingRequestRepository::class)]
 class FundingRequest
 {
