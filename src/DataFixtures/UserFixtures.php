@@ -9,6 +9,12 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserFixtures extends Fixture
 {
+    public const CUSTOMER_ALICE = 'user.customer.alice';
+    public const CUSTOMER_BRUNO = 'user.customer.bruno';
+    public const CUSTOMER_CHLOE = 'user.customer.chloe';
+    public const CUSTOMER_DIEGO = 'user.customer.diego';
+    private const GENERATED_CUSTOMER_COUNT = 200;
+
     public function __construct(
         private readonly UserPasswordHasherInterface $passwordHasher
     ) {}
@@ -17,63 +23,64 @@ class UserFixtures extends Fixture
     {
         $users = [
             [
-                'email' => 'subvention@btdconsulting.fr',
-                'password' => 'N4d!7xR2qL9b',
-                'lastname' => 'Taleb',
-                'firstname' => 'Nadia',
-                'role' => ['ROLE_COLLABORATOR'],
+                'reference' => self::CUSTOMER_ALICE,
+                'email' => 'alice.martin@example.test',
+                'password' => 'customer123',
+                'lastname' => 'Martin',
+                'firstname' => 'Alice',
+                'number' => '0600000001',
             ],
             [
-                'email' => 'communication@btdconsulting.fr',
-                'password' => 'M9r@6TqF3yZa',
-                'lastname' => 'Letaif',
-                'firstname' => 'Mohamed Mehdi',
-                'role' => ['ROLE_COLLABORATOR'],
+                'reference' => self::CUSTOMER_BRUNO,
+                'email' => 'bruno.dupont@example.test',
+                'password' => 'customer123',
+                'lastname' => 'Dupont',
+                'firstname' => 'Bruno',
+                'number' => '0600000002',
             ],
             [
-                'email' => 'contact@btdconsulting.fr',
-                'password' => 'Aq3$J7pL0hVz',
-                'lastname' => 'Ganvo',
-                'firstname' => 'Alex',
-                'role' => ['ROLE_ADMIN'],
+                'reference' => self::CUSTOMER_CHLOE,
+                'email' => 'chloe.bernard@example.test',
+                'password' => 'customer123',
+                'lastname' => 'Bernard',
+                'firstname' => 'Chloe',
+                'number' => '0600000003',
             ],
             [
-                'email' => 'dispositif@btdconsulting.fr',
-                'password' => 'sV6&nX1uR8cE',
-                'lastname' => 'Inconnu',
-                'firstname' => 'Sylvain',
-                'role' => ['ROLE_COLLABORATOR'],
-            ],
-            [
-                'email' => 'aide@btdconsulting.fr',
-                'password' => 'rB7!zK4mY2pH',
-                'lastname' => 'Bouziane',
-                'firstname' => 'Rim',
-                'role' => ['ROLE_COLLABORATOR'],
-            ],
-            [
-                'email' => 'marketing@btdconsulting.fr',
-                'password' => 'vP8#s2KzW1mQ',
-                'lastname' => 'Morel',
-                'firstname' => 'Margaux',
-                'role' => ['ROLE_CUSTOMER'],
+                'reference' => self::CUSTOMER_DIEGO,
+                'email' => 'diego.leroy@example.test',
+                'password' => 'customer123',
+                'lastname' => 'Leroy',
+                'firstname' => 'Diego',
+                'number' => '0600000004',
             ],
         ];
 
+        for ($index = 5; $index <= self::GENERATED_CUSTOMER_COUNT; ++$index) {
+            $users[] = [
+                'reference' => sprintf('user.customer.%03d', $index),
+                'email' => sprintf('customer%03d@example.test', $index),
+                'password' => 'customer123',
+                'lastname' => sprintf('Client%03d', $index),
+                'firstname' => sprintf('Customer%03d', $index),
+                'number' => sprintf('06%08d', $index),
+            ];
+        }
+
         foreach ($users as $data) {
-            $user = new User();
+            $user = $manager->getRepository(User::class)->findOneBy(['email' => $data['email']]) ?? new User();
             $user->setEmail($data['email']);
             $user->setName($data['firstname']);
             $user->setLastname($data['lastname']);
-            $user->setNumber(''); // ou un numéro générique
-            $user->setRoles($data['role']);
+            $user->setNumber($data['number']);
+            $user->setRoles(['ROLE_CUSTOMER']);
 
             $hashedPassword = $this->passwordHasher->hashPassword($user, $data['password']);
             $user->setPassword($hashedPassword);
 
             $manager->persist($user);
+            $this->addReference($data['reference'], $user);
         }
-
         $manager->flush();
     }
 }

@@ -94,14 +94,15 @@
 					Historique de financement
 				</div>
 				<div class="table-responsive">
-					<table class="table  align-middle mb-0">
+						<table class="table  align-middle mb-0">
 						<thead class="table-primary text-white">
 
 							<tr>
 								<th>Produit</th>
 								<th>Montant</th>
 								<th>status</th>
-								<th>Détail</th>
+								<th>Suppression</th>
+								<th>Action</th>
 							</tr>
 
 						</thead>
@@ -109,16 +110,43 @@
 						<tbody>
 
 							{% for requestDemand in requestDemands %}
+								{% set pendingDelete = pendingDeletionByRequestId[requestDemand.id]|default(false) %}
 								<tr>
-
 									<td>{{requestDemand.product.name}}</td>
 									<td>{{ requestDemand.amount|number_format(0, ',', ' ') }}&nbsp;€</td>
 									<td>{{requestDemand.status}}</td>
+									<td>
+										{% if pendingDelete %}
+											<span class="badge bg-warning text-dark">Validation admin en attente</span>
+										{% else %}
+											<span class="badge bg-secondary">Aucune demande</span>
+										{% endif %}
+									</td>
 									<td class="text-center">
-										<a href="{{path('app_document_index',{id:requestDemand.id, user:user})}}" class="btn btn-outline-primary">
+										{% if pendingDelete %}
+											<button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Demande en attente">
+												<i class="bi bi-trash"></i>
+											</button>
+										{% else %}
+											<button
+												type="button"
+												class="btn btn-outline-danger btn-sm btn-request-delete"
+												title="Demander la suppression"
+												data-bs-toggle="modal"
+												data-bs-target="#deleteRequestModal"
+												data-request-id="{{ requestDemand.id }}"
+											>
+												<i class="bi bi-trash"></i>
+											</button>
+										{% endif %}
+										<a href="{{path('app_document_index',{id:requestDemand.id, user:user})}}" class="btn btn-outline-primary btn-sm ms-1" title="Voir">
 											<i class="bi bi-chevron-right"></i>
 										</a>
 									</td>
+								</tr>
+							{% else %}
+								<tr>
+									<td colspan="5" class="text-center text-muted">Aucun dossier</td>
 								</tr>
 							{% endfor %}
 						</tbody>
@@ -127,6 +155,55 @@
 			</div>
 		</div>
 
+		<div class="modal fade" id="deleteRequestModal" tabindex="-1" aria-labelledby="deleteRequestModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content rounded-0">
+					<form method="post" action="{{ path('app_campany_deletion_request', {id: campanies.id, user: user}) }}" id="deleteRequestForm">
+						<div class="modal-header">
+							<h5 class="modal-title" id="deleteRequestModalLabel">Demander une suppression (validation admin obligatoire)</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+						</div>
+						<div class="modal-body">
+							<input type="hidden" name="_token" value="{{ csrf_token('campany-deletion-request-' ~ campanies.id) }}">
+							<div id="deleteRequestIdsContainer"></div>
+							<div class="mb-2">
+								<label class="form-label fw-semibold">Motif (optionnel)</label>
+								<textarea name="reason" class="form-control" rows="3" placeholder="Motif (optionnel)"></textarea>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-outline-secondary rounded-0" data-bs-dismiss="modal">Retour</button>
+							<button type="submit" class="btn btn-danger rounded-0">Envoyer la demande de suppression</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
 
 	</main>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			const modalEl = document.getElementById('deleteRequestModal');
+			const idsContainer = document.getElementById('deleteRequestIdsContainer');
+			if (!modalEl || !idsContainer) {
+				return;
+			}
+
+			modalEl.addEventListener('show.bs.modal', function (event) {
+				idsContainer.innerHTML = '';
+
+				const trigger = event.relatedTarget;
+				const singleRequestId = trigger ? trigger.getAttribute('data-request-id') : null;
+
+				if (singleRequestId) {
+					const input = document.createElement('input');
+					input.type = 'hidden';
+					input.name = 'funding_request_ids[]';
+					input.value = singleRequestId;
+					idsContainer.appendChild(input);
+				}
+			});
+		});
+	</script>
 {% endblock %}

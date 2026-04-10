@@ -14,10 +14,23 @@
 
 				<p>
 					<strong>Type :</strong>
-					{{ opportunity.leadSource }}</p>
+					{{ opportunity.leadSourceLabel }}
+				</p>
+				{% if opportunity.leadSourceDetail %}
+					<p>
+						<strong>Précision source :</strong>
+						{{ opportunity.leadSourceDetail }}
+					</p>
+				{% endif %}
 				<p>
-					<strong>Etape :</strong>
-					{{ opportunity.stage }}</p>
+					<strong>Référent commercial :</strong>
+					{% if opportunity.commercialReferent %}
+						{{ opportunity.commercialReferent.lastname }}
+						{{ opportunity.commercialReferent.name }}
+					{% else %}
+						-
+					{% endif %}
+				</p>
 				<p>
 					<strong>Date :</strong>
 					{{ opportunity.createdAt|date('d/m/Y H:i') }}</p>
@@ -33,7 +46,7 @@
 
 				<a href="{{ path('app_contact_show', {id: opportunity.contact.id}) }}" class="btn btn-secondary">Retour au contact</a>
 
-				<a href="{{ path('app_activity_edit', { id: opportunity.id }) }}" class="btn btn-warning">
+				<a href="{{ path('app_opportunity_edit', { id: opportunity.id }) }}" class="btn btn-warning">
 					Modifier l'activité
 				</a>
 

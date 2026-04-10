@@ -17,7 +17,13 @@
 
 			<form method="get" class="row g-3 mb-4" action="{{ path('app_contact') }}">
 				<div class="col-md-4">
-					<input type="text" name="q" value="{{ app.request.get('q') }}" class="form-control" placeholder="Rechercher un nom, prénom, email...">
+					<input type="text" name="q" value="{{ q|default('') }}" class="form-control" placeholder="Recherche (nom, prénom, ville)">
+				</div>
+				<div class="col-md-3">
+					<input type="text" name="company" value="{{ company|default('') }}" class="form-control" placeholder="Filtrer par entreprise">
+				</div>
+				<div class="col-md-3">
+					<input type="text" name="city" value="{{ city|default('') }}" class="form-control" placeholder="Filtrer par ville">
 				</div>
 				<div class="col-md-auto">
 					<button type="submit" class="btn btn-primary">Rechercher</button>

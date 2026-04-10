@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Campany;
+use App\Entity\FundingRequest;
 use App\Entity\Roadmap;
 use App\Form\MultiroadmapType;
 use App\Form\RoadmapType;
@@ -28,6 +29,8 @@ final class RoadmapController extends AbstractController
             throw $this->createNotFoundException("Entreprise #{$id} introuvable.");
         }
 
+        $this->synchronizeValidatedFundingRequestsToRoadmap($em, $campany);
+
         $roadmaps = $em->getRepository(Roadmap::class)->findBy(
             ['campany' => $campany],
             ['date' => 'ASC']
@@ -48,7 +51,11 @@ final class RoadmapController extends AbstractController
         // Récupère l'utilisateur par l'ID
         $campany = $em->getRepository(Campany::class)->find($id);
 
-        
+        if (!$campany) {
+            throw $this->createNotFoundException("Entreprise #{$id} introuvable.");
+        }
+
+        $this->synchronizeValidatedFundingRequestsToRoadmap($em, $campany);
 
         // Tableau contenant des Roadmap vides
         $data = ['roadmaps' => []];
@@ -66,6 +73,10 @@ final class RoadmapController extends AbstractController
 
             foreach ($submittedRoadmaps as $roadmap) {
                 if ($roadmap instanceof Roadmap) {
+                    if ($roadmap->getFundingRequest() !== null) {
+                        continue;
+                    }
+
                     $roadmap->setCampany($campany);
 
                     $em->persist($roadmap);
@@ -157,6 +168,8 @@ final class RoadmapController extends AbstractController
             throw $this->createNotFoundException("Entreprise #{$id} introuvable.");
         }
 
+        $this->synchronizeValidatedFundingRequestsToRoadmap($em, $campany);
+
         $roadmaps = $em->getRepository(Roadmap::class)->findBy(
             ['campany' => $campany],
             ['date' => 'ASC']
@@ -185,5 +198,78 @@ final class RoadmapController extends AbstractController
             ];
         }
         return $result;
+    }
+
+    private function synchronizeValidatedFundingRequestsToRoadmap(EntityManagerInterface $em, Campany $campany): void
+    {
+        $validatedRequests = $em->getRepository(FundingRequest::class)
+            ->createQueryBuilder('fr')
+            ->andWhere('fr.campany = :campany')
+            ->andWhere('(fr.status = :statusValidated OR (fr.status = :statusClosed AND fr.decision = :decisionValidated))')
+            ->andWhere('fr.product IS NOT NULL')
+            ->setParameter('campany', $campany)
+            ->setParameter('statusValidated', FundingRequest::STATUS_VALIDATED)
+            ->setParameter('statusClosed', FundingRequest::STATUS_CLOSED)
+            ->setParameter('decisionValidated', FundingRequest::DECISION_VALIDATED)
+            ->orderBy('fr.createdAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        if ($validatedRequests === []) {
+            return;
+        }
+
+        $existingRoadmaps = $em->getRepository(Roadmap::class)
+            ->createQueryBuilder('r')
+            ->andWhere('r.campany = :campany')
+            ->andWhere('r.fundingRequest IS NOT NULL')
+            ->setParameter('campany', $campany)
+            ->getQuery()
+            ->getResult();
+
+        $existingByFundingRequest = [];
+        foreach ($existingRoadmaps as $roadmap) {
+            if (!$roadmap instanceof Roadmap) {
+                continue;
+            }
+
+            $request = $roadmap->getFundingRequest();
+            if ($request === null || $request->getId() === null) {
+                continue;
+            }
+
+            $existingByFundingRequest[$request->getId()] = true;
+        }
+
+        $hasChanges = false;
+
+        foreach ($validatedRequests as $validatedRequest) {
+            if (!$validatedRequest instanceof FundingRequest || $validatedRequest->getId() === null) {
+                continue;
+            }
+
+            if (isset($existingByFundingRequest[$validatedRequest->getId()])) {
+                continue;
+            }
+
+            $date = $validatedRequest->getCreatedAt() !== null
+                ? \DateTime::createFromImmutable($validatedRequest->getCreatedAt())
+                : new \DateTime();
+
+            $roadmap = new Roadmap();
+            $roadmap
+                ->setCampany($campany)
+                ->setProduct($validatedRequest->getProduct())
+                ->setDate($date)
+                ->setEstimatedAmount($validatedRequest->getAmount())
+                ->setFundingRequest($validatedRequest);
+
+            $em->persist($roadmap);
+            $hasChanges = true;
+        }
+
+        if ($hasChanges) {
+            $em->flush();
+        }
     }
 }

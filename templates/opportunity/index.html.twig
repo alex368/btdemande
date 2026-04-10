@@ -12,7 +12,10 @@
 
             {{ form_start(form) }}
 
-                {{ form_widget(form) }}
+                {{ form_row(form.leadSource) }}
+                {{ form_row(form.leadSourceDetail) }}
+                {{ form_row(form.commercialReferent) }}
+                {{ form_row(form.createdAt) }}
 
                 <button class="btn btn-primary mt-3">Enregistrer</button>
 
@@ -27,4 +30,20 @@
     </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const sourceSelect = document.querySelector('.js-lead-source');
+    const detailRow = document.querySelector('.js-lead-source-detail-row');
+    if (!sourceSelect || !detailRow) return;
+
+    const refreshVisibility = () => {
+        const isReferral = sourceSelect.value === 'recommandation_partenaire';
+        detailRow.classList.toggle('d-none', !isReferral);
+    };
+
+    refreshVisibility();
+    sourceSelect.addEventListener('change', refreshVisibility);
+});
+</script>
 {% endblock %}

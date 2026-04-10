@@ -193,10 +193,15 @@
        {% endif %}
 
 
-           {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
+{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
 <li class="nav-item mb-2">
     <a href="{{ path('app_prospect_kanban') }}">
         <i class="bi bi-kanban me-2"></i>Prospect
+    </a>
+</li>
+<li class="nav-item mb-2">
+    <a href="{{ path('app_prospect_archives') }}">
+        <i class="bi bi-archive me-2"></i>Prospects archivés
     </a>
 </li>
 

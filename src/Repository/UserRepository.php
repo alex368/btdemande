@@ -94,15 +94,29 @@ public function findByRole(string $role): array
         return in_array($role, $user->getRoles(), true);
     });
 }
-public function getQueryBuilderByRoleAndSearch(string $role, string $search): QueryBuilder
+public function getQueryBuilderByRoleAndSearch(string $role, string $search, ?string $campany = null, ?string $project = null): QueryBuilder
 {
     $qb = $this->createQueryBuilder('u')
+        ->leftJoin('u.referent', 'r')
+        ->leftJoin('u.campanies', 'c')
+        ->addSelect('r', 'c')
+        ->distinct()
         ->where('u.roles LIKE :role')
         ->setParameter('role', '%"'.$role.'"%');
 
-    if (!empty($search)) {
-        $qb->andWhere('u.name LIKE :search OR u.email LIKE :search')
-           ->setParameter('search', '%'.$search.'%');
+    if ($search !== '') {
+        $qb->andWhere('u.name LIKE :search OR u.lastname LIKE :search OR u.email LIKE :search OR u.number LIKE :search')
+            ->setParameter('search', '%'.$search.'%');
+    }
+
+    if ($campany !== null && $campany !== '') {
+        $qb->andWhere('c.legalName LIKE :campany')
+            ->setParameter('campany', '%'.$campany.'%');
+    }
+
+    if ($project !== null && $project !== '') {
+        $qb->andWhere('c.projetName LIKE :project')
+            ->setParameter('project', '%'.$project.'%');
     }
 
     return $qb;

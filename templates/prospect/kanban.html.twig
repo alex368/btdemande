@@ -4,10 +4,13 @@
 
 {% block body %}
 <div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="mb-0">Kanban Prospects</h1>
+        <a href="{{ path('app_prospect_archives') }}" class="btn btn-outline-secondary rounded-0">
+            Contacts archivés / désarchivés
+        </a>
+    </div>
 
-    <h1 class="mb-3">Kanban Prospects</h1>
-
-    {# --------- STATS --------- #}
     <div class="d-flex justify-content-end mb-3 gap-2">
         <span class="badge bg-secondary">Total : {{ stats.total }}</span>
         <span class="badge bg-success">Gagnés : {{ stats.won }}</span>
@@ -15,110 +18,156 @@
         <span class="badge bg-info">Ouverts : {{ stats.open }}</span>
     </div>
 
-    {# --------- KANBAN --------- #}
     <div class="d-flex flex-row gap-3 overflow-auto" style="min-height: 70vh;">
-
         {% for stageKey, stageLabel in stages %}
-
             {% set stageColor =
                 stageKey == 'prospect'      ? 'secondary' :
                 stageKey == 'qualification' ? 'info'      :
-                stageKey == 'proposal'      ? 'primary'   :
-                stageKey == 'negotiation'   ? 'warning'   :
-                stageKey == 'won'           ? 'success'   :
+                stageKey == 'proposition'   ? 'primary'   :
+                stageKey == 'negociation'   ? 'warning'   :
+                stageKey == 'gagne'         ? 'success'   :
                 'danger'
             %}
 
-            <div class="card flex-shrink-0 kanban-column"
-                 style="width: 18rem;"
-                 data-stage="{{ stageKey }}">
-
+            <div class="card flex-shrink-0 kanban-column" style="width: 18rem;" data-stage="{{ stageKey }}">
                 <div class="card-header bg-{{ stageColor }} text-white fw-bold d-flex justify-content-between align-items-center">
                     <span>{{ stageLabel }}</span>
-                    <span class="badge bg-dark column-count">
-                        {{ columns[stageKey]|length }}
-                    </span>
+                    <span class="badge bg-dark column-count">{{ columns[stageKey]|length }}</span>
                 </div>
 
-                <div class="card-body p-2"
-                     style="background:#f8f9fa; max-height: 65vh; overflow-y:auto;">
-
+                <div class="card-body p-2" style="background:#f8f9fa; max-height: 65vh; overflow-y:auto;">
                     {% if columns[stageKey] is empty %}
-                        <p class="text-muted small m-2 no-items">Aucune opportunité.</p>
+                        <p class="text-muted small m-2 no-items">Aucun contact.</p>
                     {% else %}
-                        <p class="text-muted small m-2 no-items d-none">Aucune opportunité.</p>
+                        <p class="text-muted small m-2 no-items d-none">Aucun contact.</p>
 
-                        {% for opp in columns[stageKey] %}
+                        {% for item in columns[stageKey] %}
+                            {% set contact = item.contact %}
+                            {% set opp = item.opportunity %}
+                            {% set stageHistory = item.stageHistory %}
+
                             <div class="card mb-2 shadow-sm kanban-card"
                                  draggable="true"
-                                 data-id="{{ opp.id }}">
-
+                                 data-contact-id="{{ contact.id }}">
                                 <div class="card-body p-2">
-
                                     <div class="d-flex justify-content-between">
                                         <strong class="small">
-                                            {{ opp.contact ? opp.contact.firstName ~ ' ' ~ opp.contact.lastName : 'Sans contact' }}
+                                            {{ contact.firstName ~ ' ' ~ contact.lastName }}
                                         </strong>
 
-                                        <span class="badge bg-light text-muted border">
-                                            {{ opp.leadSource|capitalize }}
-                                        </span>
+                                        {% if opp %}
+                                            <span class="badge bg-light text-muted border">
+                                                {{ opp.leadSourceLabel }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-light text-muted border">Sans opportunité</span>
+                                        {% endif %}
                                     </div>
 
-                                    <div class="text-muted small mt-1">
-                                        Créée le {{ opp.createdAt|date('d/m/Y') }}
-                                    </div>
-
-                                    {% if opp.user %}
-                                        <div class="small mt-1">
-                                            <i class="bi bi-person-badge"></i>
-                                            {{ opp.user.fullName ?? opp.user.email }}
+                                    {% if stageHistory %}
+                                        <div class="text-muted small mt-1">
+                                            Étape mise à jour le {{ stageHistory.occurredAt|date('d/m/Y H:i') }}
                                         </div>
                                     {% endif %}
 
-                                    <div class="mt-2 d-flex justify-content-between">
-
-                                        <a href="{{ path('app_opportunity_show', { id: opp.id }) }}"
-                                           class="btn btn-sm btn-outline-info"
-                                           title="Voir">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-
-                                        <a href="{{ path('app_opportunity_edit', { id: opp.id }) }}"
-                                           class="btn btn-sm btn-outline-warning"
-                                           title="Modifier">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-
-                                        {% if opp.contact %}
-                                            <a href="{{ path('app_contact_show', { id: opp.contact.id }) }}"
-                                               class="btn btn-sm btn-outline-secondary"
-                                               title="Contact">
-                                                <i class="bi bi-person"></i>
-                                            </a>
+                                    <div class="text-muted small mt-1">
+                                        Propriétaire lead :
+                                        {% if opp and opp.user %}
+                                            {{ opp.user.lastname }} {{ opp.user.name }}
+                                        {% elseif contact.account %}
+                                            {{ contact.account.lastname }} {{ contact.account.name }}
+                                        {% else %}
+                                            Non défini
                                         {% endif %}
-
                                     </div>
 
+                                    <div class="text-muted small mt-1">
+                                        Référent du lead :
+                                        {% if opp and opp.commercialReferent %}
+                                            {{ opp.commercialReferent.lastname }} {{ opp.commercialReferent.name }}
+                                        {% else %}
+                                            Non défini
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mt-2">
+                                        <label class="form-label small mb-1">Changer l’étape</label>
+                                        <select class="form-select form-select-sm js-stage-select" data-contact-id="{{ contact.id }}">
+                                            {% for stageOptionKey, stageOptionLabel in stages %}
+                                                <option value="{{ stageOptionKey }}" {% if stageOptionKey == stageKey %}selected{% endif %}>
+                                                    {{ stageOptionLabel }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="mt-2 d-flex justify-content-between">
+                                        {% if opp %}
+                                            <a href="{{ path('app_opportunity_show', { id: opp.id }) }}"
+                                               class="btn btn-sm btn-outline-info"
+                                               title="Voir opportunité">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+
+                                            <a href="{{ path('app_opportunity_edit', { id: opp.id }) }}"
+                                               class="btn btn-sm btn-outline-warning"
+                                               title="Modifier opportunité">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                        {% else %}
+                                            <span></span>
+                                        {% endif %}
+
+                                        <a href="{{ path('app_contact_show', { id: contact.id }) }}"
+                                           class="btn btn-sm btn-outline-secondary"
+                                           title="Contact">
+                                            <i class="bi bi-person"></i>
+                                        </a>
+
+                                        <form method="post" action="{{ path('app_prospect_contact_archive', { id: contact.id }) }}" onsubmit="return confirm('Archiver ce contact ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('archive-contact-' ~ contact.id) }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Archiver">
+                                                <i class="bi bi-archive"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         {% endfor %}
                     {% endif %}
-
                 </div>
-
             </div>
-
         {% endfor %}
-
     </div>
-
 </div>
 
-{# ----------- DRAG & DROP + AJAX ----------- #}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     let draggedCard = null;
+    const updateEndpoint = '{{ path('app_prospect_kanban_update_stage') }}';
+
+    const updateStage = async (contactId, stage) => {
+        const response = await fetch(updateEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ contactId, stage })
+        });
+
+        let payload = null;
+        try {
+            payload = await response.json();
+        } catch (e) {
+            const text = await response.text();
+            throw new Error(text || `HTTP ${response.status}`);
+        }
+
+        if (!payload?.success) {
+            throw new Error(payload?.message || 'Mise à jour impossible.');
+        }
+    };
 
     document.querySelectorAll('.kanban-card').forEach(card => {
         card.addEventListener('dragstart', (e) => {
@@ -128,13 +177,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         card.addEventListener('dragend', () => {
-            draggedCard.classList.remove('opacity-50');
+            card.classList.remove('opacity-50');
             draggedCard = null;
         });
     });
 
     document.querySelectorAll('.kanban-column').forEach(column => {
-
         column.addEventListener('dragover', (e) => {
             e.preventDefault();
             column.classList.add('border', 'border-primary');
@@ -149,26 +197,37 @@ document.addEventListener('DOMContentLoaded', () => {
             column.classList.remove('border', 'border-primary');
 
             if (!draggedCard) return;
+            const movedCard = draggedCard;
 
             const stage = column.dataset.stage;
             const body = column.querySelector('.card-body');
+            const contactId = movedCard.dataset.contactId;
 
-            body.querySelector('.no-items')?.classList.add('d-none');
-            body.appendChild(draggedCard);
+            updateStage(contactId, stage)
+            .then(() => {
+                if (!(movedCard instanceof Node)) return;
+                body.querySelector('.no-items')?.classList.add('d-none');
+                body.appendChild(movedCard);
+                updateColumnCounts();
 
-            updateColumnCounts();
+                const select = movedCard.querySelector('.js-stage-select');
+                if (select) select.value = stage;
+            })
+            .catch((error) => alert(error?.message || 'Erreur serveur lors de la mise à jour.'));
+        });
+    });
 
-            fetch('{{ path('app_prospect_kanban_update_stage') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    id: draggedCard.dataset.id,
-                    stage: stage
-                })
-            });
+    document.querySelectorAll('.js-stage-select').forEach((select) => {
+        select.addEventListener('change', () => {
+            const contactId = select.dataset.contactId;
+            const stage = select.value;
+
+            updateStage(contactId, stage)
+                .then(() => window.location.reload())
+                .catch((error) => {
+                    alert(error?.message || 'Erreur serveur lors de la mise à jour.');
+                    window.location.reload();
+                });
         });
     });
 

@@ -37,6 +37,9 @@ public function index(EntityManagerInterface $em, $id, Request $request): Respon
     if ($oppForm->isSubmitted() && $oppForm->isValid()) {
 
         $opportunity->setUser($user);
+        if (!$opportunity->isReferralPartnerSource()) {
+            $opportunity->setLeadSourceDetail(null);
+        }
 
         $em->persist($opportunity);
         $em->flush();
@@ -62,6 +65,10 @@ public function index(EntityManagerInterface $em, $id, Request $request): Respon
         $oppForm->handleRequest($request);
 
         if ($oppForm->isSubmitted() && $oppForm->isValid()) {
+            if (!$opportunity->isReferralPartnerSource()) {
+                $opportunity->setLeadSourceDetail(null);
+            }
+
             $em->persist($opportunity);
             $em->flush();
             $this->addFlash('success', 'Opportunity ajoutée.');

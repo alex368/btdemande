@@ -2,8 +2,9 @@
 
 namespace App\Controller;
 
-use App\Repository\CampanyRepository;
+use App\Entity\User;
 use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,23 +18,15 @@ final class CustomerPortalController extends AbstractController
 public function index(
     Request $request,
     UserRepository $userRepository,
-    CampanyRepository $campanyRepository,
     PaginatorInterface $paginator
 ): Response {
-    $search = $request->query->get('search', '');
-  
+    $search = trim((string) $request->query->get('search', ''));
+    $campany = trim((string) $request->query->get('campany', ''));
+    $project = trim((string) $request->query->get('project', ''));
 
-    $queryBuilder = $userRepository->getQueryBuilderByRoleAndSearch('ROLE_CUSTOMER', $search);
-
-    // dd($queryBuilder->getQuery()->getResult());
-     //$campanyRepository->findAll();
-@
-    $queryBuilderCampany = $queryBuilder->getQuery()->getResult();
-    // $test = $queryBuilderCampany[0]->getCampanies();
-   
-    // dd($test);
+    $queryBuilder = $userRepository->getQueryBuilderByRoleAndSearch('ROLE_CUSTOMER', $search, $campany, $project);
     $pagination = $paginator->paginate(
-        $queryBuilderCampany,
+        $queryBuilder,
         $request->query->getInt('page', 1),
         10
     );
@@ -41,7 +34,46 @@ public function index(
     return $this->render('customer_portal/index.html.twig', [
         'pagination' => $pagination,
         'search' => $search,
+        'campany' => $campany,
+        'project' => $project,
+        'referents' => $userRepository->findByRole('ROLE_COLLABORATOR'),
     ]);
+}
+
+#[Route('/customer/portal/{id}/referent', name: 'app_customer_portal_assign_referent', methods: ['POST'])]
+public function assignReferent(
+    User $user,
+    Request $request,
+    UserRepository $userRepository,
+    EntityManagerInterface $entityManager
+): Response {
+    $this->denyAccessUnlessGranted('ROLE_COLLABORATOR');
+
+    if (!in_array('ROLE_CUSTOMER', $user->getRoles(), true)) {
+        throw $this->createNotFoundException('Client introuvable.');
+    }
+
+    if (!$this->isCsrfTokenValid('assign-referent-' . $user->getId(), (string) $request->request->get('_token'))) {
+        throw $this->createAccessDeniedException('Jeton invalide.');
+    }
+
+    $referentId = $request->request->get('referent_id');
+    $referent = null;
+
+    if (!empty($referentId)) {
+        $referent = $userRepository->findOneByIdAndRole((int) $referentId, 'ROLE_COLLABORATOR');
+        if (!$referent instanceof User) {
+            $this->addFlash('danger', 'Le référent sélectionné est invalide.');
+            return $this->redirectToRoute('app_customer_portal');
+        }
+    }
+
+    $user->setReferent($referent);
+    $entityManager->flush();
+
+    $this->addFlash('success', 'Le référent du client a été mis à jour.');
+
+    return $this->redirectToRoute('app_customer_portal');
 }
 
 }

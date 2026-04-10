@@ -1,0 +1,31 @@
+<p>Bonjour {{ admin.name ?: admin.email }},</p>
+
+<p>
+    Une demande de suppression de dossier nécessite votre validation.
+</p>
+
+<p>
+    <strong>Demandeur :</strong> {{ requester.lastname }} {{ requester.name }} ({{ requester.email }})<br>
+    <strong>Entreprise :</strong> {{ campany.legalName }}<br>
+    <strong>Nombre de dossiers :</strong> {{ deletionRequests|length }}
+</p>
+
+{% if reason is not empty %}
+    <p><strong>Motif :</strong> {{ reason }}</p>
+{% endif %}
+
+<p>Dossiers concernés :</p>
+<ul>
+    {% for deletionRequest in deletionRequests %}
+        <li>
+            Dossier #{{ deletionRequest.fundingRequest ? deletionRequest.fundingRequest.id : 'N/A' }}
+            {% if deletionRequest.fundingRequest and deletionRequest.fundingRequest.product %}
+                - {{ deletionRequest.fundingRequest.product.name }}
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
+
+<p>
+    Rendez-vous dans l'administration EasyAdmin pour valider ou refuser cette demande.
+</p>

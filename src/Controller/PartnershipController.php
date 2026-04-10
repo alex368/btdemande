@@ -24,28 +24,47 @@ final class PartnershipController extends AbstractController
     #[Route('/partnership', name: 'app_partnership')]
     public function index(PartnershipRepository $partnershipRepository, PaginatorInterface $paginator, Request $request): Response
     {
-        $search = $request->query->get('q');
+        $search = trim((string) $request->query->get('q', ''));
+        $structure = trim((string) $request->query->get('structure', ''));
+        $occupation = trim((string) $request->query->get('occupation', ''));
 
-        $qb = $partnershipRepository->createQueryBuilder('c');
+        $qb = $partnershipRepository->createQueryBuilder('c')
+            ->leftJoin('c.fundingMechanism', 'fm')
+            ->addSelect('fm');
 
-        if ($search) {
+        if ($search !== '') {
             $qb
                 ->where('c.firstname LIKE :search')
                 ->orWhere('c.lastname LIKE :search')
-                ->orWhere('c.email LIKE :search')
+                ->orWhere('c.occupation LIKE :search')
                 ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($structure !== '') {
+            $qb
+                ->andWhere('fm.name LIKE :structure')
+                ->setParameter('structure', '%' . $structure . '%');
+        }
+
+        if ($occupation !== '') {
+            $qb
+                ->andWhere('c.occupation LIKE :occupation')
+                ->setParameter('occupation', '%' . $occupation . '%');
         }
 
         $qb->orderBy('c.lastname', 'DESC');
 
         $partnerships = $paginator->paginate(
-            $qb->getQuery(),
+            $qb,
             $request->query->getInt('page', 1),
             10
         );
 
         return $this->render('partnership/index.html.twig', [
             'partnerships' => $partnerships,
+            'q' => $search,
+            'structure' => $structure,
+            'occupation' => $occupation,
         ]);
     }
 

@@ -24,7 +24,7 @@
 			<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Documents à fournir pour la demande</h1>
 			<!-- Table des documents basés sur les modèles -->
 			<div class="d-flex justify-content-between align-items-center mb-3">
-				<h4 class="mb-0">Documents issus de modèles</h4>
+				<h4 class="mb-0">Templates {{ request.product.name }}</h4>
 				<a href="{{ path('document_assign', { id: request.id }) }}" class="btn btn-outline-primary">
 					Modifier la sélection
 				</a>
@@ -54,7 +54,7 @@
 
 			<!-- Table des documents personnalisés -->
 			<div class="d-flex justify-content-between align-items-center mb-3">
-				<h4 class="mb-0">Documents personnalisés ajoutés</h4>
+				<h4 class="mb-0">Documents complémentaires</h4>
 				<a href="{{ path('document_add_custom', { id: request.id }) }}" class="btn btn-outline-success">
 					Ajouter un document personnalisé
 				</a>
@@ -149,8 +149,8 @@
         class="btn text-white rounded-0"
         style="background-color:#6B7280;"
         data-bs-toggle="modal"
-        data-bs-target="#cancelRequestModal">
-        Annuler
+        data-bs-target="#resetRequestModal">
+        Réinitialiser
     </button>
 
     <button type="submit" name="action" value="send"
@@ -160,20 +160,20 @@
     </button>
 </form>
 
-<div class="modal fade" id="cancelRequestModal" tabindex="-1" aria-labelledby="cancelRequestModalLabel" aria-hidden="true">
+<div class="modal fade" id="resetRequestModal" tabindex="-1" aria-labelledby="resetRequestModalLabel" aria-hidden="true">
 	<div class="modal-dialog">
 		<div class="modal-content rounded-0">
 			<div class="modal-header">
-				<h5 class="modal-title" id="cancelRequestModalLabel">Annuler la demande</h5>
+				<h5 class="modal-title" id="resetRequestModalLabel">Réinitialiser la demande</h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
 			</div>
 			<div class="modal-body">
-				Cette action supprimera la demande et les documents deja rattaches. Voulez-vous continuer ?
+				Cette action vide la demande: les documents envoyés sont effacés, les validations sont remises à zéro et les documents personnalisés sont supprimés. Voulez-vous continuer ?
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-outline-secondary rounded-0" data-bs-dismiss="modal">Retour</button>
 				<form method="post">
-					<button type="submit" name="action" value="cancel" class="btn btn-danger rounded-0">Confirmer l'annulation</button>
+					<button type="submit" name="action" value="reset" class="btn btn-danger rounded-0">Confirmer la réinitialisation</button>
 				</form>
 			</div>
 		</div>

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Activity;
 use App\Entity\Campany;
 use App\Entity\Contact;
+use App\Entity\ContactStageHistory;
 use App\Entity\Opportunity;
 use App\Entity\Quote;
 use App\Entity\User;
@@ -13,6 +14,7 @@ use App\Form\ContactType;
 use App\Form\ImportContactsType;
 use App\Form\OpportunityType;
 use App\Repository\ContactRepository;
+use App\Repository\ContactStageHistoryRepository;
 use App\Service\CampanyCreatorService;
 use App\Service\ContactConverterService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,28 +39,48 @@ final class ContactController extends AbstractController
     #[Route('/contact', name: 'app_contact')]
     public function index(ContactRepository $contactRepository, PaginatorInterface $paginator, Request $request): Response
     {
-        $search = $request->query->get('q');
+        $search = trim((string) $request->query->get('q', ''));
+        $company = trim((string) $request->query->get('company', ''));
+        $city = trim((string) $request->query->get('city', ''));
 
-        $qb = $contactRepository->createQueryBuilder('c');
+        $qb = $contactRepository->createQueryBuilder('c')
+            ->leftJoin('c.campanyContacts', 'cc')
+            ->addSelect('cc')
+            ->distinct();
 
-        if ($search) {
+        if ($search !== '') {
             $qb
                 ->where('c.firstName LIKE :search')
                 ->orWhere('c.lastName LIKE :search')
-                ->orWhere('c.email LIKE :search')
+                ->orWhere('c.city LIKE :search')
                 ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($company !== '') {
+            $qb
+                ->andWhere('cc.legalName LIKE :company')
+                ->setParameter('company', '%' . $company . '%');
+        }
+
+        if ($city !== '') {
+            $qb
+                ->andWhere('c.city LIKE :city')
+                ->setParameter('city', '%' . $city . '%');
         }
 
         $qb->orderBy('c.lastName', 'DESC');
 
         $contacts = $paginator->paginate(
-            $qb->getQuery(),
+            $qb,
             $request->query->getInt('page', 1),
             10
         );
 
         return $this->render('contact/index.html.twig', [
             'contacts' => $contacts,
+            'q' => $search,
+            'company' => $company,
+            'city' => $city,
         ]);
     }
 
@@ -123,7 +145,7 @@ final class ContactController extends AbstractController
     }
 
     #[Route('/contact/{id}', name: 'app_contact_show', methods: ['GET'])]
-    public function show(Contact $contact): Response
+    public function show(Contact $contact, ContactStageHistoryRepository $contactStageHistoryRepository): Response
     {
 
 
@@ -133,8 +155,47 @@ final class ContactController extends AbstractController
             'activities' => $contact->getActivities(),
             'quotes' => $contact->getQuotes(),
             'campanies' => $contact->getCampanyContacts(),
-           
+            'stageHistories' => $contactStageHistoryRepository->findByContactOrdered($contact),
+            'stageChoices' => ContactStageHistory::getStageChoices(),
         ]);
+    }
+
+    #[Route('/contact/{id}/stage', name: 'app_contact_stage_add', methods: ['POST'])]
+    public function addStage(
+        Contact $contact,
+        Request $request,
+        EntityManagerInterface $em,
+        ContactStageHistoryRepository $contactStageHistoryRepository
+    ): Response {
+        if (!$this->isCsrfTokenValid('add-stage-' . $contact->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Jeton invalide.');
+            return $this->redirectToRoute('app_contact_show', ['id' => $contact->getId()]);
+        }
+
+        $stage = (string) $request->request->get('stage');
+        $allowedStages = array_values(ContactStageHistory::getStageChoices());
+        if (!in_array($stage, $allowedStages, true)) {
+            $this->addFlash('danger', 'Étape invalide.');
+            return $this->redirectToRoute('app_contact_show', ['id' => $contact->getId()]);
+        }
+
+        $history = $contactStageHistoryRepository->findOneByContactAndStage($contact, $stage);
+        if (!$history instanceof ContactStageHistory) {
+            $history = (new ContactStageHistory())
+                ->setContact($contact)
+                ->setStage($stage);
+            $em->persist($history);
+        }
+
+        $history
+            ->setOccurredAt(new \DateTimeImmutable('now', new \DateTimeZone('Europe/Paris')))
+            ->setUpdatedBy($this->getUser() instanceof User ? $this->getUser() : null);
+
+        $em->flush();
+
+        $this->addFlash('success', 'Étape enregistrée/mise à jour avec date et heure.');
+
+        return $this->redirectToRoute('app_contact_show', ['id' => $contact->getId()]);
     }
 
     #[Route('/contacts/import', name: 'app_contact_import')]
@@ -304,10 +365,10 @@ public function convertToUser(
     $em->persist($user);
     $em->flush();
 
-    $this->addFlash('success', 'Le contact a été converti en utilisateur.');
+    $this->addFlash('success', 'Le contact a été converti en client.');
 
-    return $this->redirectToRoute('app_contact_show', [
-        'id' => $contact->getId()
+    return $this->redirectToRoute('app_customer_datasheet', [
+        'id' => $user->getId(),
     ]);
 }
 

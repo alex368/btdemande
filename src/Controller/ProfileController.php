@@ -42,7 +42,10 @@ final class ProfileController extends AbstractController
         // $filesystem = new Filesystem();
         // $oldImage = $user->getImageProfile();
         // Créer le formulaire et lier les données de l'utilisateur
-        $form = $this->createForm(UserType::class, $user);
+        $form = $this->createForm(UserType::class, $user, [
+            'include_referent' => false,
+            'include_password' => true,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

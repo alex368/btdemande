@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Campany;
+use App\Entity\FundingRequestDeletionRequest;
 use App\Entity\FundingMechanism;
 use App\Entity\LegalPage;
 use App\Entity\LegalPageSection;
@@ -50,6 +51,8 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToCrud('Partenaires', 'fas fa-handshake', Partnership::class);
         yield MenuItem::linkToCrud('Produits', 'fas fa-box', Product::class);
         yield MenuItem::linkToCrud('Entreprises', 'fas fa-building', Campany::class);
+        yield MenuItem::linkToCrud('Suppressions dossiers', 'fas fa-trash-alt', FundingRequestDeletionRequest::class)
+            ->setPermission('ROLE_ADMIN');
         yield MenuItem::linkToCrud('Traçabilité', 'fas fa-shoe-prints', UserSessionEvent::class)
             ->setPermission('ROLE_SUPER_ADMIN');
 

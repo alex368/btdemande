@@ -207,9 +207,20 @@
 								</span>
 
 								<h5 class="label-title">
-									<a href="{{ path('app_product_show', { id: roadmap.product.id }) }}" class="text-decoration-none clickable-title">
-										{{ roadmap.product.name }}
-									</a>
+									{% if roadmap.product %}
+										<button
+											type="button"
+											class="btn p-0 border-0 bg-transparent text-decoration-none clickable-title js-product-modal"
+											data-bs-toggle="modal"
+											data-bs-target="#roadmapProductModal"
+											data-product-name="{{ roadmap.product.name }}"
+											data-product-description-html="{{ roadmap.product.productDescription|default('')|e('html_attr') }}"
+										>
+											{{ roadmap.product.name }}
+										</button>
+									{% else %}
+										Produit non défini
+									{% endif %}
 								</h5>
 
 
@@ -223,9 +234,17 @@
 										Date :
 										{{ roadmap.date|date('d/m/Y') }}<br>
 									{% endif %}
-
-
-									{#{{ roadmap.product.productDescription|truncate_html(150) }}#}
+									Montant estimatif :
+									<strong>
+										{% if roadmap.estimatedAmount is not null %}
+											{{ roadmap.estimatedAmount|number_format(0, ',', ' ') }}
+											€
+										{% else %}
+											Non renseigné
+										{% endif %}
+									</strong><br>
+									Type de dépense :
+									<strong>{{ roadmap.expenseType ?: 'Non renseigné' }}</strong>
 
 								</p>
 
@@ -255,9 +274,20 @@
 								</span>
 
 								<h5 class="label-title">
-									<a href="{{ path('app_product_show', { id: roadmap.product.id }) }}" class="text-decoration-none clickable-title">
-										{{ roadmap.product.name }}
-									</a>
+									{% if roadmap.product %}
+										<button
+											type="button"
+											class="btn p-0 border-0 bg-transparent text-decoration-none clickable-title js-product-modal"
+											data-bs-toggle="modal"
+											data-bs-target="#roadmapProductModal"
+											data-product-name="{{ roadmap.product.name }}"
+											data-product-description-html="{{ roadmap.product.productDescription|default('')|e('html_attr') }}"
+										>
+											{{ roadmap.product.name }}
+										</button>
+									{% else %}
+										Produit non défini
+									{% endif %}
 								</h5>
 								<div class="label-line"></div>
 
@@ -269,8 +299,17 @@
 										Date :
 										{{ roadmap.date|date('d/m/Y') }}<br>
 									{% endif %}
-
-									{#{{ roadmap.product.productDescription|truncate_html(150) }}#}
+									Montant estimatif :
+									<strong>
+										{% if roadmap.estimatedAmount is not null %}
+											{{ roadmap.estimatedAmount|number_format(0, ',', ' ') }}
+											€
+										{% else %}
+											Non renseigné
+										{% endif %}
+									</strong><br>
+									Type de dépense :
+									<strong>{{ roadmap.expenseType ?: 'Non renseigné' }}</strong>
 								</p>
 
 								{% if is_granted('ROLE_ADMIN') %}
@@ -293,5 +332,80 @@
 			</div>
 		</div>
 	</div>
+
+	<div class="modal fade" id="roadmapProductModal" tabindex="-1" aria-labelledby="roadmapProductModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg modal-dialog-centered">
+			<div class="modal-content rounded-0">
+				<div class="modal-header">
+					<h5 class="modal-title" id="roadmapProductModalLabel">Produit</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+				</div>
+				<div class="modal-body">
+					<p class="mb-2">
+						<strong>Name :</strong>
+						<span id="roadmap-modal-product-name"></span>
+					</p>
+					<p class="mb-0">
+						<strong>Product description :</strong><br>
+						<span id="roadmap-modal-product-description"></span>
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		document.addEventListener('DOMContentLoaded', () => {
+			const nameTarget = document.getElementById('roadmap-modal-product-name');
+			const descriptionTarget = document.getElementById('roadmap-modal-product-description');
+			const buttons = document.querySelectorAll('.js-product-modal');
+
+			const sanitizeAndRenderHtml = (unsafeHtml) => {
+				const parser = new DOMParser();
+				const doc = parser.parseFromString(unsafeHtml || '', 'text/html');
+				const allowedTags = new Set(['P', 'BR', 'UL', 'OL', 'LI', 'STRONG', 'EM', 'B', 'I', 'A']);
+
+				const cleanNode = (node) => {
+					if (node.nodeType === Node.ELEMENT_NODE) {
+						if (!allowedTags.has(node.tagName)) {
+							const textNode = document.createTextNode(node.textContent || '');
+							node.replaceWith(textNode);
+							return;
+						}
+
+						[...node.attributes].forEach((attr) => {
+							const isHref = node.tagName === 'A' && attr.name.toLowerCase() === 'href';
+							if (!isHref) {
+								node.removeAttribute(attr.name);
+								return;
+							}
+
+							const value = attr.value.trim().toLowerCase();
+							const isSafeLink = value.startsWith('http://') || value.startsWith('https://') || value.startsWith('mailto:');
+							if (!isSafeLink) {
+								node.removeAttribute('href');
+							} else {
+								node.setAttribute('rel', 'noopener noreferrer');
+								node.setAttribute('target', '_blank');
+							}
+						});
+					}
+
+					[...node.childNodes].forEach(cleanNode);
+				};
+
+				[...doc.body.childNodes].forEach(cleanNode);
+				return doc.body.innerHTML.trim();
+			};
+
+			buttons.forEach((button) => {
+				button.addEventListener('click', () => {
+					nameTarget.textContent = button.dataset.productName || '';
+					const sanitizedHtml = sanitizeAndRenderHtml(button.dataset.productDescriptionHtml || '');
+					descriptionTarget.innerHTML = sanitizedHtml !== '' ? sanitizedHtml : '<em>Non renseigné</em>';
+				});
+			});
+		});
+	</script>
 
 {% endblock %}

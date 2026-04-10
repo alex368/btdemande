@@ -98,15 +98,24 @@ final class DocumentController extends AbstractController
                 return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
             }
 
-            if ($action === 'cancel') {
+            if ($action === 'reset' || $action === 'cancel') {
                 foreach ($fundingRequest->getDocuments() as $document) {
-                    $em->remove($document);
+                    if ($document->getDocumentDefinition() === null) {
+                        // Les documents personnalisés sont retirés complètement
+                        $em->remove($document);
+                        continue;
+                    }
+
+                    // Les documents de template sont conservés mais remis à vide
+                    $document->setFilename('');
+                    $document->setStatus(false);
+                    $document->setComment(null);
                 }
-                $em->remove($fundingRequest);
+
                 $em->flush();
 
-                $this->addFlash('success', 'La demande a ete annulee.');
-                return $this->redirectToRoute('app_dashboard');
+                $this->addFlash('success', 'La demande a ete reinitialisee.');
+                return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
             }
         }
 

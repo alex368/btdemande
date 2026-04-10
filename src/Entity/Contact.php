@@ -110,12 +110,25 @@ class Contact
     #[ORM\ManyToMany(targetEntity: CampanyContact::class, mappedBy: 'contact')]
     private Collection $campanyContacts;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isArchived = false;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $archivedAt = null;
+
+    /**
+     * @var Collection<int, ContactStageHistory>
+     */
+    #[ORM\OneToMany(targetEntity: ContactStageHistory::class, mappedBy: 'contact', orphanRemoval: true)]
+    private Collection $stageHistories;
+
     public function __construct()
     {
         $this->opportunity = new ArrayCollection();
         $this->activities = new ArrayCollection();
         $this->quotes = new ArrayCollection();
         $this->campanyContacts = new ArrayCollection();
+        $this->stageHistories = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -459,6 +472,59 @@ public function removeCampanyContact(CampanyContact $campanyContact): static
 {
     if ($this->campanyContacts->removeElement($campanyContact)) {
         $campanyContact->removeContact($this);
+    }
+
+    return $this;
+}
+
+public function isArchived(): bool
+{
+    return $this->isArchived;
+}
+
+public function setIsArchived(bool $isArchived): static
+{
+    $this->isArchived = $isArchived;
+
+    return $this;
+}
+
+public function getArchivedAt(): ?\DateTimeImmutable
+{
+    return $this->archivedAt;
+}
+
+public function setArchivedAt(?\DateTimeImmutable $archivedAt): static
+{
+    $this->archivedAt = $archivedAt;
+
+    return $this;
+}
+
+/**
+ * @return Collection<int, ContactStageHistory>
+ */
+public function getStageHistories(): Collection
+{
+    return $this->stageHistories;
+}
+
+public function addStageHistory(ContactStageHistory $stageHistory): static
+{
+    if (!$this->stageHistories->contains($stageHistory)) {
+        $this->stageHistories->add($stageHistory);
+        $stageHistory->setContact($this);
+    }
+
+    return $this;
+}
+
+public function removeStageHistory(ContactStageHistory $stageHistory): static
+{
+    if ($this->stageHistories->removeElement($stageHistory)) {
+        if ($stageHistory->getContact() === $this) {
+            $stageHistory->setContact(null);
+        }
     }
 
     return $this;

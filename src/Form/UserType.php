@@ -64,8 +64,10 @@ class UserType extends AbstractType
                     new NotBlank(message: 'Le numéro est requis.'),
                     new Regex(pattern: '/^0[1-9](\d{2}){4}$/', message: 'Numéro invalide (format FR attendu).')
                 ],
-            ])
-            ->add('referent', EntityType::class, [
+            ]);
+
+        if ($options['include_referent']) {
+            $builder->add('referent', EntityType::class, [
                 'class' => User::class,
                 'choice_label' => fn(User $user) => trim(sprintf('%s %s', $user->getLastname(), $user->getName())),
                 'label' => 'Référent',
@@ -73,16 +75,19 @@ class UserType extends AbstractType
                 'placeholder' => 'Sélectionner un référent',
                 'query_builder' => function (EntityRepository $er) {
                     return $er->createQueryBuilder('u')
-                        ->where('u.roles LIKE :admin OR u.roles LIKE :collaborator')
-                        ->setParameter('admin', '%ROLE_ADMIN%')
+                        ->where('u.roles LIKE :collaborator')
                         ->setParameter('collaborator', '%ROLE_COLLABORATOR%')
-                        ->orderBy('u.lastname', 'ASC');
+                        ->orderBy('u.lastname', 'ASC')
+                        ->addOrderBy('u.name', 'ASC');
                 },
                 'attr' => [
                     'class' => 'form-select border-0 rounded-0 shadow py-3 px-4 fs-5 mb-3',
                 ],
-            ])
-            ->add('password', PasswordType::class, [
+            ]);
+        }
+
+        if ($options['include_password']) {
+            $builder->add('password', PasswordType::class, [
                 'label' => 'Mot de passe',
                 'attr' => [
                     'class' => 'form-control border-0 rounded-0 shadow py-3 px-4 fs-5 mb-3',
@@ -97,12 +102,18 @@ class UserType extends AbstractType
                     new Regex(pattern: '/[\W]/', message: 'Au moins un caractère spécial.')
                 ],
             ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => User::class,
+            'include_password' => true,
+            'include_referent' => false,
         ]);
+
+        $resolver->setAllowedTypes('include_password', 'bool');
+        $resolver->setAllowedTypes('include_referent', 'bool');
     }
 }

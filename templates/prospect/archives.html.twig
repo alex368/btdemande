@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Contacts archivés{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Contacts archivés / désarchivés</h1>
+        <a href="{{ path('app_prospect_kanban') }}" class="btn btn-outline-primary rounded-0">Retour Kanban</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white fw-bold">Contacts actifs</div>
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contact in activeContacts %}
+                                <tr>
+                                    <td>{{ contact.lastName }}</td>
+                                    <td>{{ contact.firstName }}</td>
+                                    <td class="text-end">
+                                        <form method="post" action="{{ path('app_prospect_contact_archive', { id: contact.id }) }}" class="d-inline" onsubmit="return confirm('Archiver ce contact ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('archive-contact-' ~ contact.id) }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Archiver</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-3">Aucun contact actif</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white fw-bold">Contacts archivés</div>
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>Archivé le</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contact in archivedContacts %}
+                                <tr>
+                                    <td>{{ contact.lastName }}</td>
+                                    <td>{{ contact.firstName }}</td>
+                                    <td>{{ contact.archivedAt ? contact.archivedAt|date('d/m/Y H:i') : '-' }}</td>
+                                    <td class="text-end">
+                                        <form method="post" action="{{ path('app_prospect_contact_unarchive', { id: contact.id }) }}" class="d-inline" onsubmit="return confirm('Désarchiver ce contact ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('unarchive-contact-' ~ contact.id) }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Désarchiver</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">Aucun contact archivé</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

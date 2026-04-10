@@ -4,9 +4,13 @@ namespace App\Controller;
 
 use App\Entity\Campany;
 use App\Entity\FundingRequest;
+use App\Entity\FundingRequestDeletionRequest;
 use App\Entity\User;
 use App\Form\CampanyType;
+use App\Repository\FundingRequestDeletionRequestRepository;
+use App\Repository\UserRepository;
 use App\Service\InseeApiService;
+use App\Service\MailerService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -197,19 +201,142 @@ final class CustomerDatasheetController extends AbstractController
 
 
     #[Route('/customer/campany/{id}/{user}', name: 'app_campany')]
-    public function campanyDatasheet(int $id, int $user, EntityManagerInterface $em): Response
+    public function campanyDatasheet(
+        int $id,
+        int $user,
+        EntityManagerInterface $em,
+        FundingRequestDeletionRequestRepository $deletionRequestRepository
+    ): Response
     {
 
         $campanies = $em->getRepository(Campany::class)->find($id);
 
         $requestDemand = $em->getRepository(FundingRequest::class)->findBy(['campany' => $campanies]);
 
+        $pendingDeletionByRequestId = [];
+        foreach ($requestDemand as $fundingRequest) {
+            $pendingDeletionByRequestId[$fundingRequest->getId()] = $deletionRequestRepository->hasPendingRequestForFundingRequest($fundingRequest);
+        }
 
 
         return $this->render('customer_datasheet/campanyDatasheet.html.twig', [
             'campanies' => $campanies,
             'requestDemands' => $requestDemand,
-            'user' => $user
+            'user' => $user,
+            'pendingDeletionByRequestId' => $pendingDeletionByRequestId,
         ]);
+    }
+
+    #[Route('/customer/campany/{id}/{user}/deletion-request', name: 'app_campany_deletion_request', methods: ['POST'])]
+    public function requestDeletion(
+        int $id,
+        int $user,
+        Request $request,
+        EntityManagerInterface $em,
+        FundingRequestDeletionRequestRepository $deletionRequestRepository,
+        UserRepository $userRepository,
+        MailerService $mailerService
+    ): Response {
+        if (!$this->isCsrfTokenValid('campany-deletion-request-'.$id, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
+        }
+
+        $currentUser = $this->getUser();
+        if (!$currentUser instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        $campany = $em->getRepository(Campany::class)->find($id);
+        if (!$campany) {
+            throw $this->createNotFoundException('Entreprise introuvable.');
+        }
+
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $isLinkedCustomer = false;
+            foreach ($campany->getCustomer() as $customer) {
+                if ($customer->getId() === $currentUser->getId()) {
+                    $isLinkedCustomer = true;
+                    break;
+                }
+            }
+
+            if (!$isLinkedCustomer) {
+                throw $this->createAccessDeniedException('Vous ne pouvez pas demander la suppression de ces dossiers.');
+            }
+        }
+
+        $ids = array_map('intval', (array) $request->request->all('funding_request_ids'));
+        $ids = array_values(array_filter($ids, static fn(int $value): bool => $value > 0));
+        $reason = trim((string) $request->request->get('reason', ''));
+
+        if ($ids === []) {
+            $this->addFlash('warning', 'Veuillez sélectionner au moins un dossier.');
+
+            return $this->redirectToRoute('app_campany', ['id' => $id, 'user' => $user]);
+        }
+
+        $fundingRequests = $em->getRepository(FundingRequest::class)->createQueryBuilder('fr')
+            ->andWhere('fr.id IN (:ids)')
+            ->andWhere('fr.campany = :campany')
+            ->setParameter('ids', $ids)
+            ->setParameter('campany', $campany)
+            ->getQuery()
+            ->getResult();
+
+        $createdRequests = [];
+        foreach ($fundingRequests as $fundingRequest) {
+            if ($deletionRequestRepository->hasPendingRequestForFundingRequest($fundingRequest)) {
+                continue;
+            }
+
+            $deletionRequest = (new FundingRequestDeletionRequest())
+                ->setFundingRequest($fundingRequest)
+                ->setRequestedBy($currentUser)
+                ->setStatus(FundingRequestDeletionRequest::STATUS_PENDING)
+                ->setReason($reason !== '' ? $reason : null);
+
+            $em->persist($deletionRequest);
+            $createdRequests[] = $deletionRequest;
+        }
+
+        if ($createdRequests === []) {
+            $this->addFlash('info', 'Aucun nouveau dossier: une demande est déjà en attente.');
+
+            return $this->redirectToRoute('app_campany', ['id' => $id, 'user' => $user]);
+        }
+
+        $em->flush();
+
+        $admins = array_merge(
+            $userRepository->findByRole('ROLE_ADMIN'),
+            $userRepository->findByRole('ROLE_SUPER_ADMIN')
+        );
+        $adminsById = [];
+        foreach ($admins as $admin) {
+            $adminsById[$admin->getId()] = $admin;
+        }
+
+        foreach ($adminsById as $admin) {
+            if (!$admin->getEmail()) {
+                continue;
+            }
+
+            $mailerService->send(
+                $admin->getEmail(),
+                'Validation requise: suppression de dossier',
+                'emails/funding_request_deletion_request.html.twig',
+                [
+                    'admin' => $admin,
+                    'requester' => $currentUser,
+                    'campany' => $campany,
+                    'deletionRequests' => $createdRequests,
+                    'reason' => $reason,
+                ]
+            );
+        }
+
+        $this->addFlash('success', 'Demande envoyée à l\'admin pour validation.');
+
+        return $this->redirectToRoute('app_campany', ['id' => $id, 'user' => $user]);
     }
 }

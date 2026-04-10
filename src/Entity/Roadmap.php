@@ -21,6 +21,13 @@ use Symfony\Component\Serializer\Attribute\Groups;
 #[ORM\Entity(repositoryClass: RoadmapRepository::class)]
 class Roadmap
 {
+    public const EXPENSE_TYPE_TREASURY = 'trésorerie';
+    public const EXPENSE_TYPE_R_AND_D = 'R&D';
+    public const EXPENSE_TYPE_COMMERCIAL = 'commercial';
+    public const EXPENSE_TYPE_HR = 'RH';
+    public const EXPENSE_TYPE_TANGIBLE_INVESTMENT = 'investissement corporel';
+    public const EXPENSE_TYPE_INTANGIBLE_INVESTMENT = 'investissement incorporel';
+
     #[Groups(['roadmap:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -38,6 +45,18 @@ class Roadmap
     #[Groups(['roadmap:read', 'roadmap:write'])]
     #[ORM\ManyToOne(inversedBy: 'roadmaps')]
     private ?Campany $campany = null;
+
+    #[Groups(['roadmap:read', 'roadmap:write'])]
+    #[ORM\Column(nullable: true)]
+    private ?int $estimatedAmount = null;
+
+    #[Groups(['roadmap:read', 'roadmap:write'])]
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $expenseType = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?FundingRequest $fundingRequest = null;
 
     public function getId(): ?int
     {
@@ -78,5 +97,56 @@ class Roadmap
         $this->campany = $campany;
 
         return $this;
+    }
+
+    public function getEstimatedAmount(): ?int
+    {
+        return $this->estimatedAmount;
+    }
+
+    public function setEstimatedAmount(?int $estimatedAmount): static
+    {
+        $this->estimatedAmount = $estimatedAmount;
+
+        return $this;
+    }
+
+    public function getExpenseType(): ?string
+    {
+        return $this->expenseType;
+    }
+
+    public function setExpenseType(?string $expenseType): static
+    {
+        $this->expenseType = $expenseType;
+
+        return $this;
+    }
+
+    public function getFundingRequest(): ?FundingRequest
+    {
+        return $this->fundingRequest;
+    }
+
+    public function setFundingRequest(?FundingRequest $fundingRequest): static
+    {
+        $this->fundingRequest = $fundingRequest;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function getExpenseTypeChoices(): array
+    {
+        return [
+            'Trésorerie' => self::EXPENSE_TYPE_TREASURY,
+            'R&D' => self::EXPENSE_TYPE_R_AND_D,
+            'Commercial' => self::EXPENSE_TYPE_COMMERCIAL,
+            'RH' => self::EXPENSE_TYPE_HR,
+            'Investissement corporel' => self::EXPENSE_TYPE_TANGIBLE_INVESTMENT,
+            'Investissement incorporel' => self::EXPENSE_TYPE_INTANGIBLE_INVESTMENT,
+        ];
     }
 }

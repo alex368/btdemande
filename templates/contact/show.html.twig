@@ -88,7 +88,7 @@
 					<tr>
 						<th class="text-muted">Emails</th>
 						<td>
-							{% for e in contact.email %}
+							{% for e in contact.email ?? [] %}
 								<div>
 									<i class="bi bi-envelope-at me-1"></i>
 									<a href="mailto:{{ e }}">{{ e }}</a>
@@ -102,7 +102,7 @@
 					<tr>
 						<th class="text-muted">Téléphones</th>
 						<td>
-							{% for t in contact.phone %}
+							{% for t in contact.phone ?? [] %}
 								<div>
 									<i class="bi bi-telephone me-1"></i>
 									{{ t }}</div>
@@ -115,7 +115,7 @@
 					<tr>
 						<th class="text-muted">Mobiles</th>
 						<td>
-							{% for m in contact.mobilePhone %}
+							{% for m in contact.mobilePhone ?? [] %}
 								<div>
 									<i class="bi bi-phone me-1"></i>
 									{{ m }}</div>
@@ -128,7 +128,7 @@
 					<tr>
 						<th class="text-muted">Réseaux sociaux</th>
 						<td>
-							{% for s in contact.socialMedia %}
+							{% for s in contact.socialMedia ?? [] %}
 								{% set url = s starts with 'http' ? s : 'https://' ~ s %}
 								<div
 									class="mb-1">
@@ -226,8 +226,15 @@
 
 					<a href="{{ path('contact_convert_user', { id: contact.id }) }}" class="btn btn-primary">
 						<i class="bi bi-person-plus"></i>
-						Convertir en utilisateur
+						Convertir en client
 					</a>
+
+					{% if contact.account %}
+						<a href="{{ path('app_customer_datasheet', { id: contact.account.id }) }}" class="btn btn-outline-primary">
+							<i class="bi bi-building"></i>
+							Voir l'entreprise associée
+						</a>
+					{% endif %}
 
 					<a href="{{ path('app_contact_edit', {id: contact.id}) }}" class="btn btn-warning">
 						<i class="bi bi-pencil-square"></i>
@@ -323,6 +330,70 @@
     </div>
 </div>
 
+		<div class="card mb-4 shadow-sm">
+			<div class="card-header d-flex justify-content-between align-items-center bg-dark text-white fw-bold">
+				<span>
+					<i class="bi bi-diagram-3 me-2"></i>
+					Étapes du suivi
+				</span>
+			</div>
+
+			<div class="card-body">
+				<form method="post" action="{{ path('app_contact_stage_add', { id: contact.id }) }}" class="row g-2 align-items-end mb-3">
+					<input type="hidden" name="_token" value="{{ csrf_token('add-stage-' ~ contact.id) }}">
+					<div class="col-md-8">
+						<label class="form-label">Nouvelle étape</label>
+						<select name="stage" class="form-select" required>
+							<option value="">Sélectionner une étape</option>
+							{% for stageLabel, stageValue in stageChoices %}
+								<option value="{{ stageValue }}">{{ stageLabel }}</option>
+							{% endfor %}
+						</select>
+					</div>
+					<div class="col-md-4 d-grid">
+						<button type="submit" class="btn btn-primary">Ajouter l'étape</button>
+					</div>
+				</form>
+
+				{% if stageHistories is empty %}
+					<p class="text-muted mb-0">Aucune étape enregistrée pour ce contact.</p>
+				{% else %}
+					{% set stageLabels = {
+						'prospect': 'Prospect',
+						'qualification': 'Qualification',
+						'proposition': 'Proposition',
+						'negociation': 'Négociation',
+						'gagne': 'Gagné',
+						'perdu': 'Perdu'
+					} %}
+					<ul class="list-group">
+						{% for stageHistory in stageHistories %}
+							{% set stageKey = stageHistory.stage %}
+							{% set stageColor =
+								stageKey == 'gagne' ? 'success' :
+								stageKey == 'perdu' ? 'danger' :
+								stageKey == 'proposition' ? 'primary' :
+								stageKey == 'qualification' ? 'info' :
+								stageKey == 'negociation' ? 'warning' :
+								'secondary'
+							%}
+							<li class="list-group-item d-flex justify-content-between align-items-center">
+								<div>
+									<span class="badge bg-{{ stageColor }} me-2">{{ stageLabels[stageKey] ?? stageKey }}</span>
+									<span class="text-muted small">Le {{ stageHistory.occurredAt|date('d/m/Y H:i') }}</span>
+								</div>
+								{% if stageHistory.updatedBy %}
+									<span class="small text-muted">
+										{{ stageHistory.updatedBy.lastname }} {{ stageHistory.updatedBy.name }}
+									</span>
+								{% endif %}
+							</li>
+						{% endfor %}
+					</ul>
+				{% endif %}
+			</div>
+		</div>
+
 		{# ===================== OPPORTUNITÉS ===================== #}
 		<div class="card mb-4 shadow-sm">
 			<div class="card-header d-flex justify-content-between align-items-center bg-success text-white fw-bold">
@@ -343,33 +414,30 @@
 					<ul class="list-group">
 
 						{% for opp in opportunities %}
-
-							{# Détection de couleur badge selon étape #}
-							{% set stageColor =
-                        opp.stage == 'won'      ? 'success' :
-                        opp.stage == 'lost'     ? 'danger'  :
-                        opp.stage == 'proposal' ? 'primary' :
-                        opp.stage == 'qualification' ? 'warning' :
-                        'secondary'
-                    %}
-
 							{# Icône selon la source du lead #}
 							{% set icon =
-                        'phone' in opp.leadSource     ? 'bi-telephone' :
-                        'email' in opp.leadSource     ? 'bi-envelope'  :
-                        'website' in opp.leadSource   ? 'bi-globe2'    :
-                        'social' in opp.leadSource    ? 'bi-share'     :
-                        'referral' in opp.leadSource  ? 'bi-people'    :
+                        opp.leadSource == 'tels' ? 'bi-telephone' :
+                        opp.leadSource == 'mails' ? 'bi-envelope' :
+                        opp.leadSource == 'site_btd' ? 'bi-globe2' :
+                        opp.leadSource == 'linkedin' ? 'bi-linkedin' :
+                        opp.leadSource == 'reseau_affaires' ? 'bi-people' :
+                        opp.leadSource == 'recommandation_partenaire' ? 'bi-person-heart' :
                         'bi-lightning'
                     %}
 
 							<li class="list-group-item d-flex justify-content-between align-items-center">
 
 								<div>
-									<span class="badge bg-{{ stageColor }} me-2">{{ opp.stage|capitalize }}</span>
-
 									<i class="bi {{ icon }} me-1"></i>
-									{{ opp.leadSource|capitalize }}
+									{{ opp.leadSourceLabel }}
+									{% if opp.leadSourceDetail %}
+										<div class="text-muted small">Précision: {{ opp.leadSourceDetail }}</div>
+									{% endif %}
+									{% if opp.commercialReferent %}
+										<div class="text-muted small">
+											Référent commercial: {{ opp.commercialReferent.lastname }} {{ opp.commercialReferent.name }}
+										</div>
+									{% endif %}
 
 									<div class="text-muted small">
 										Créée le

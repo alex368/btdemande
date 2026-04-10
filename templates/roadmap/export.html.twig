@@ -93,10 +93,15 @@
                     </div>
                     <div class="label-text">
                         Trimestre : <strong>{{ r.quarter }}</strong><br>
-                        {# Date : {{ roadmap.date|date('d/m/Y') }}<br>
-                        {% if roadmap.product.productDescription %}
-                            Description : {{ roadmap.product.productDescription }}
-                        {% endif %} #}
+                        Montant estimatif :
+                        <strong>
+                            {% if roadmap.estimatedAmount is not null %}
+                                {{ roadmap.estimatedAmount|number_format(0, ',', ' ') }} €
+                            {% else %}
+                                Non renseigne
+                            {% endif %}
+                        </strong><br>
+                        Type de depense : <strong>{{ roadmap.expenseType ?: 'Non renseigne' }}</strong>
                     </div>
                 </div>
             </div>
