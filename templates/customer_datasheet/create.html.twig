@@ -18,6 +18,10 @@
 
 			{{ form_start(form) }}
 
+			<div class="alert alert-info">
+				Saisis un `SIRET` pour préremplir les données INSEE. Si c'est une personne physique, renseigne `0`. Le type de personne sera défini automatiquement.
+			</div>
+
 			{# Chaque champ avec un id explicite #}
 			<div class="mb-3">
 				{{ form_label(form.legalName, 'Nom légal', {'label_attr': {'for': 'legalName'}}) }}
@@ -25,8 +29,8 @@
 			</div>
 
 			<div class="mb-3">
-				{{ form_label(form.projetName, 'Nom du projet', {'label_attr': {'for': 'legalName'}}) }}
-				{{ form_widget(form.projetName, {'attr': {'id': 'legalName', 'class': 'form-control'}}) }}
+				{{ form_label(form.projetName, 'Nom du projet', {'label_attr': {'for': 'projetName'}}) }}
+				{{ form_widget(form.projetName, {'attr': {'id': 'projetName', 'class': 'form-control'}}) }}
 			</div>
 
 
@@ -56,6 +60,21 @@
 			<div class="mb-3">
 				{{ form_label(form.adress, 'Adresse', {'label_attr': {'for': 'adress'}}) }}
 				{{ form_widget(form.adress, {'attr': {'id': 'adress', 'class': 'form-control'}}) }}
+			</div>
+
+			<div class="mb-3">
+				{{ form_label(form.city, 'Ville', {'label_attr': {'for': 'city'}}) }}
+				{{ form_widget(form.city, {'attr': {'id': 'city', 'class': 'form-control'}}) }}
+			</div>
+
+			<div class="mb-3">
+				{{ form_label(form.zipCode, 'Code postal', {'label_attr': {'for': 'zipCode'}}) }}
+				{{ form_widget(form.zipCode, {'attr': {'id': 'zipCode', 'class': 'form-control'}}) }}
+			</div>
+
+			<div class="mb-3">
+				{{ form_label(form.country, 'Pays', {'label_attr': {'for': 'country'}}) }}
+				{{ form_widget(form.country, {'attr': {'id': 'country', 'class': 'form-select'}}) }}
 			</div>
 
 			<div class="mb-3">
@@ -89,10 +108,14 @@ document.getElementById('siret').addEventListener('change', function () {
 
   const clearCompanyFields = () => {
     const ids = [
+      'campany_legalType',
       'campany_legalName',
       'campany_siren',
       'campany_sector',
       'campany_adress',
+      'campany_city',
+      'campany_zipCode',
+      'campany_country',
       'campany_stage',
       'campany_creationDate',
     ];
@@ -105,6 +128,14 @@ document.getElementById('siret').addEventListener('change', function () {
   // ✅ Si SIRET = 0 (ou 00000000000000), on ne fait rien / pas de création
   if (siret === '0' || /^0+$/.test(siret)) {
     clearCompanyFields();
+    const setFieldValue = (id, value) => {
+      const field = document.getElementById(id);
+      if (field) field.value = value ?? '';
+    };
+
+    setFieldValue('campany_legalType', 'personne_physique');
+    setFieldValue('campany_legalName', 'Personne physique');
+    setFieldValue('campany_siren', '0');
     return;
   }
 
@@ -126,10 +157,14 @@ document.getElementById('siret').addEventListener('change', function () {
         else console.warn(`Champ introuvable : #${id}`);
       };
 
+      setFieldValue('campany_legalType', data.legalType);
       setFieldValue('campany_legalName', data.legalName);
       setFieldValue('campany_siren', data.siren);
       setFieldValue('campany_sector', data.sector);
       setFieldValue('campany_adress', data.adress);
+      setFieldValue('campany_city', data.city);
+      setFieldValue('campany_zipCode', data.zipCode);
+      setFieldValue('campany_country', data.country);
       setFieldValue('campany_stage', data.stage);
       setFieldValue('campany_creationDate', data.creationDate);
     })

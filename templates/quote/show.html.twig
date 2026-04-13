@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Devis
+{% block title %}Proposition commerciale
 	{{ quote.quoteNumber }}
 {% endblock %}
 
@@ -10,12 +10,12 @@
 		class="container mt-4">
 
 
-		<!-- === HEADER DU DEVIS === -->
+		<!-- === HEADER DE LA PROPOSITION === -->
 		<div class="card shadow-sm mb-4">
 			<div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
 				<span>
 					<i class="bi bi-file-earmark-text me-2"></i>
-					Devis n°
+					Proposition n°
 					{{ quote.quoteNumber }}
 				</span>
 
@@ -29,7 +29,7 @@
 						Modifier
 					</a>
 
-					<form action="{{ path('app_quote_delete', {id: quote.id}) }}" method="post" onsubmit="return confirm('Confirmer la suppression de ce devis ?');">
+					<form action="{{ path('app_quote_delete', {id: quote.id}) }}" method="post" onsubmit="return confirm('Confirmer la suppression de cette proposition commerciale ?');">
 						<input type="hidden" name="_token" value="{{ csrf_token('delete-quote-' ~ quote.id) }}">
 						<button class="btn btn-danger btn-sm">
 							<i class="bi bi-trash"></i>
@@ -95,11 +95,11 @@
 
 				</ul>
 
-				<!-- === LIGNES DU DEVIS === -->
-				<h5 class="fw-bold">Lignes du devis</h5>
+				<!-- === LIGNES DE LA PROPOSITION === -->
+				<h5 class="fw-bold">Lignes de la proposition commerciale</h5>
 
 				{% if quote.quoteItems is empty %}
-					<p class="text-muted">Aucune ligne dans ce devis.</p>
+					<p class="text-muted">Aucune ligne dans cette proposition commerciale.</p>
 				{% else %}
 					<table class="table table-striped mt-3">
 						<thead class="table-primary">
@@ -212,7 +212,7 @@
 					</table>
 				{% endif %}
 
-				<!-- === TOTAL DU DEVIS === -->
+				<!-- === TOTAL DE LA PROPOSITION === -->
 				{% if quote.totalHt is defined %}
 					<div class="card mt-4 p-3 shadow-sm">
 						<h5 class="fw-bold mb-3">Récapitulatif financier</h5>

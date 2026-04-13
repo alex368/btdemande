@@ -23,7 +23,7 @@ class QuoteType extends AbstractType
                 'attr' => ['class' => 'form-control'],
             ])
             ->add('quoteNumber', TextType::class, [
-                'label' => 'Numéro du devis',
+                'label' => 'Numéro de proposition',
                 'attr' => ['class' => 'form-control'],
             ])
             ->add('expirationDate', DateType::class, [

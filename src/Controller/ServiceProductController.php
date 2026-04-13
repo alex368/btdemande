@@ -15,6 +15,9 @@ final class ServiceProductController extends AbstractController
     #[Route('/service/product', name: 'app_service_product')]
     public function index(EntityManagerInterface $em): Response
     {
+        if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('ROLE_COLLABORATOR')) {
+            throw $this->createAccessDeniedException();
+        }
 
 
         $serviceProduct = $em->getRepository(ServiceProduct::class)->findAll();
@@ -28,6 +31,9 @@ final class ServiceProductController extends AbstractController
     #[Route('/service/product/{id}', name: 'app_service_product_show')]
     public function show(EntityManagerInterface $em, $id): Response
     {
+        if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('ROLE_COLLABORATOR')) {
+            throw $this->createAccessDeniedException();
+        }
 
 
         $serviceProduct = $em->getRepository(ServiceProduct::class)->find($id);
@@ -41,6 +47,9 @@ final class ServiceProductController extends AbstractController
     #[Route('/add/service/product', name: 'app_service_product_add')]
     public function add(EntityManagerInterface $em, Request $request): Response
     {
+        if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('ROLE_COLLABORATOR')) {
+            throw $this->createAccessDeniedException();
+        }
 
 
         $serviceProduct = new ServiceProduct();
@@ -67,6 +76,9 @@ final class ServiceProductController extends AbstractController
     #[Route('/edit/service/product/{id}', name: 'app_service_product_edit')]
     public function edit(EntityManagerInterface $em, Request $request, $id): Response
     {
+        if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('ROLE_COLLABORATOR')) {
+            throw $this->createAccessDeniedException();
+        }
 
         $serviceProduct = $em->getRepository(ServiceProduct::class)->find($id);
 
@@ -96,6 +108,9 @@ final class ServiceProductController extends AbstractController
         Request $request,
         EntityManagerInterface $em
     ): Response {
+        if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('ROLE_COLLABORATOR')) {
+            throw $this->createAccessDeniedException();
+        }
         // Sécurité CSRF
         if ($this->isCsrfTokenValid('delete-serviceProduct-' . $serviceProduct->getId(), $request->get('_token'))) {
 
@@ -103,7 +118,7 @@ final class ServiceProductController extends AbstractController
             $em->remove($serviceProduct);
             $em->flush();
 
-            $this->addFlash('success', 'Le devis a été supprimé avec succès.');
+            $this->addFlash('success', 'La prestation a été supprimée avec succès.');
 
             return $this->redirectToRoute('app_service_product');
         }

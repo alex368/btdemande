@@ -55,18 +55,29 @@ final class CustomerDatasheetController extends AbstractController
         $siret = $request->query->get('siret');
 
         if ($siret) {
-            $inseeData = $inseeApiService->fetchCompanyBySiret($siret);
+            if ($siret === '0' || preg_match('/^0+$/', $siret)) {
+                $campany
+                    ->setLegalType(Campany::LEGAL_TYPE_PHYSICAL_PERSON)
+                    ->setLegalName('Personne physique')
+                    ->setSiren('0');
+            } else {
+                $inseeData = $inseeApiService->fetchCompanyBySiret($siret);
 
-            if ($inseeData && isset($inseeData['etablissement'])) {
-                $etab = $inseeData['etablissement'];
-                $adresse = $etab['adresseEtablissement'];
+                if ($inseeData && isset($inseeData['etablissement'])) {
+                    $etab = $inseeData['etablissement'];
+                    $adresse = $etab['adresseEtablissement'] ?? [];
 
-                $campany->setLegalName($etab['uniteLegale']['denominationUniteLegale'] ?? null);
-                $campany->setSiren($etab['siren']);
-                $campany->setCreationDate(new \DateTime($etab['dateCreationEtablissement'] ?? 'now'));
-                $campany->setAdress(trim(($adresse['typeVoieEtablissement'] ?? '') . ' ' . ($adresse['libelleVoieEtablissement'] ?? '') . ', ' . ($adresse['codePostalEtablissement'] ?? '') . ' ' . ($adresse['libelleCommuneEtablissement'] ?? '')));
-                $campany->setSector($etab['activitePrincipaleRegistreMetiersEtablissement'] ?? 'Unknown');
-                $campany->setStage('N/A');
+                    $campany->setLegalName($etab['uniteLegale']['denominationUniteLegale'] ?? 'Personne morale');
+                    $campany->setLegalType(Campany::LEGAL_TYPE_LEGAL_ENTITY);
+                    $campany->setSiren($etab['siren']);
+                    $campany->setCreationDate(new \DateTime($etab['dateCreationEtablissement'] ?? 'now'));
+                    $campany->setAdress(trim(($adresse['numeroVoieEtablissement'] ?? '') . ' ' . ($adresse['typeVoieEtablissement'] ?? '') . ' ' . ($adresse['libelleVoieEtablissement'] ?? '')));
+                    $campany->setZipCode($adresse['codePostalEtablissement'] ?? null);
+                    $campany->setCity($adresse['libelleCommuneEtablissement'] ?? null);
+                    $campany->setCountry(!empty($adresse['codePaysEtrangerEtablissement']) ? null : 'FR');
+                    $campany->setSector($etab['activitePrincipaleRegistreMetiersEtablissement'] ?? 'other');
+                    $campany->setStage('ideation');
+                }
             }
         }
 
@@ -74,6 +85,8 @@ final class CustomerDatasheetController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $campany->synchronizeLegalTypeFromSiren();
+
             /** @var UploadedFile $logoFile */
             $logoFile = $form->get('logo')->getData();
 
@@ -123,6 +136,8 @@ final class CustomerDatasheetController extends AbstractController
         $form = $this->createForm(CampanyType::class, $campany);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
+            $campany->synchronizeLegalTypeFromSiren();
+
             $currentLogo = $campany->getLogo();
             $logoFile = $form->get('logo')->getData();
 
@@ -182,18 +197,21 @@ final class CustomerDatasheetController extends AbstractController
         $periodeEtab = $etab['periodesEtablissement'][0] ?? [];
 
         return new JsonResponse([
-            'legalName' => $etab['uniteLegale']['denominationUniteLegale'] ?? '',
+            'legalName' => $etab['uniteLegale']['denominationUniteLegale'] ?? 'Personne morale',
+            'legalType' => Campany::LEGAL_TYPE_LEGAL_ENTITY,
             'siren' => $etab['siren'],
             'siret' => $etab['siret'],
             'creationDate' => $etab['dateCreationEtablissement'] ?? '',
-            'sector' => '',
+            'sector' => $etab['activitePrincipaleRegistreMetiersEtablissement'] ?? 'other',
             'adress' => trim(
-                ($adresse['typeVoieEtablissement'] ?? '') . ' ' .
-                    ($adresse['libelleVoieEtablissement'] ?? '') . ', ' .
-                    ($adresse['codePostalEtablissement'] ?? '') . ' ' .
-                    ($adresse['libelleCommuneEtablissement'] ?? '')
+                ($adresse['numeroVoieEtablissement'] ?? '') . ' ' .
+                    ($adresse['typeVoieEtablissement'] ?? '') . ' ' .
+                    ($adresse['libelleVoieEtablissement'] ?? '')
             ),
-            'stage' => ''
+            'zipCode' => $adresse['codePostalEtablissement'] ?? '',
+            'city' => $adresse['libelleCommuneEtablissement'] ?? '',
+            'country' => empty($adresse['codePaysEtrangerEtablissement']) ? 'FR' : '',
+            'stage' => 'ideation'
         ]);
     }
 

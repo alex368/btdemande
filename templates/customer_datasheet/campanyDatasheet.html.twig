@@ -4,6 +4,9 @@
 {% endblock %}
 
 {% block body %}
+	{% set isPhysicalPerson = campanies.legalType == 'personne_physique' %}
+	{% set legalBadgeLabel = isPhysicalPerson ? 'PP' : 'PM' %}
+	{% set legalBadgeTitle = isPhysicalPerson ? 'Personne physique' : 'Personne morale' %}
 
 
 	<!-- Contenu principal à droite -->
@@ -52,11 +55,24 @@
 
 
 				<!-- Nom -->
-				<h5 class="fw-bold mb-4">{{campanies.legalName}}</h5>
+				<div class="d-flex justify-content-center align-items-center gap-2 mb-4">
+					<h5 class="fw-bold mb-0">{{ campanies.legalName }}</h5>
+					<span
+						class="badge rounded-pill px-3 py-2"
+						style="background-color: {{ isPhysicalPerson ? '#6B7280' : '#214995' }}; color: #fff;"
+						title="{{ legalBadgeTitle }}"
+					>
+						<i class="bi {{ isPhysicalPerson ? 'bi-person' : 'bi-building' }} me-1"></i>{{ legalBadgeLabel }}
+					</span>
+				</div>
 
 				<!-- Infos entreprise -->
 				<table class="table company-info border">
 					<tbody>
+						<tr>
+							<td class="fw-bold">Type :</td>
+							<td>{{ legalBadgeTitle }}</td>
+						</tr>
 						<tr>
 							<td class="fw-bold">SIREN :</td>
 							<td>{{campanies.siren}}</td>

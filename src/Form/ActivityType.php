@@ -3,8 +3,6 @@
 namespace App\Form;
 
 use App\Entity\Activity;
-use App\Entity\Contact;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
@@ -29,19 +27,6 @@ class ActivityType extends AbstractType
     'placeholder' => 'Sélectionner un type',
     'attr' => ['class' => 'form-select'],
 ])
-
-->add('status', ChoiceType::class, [
-    'label' => 'Statut',
-    'choices' => [
-        'Ouvert' => 'open',
-        'En cours' => 'in_progress',
-        'Terminé' => 'done',
-        'Annulé' => 'cancelled',
-    ],
-    'placeholder' => 'Sélectionner un statut',
-    'attr' => ['class' => 'form-select'],
-])
-
             ->add('description', null, [
     'label' => 'Description',
     'attr' => [

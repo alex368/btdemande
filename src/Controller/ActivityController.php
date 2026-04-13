@@ -28,6 +28,9 @@ final class ActivityController extends AbstractController
         $oppForm->handleRequest($request);
 
         if ($oppForm->isSubmitted() && $oppForm->isValid()) {
+            if ($opportunity->getStatus() === null) {
+                $opportunity->setStatus('open');
+            }
             $em->persist($opportunity);
             $em->flush();
 

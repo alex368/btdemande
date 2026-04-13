@@ -7,6 +7,7 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\CountryType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
@@ -52,10 +53,10 @@ class CampanyType extends AbstractType
                     new Length(['min' => 2])
                 ]
             ])
-                        ->add('projetName', TextType::class, [
+            ->add('projetName', TextType::class, [
                 'label' => 'Nom du projet',
                 'attr' => [
-                    'id' => 'campany_legalName',
+                    'id' => 'campany_projetName',
                     'placeholder' => 'Enter the project name',
                     'class' => 'form-control'
                 ],
@@ -90,12 +91,43 @@ class CampanyType extends AbstractType
 ])
             ->add('adress', TextType::class, [
                 'label' => 'Address',
+                'required' => false,
                 'attr' => [
                     'id' => 'campany_adress',
                     'placeholder' => 'Adresse',
                     'class' => 'form-control'
                 ],
                 'row_attr' => ['class' => 'mb-3']
+            ])
+            ->add('city', TextType::class, [
+                'label' => 'Ville',
+                'required' => false,
+                'attr' => [
+                    'id' => 'campany_city',
+                    'placeholder' => 'Ville',
+                    'class' => 'form-control',
+                ],
+                'row_attr' => ['class' => 'mb-3'],
+            ])
+            ->add('zipCode', TextType::class, [
+                'label' => 'Code postal',
+                'required' => false,
+                'attr' => [
+                    'id' => 'campany_zipCode',
+                    'placeholder' => 'Code postal',
+                    'class' => 'form-control',
+                ],
+                'row_attr' => ['class' => 'mb-3'],
+            ])
+            ->add('country', CountryType::class, [
+                'label' => 'Pays',
+                'required' => false,
+                'placeholder' => 'Choisir un pays',
+                'attr' => [
+                    'id' => 'campany_country',
+                    'class' => 'form-select',
+                ],
+                'row_attr' => ['class' => 'mb-3'],
             ])
             ->add('siren', TextType::class, [
                 'label' => 'SIREN',
@@ -109,7 +141,7 @@ class CampanyType extends AbstractType
                     new NotBlank(),
                     new Regex([
                         'pattern' => '/^(?:0|\d{9})$/',
-                        'message' => 'The SIREN must be exactly 9 digits.',
+                        'message' => 'The SIREN must be 0 or exactly 9 digits.',
                     ])
                 ]
             ])

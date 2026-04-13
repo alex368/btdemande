@@ -23,6 +23,9 @@ use Symfony\Component\Serializer\Attribute\Groups;
 #[ORM\Entity(repositoryClass: CampanyRepository::class)]
 class Campany
 {
+    public const LEGAL_TYPE_PHYSICAL_PERSON = 'personne_physique';
+    public const LEGAL_TYPE_LEGAL_ENTITY = 'personne_morale';
+
     #[Groups(['campany:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -79,6 +82,22 @@ class Campany
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $projetName = null;
 
+    #[Groups(['campany:read', 'campany:write'])]
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $city = null;
+
+    #[Groups(['campany:read', 'campany:write'])]
+    #[ORM\Column(length: 32, nullable: true)]
+    private ?string $zipCode = null;
+
+    #[Groups(['campany:read', 'campany:write'])]
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $country = null;
+
+    #[Groups(['campany:read', 'campany:write'])]
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $legalType = null;
+
     public function __construct()
     {
         $this->customer = new ArrayCollection();
@@ -120,7 +139,7 @@ class Campany
         return $this->adress;
     }
 
-    public function setAdress(string $adress): static
+    public function setAdress(?string $adress): static
     {
         $this->adress = $adress;
 
@@ -134,7 +153,8 @@ class Campany
 
     public function setSiren(string $siren): static
     {
-        $this->siren = $siren;
+        $this->siren = trim($siren);
+        $this->synchronizeLegalTypeFromSiren();
 
         return $this;
     }
@@ -269,6 +289,78 @@ class Campany
         $this->projetName = $projetName;
 
         return $this;
+    }
+
+    public function getCity(): ?string
+    {
+        return $this->city;
+    }
+
+    public function setCity(?string $city): static
+    {
+        $this->city = $city;
+
+        return $this;
+    }
+
+    public function getZipCode(): ?string
+    {
+        return $this->zipCode;
+    }
+
+    public function setZipCode(?string $zipCode): static
+    {
+        $this->zipCode = $zipCode;
+
+        return $this;
+    }
+
+    public function getCountry(): ?string
+    {
+        return $this->country;
+    }
+
+    public function setCountry(?string $country): static
+    {
+        $this->country = $country;
+
+        return $this;
+    }
+
+    public function getLegalType(): ?string
+    {
+        return $this->legalType;
+    }
+
+    public function setLegalType(?string $legalType): static
+    {
+        $this->legalType = $legalType;
+
+        return $this;
+    }
+
+    public function synchronizeLegalTypeFromSiren(): static
+    {
+        $siren = trim((string) $this->siren);
+
+        if ($siren !== '' && preg_match('/^0+$/', $siren) === 1) {
+            $this->legalType = self::LEGAL_TYPE_PHYSICAL_PERSON;
+        } else {
+            $this->legalType = self::LEGAL_TYPE_LEGAL_ENTITY;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function getLegalTypeChoices(): array
+    {
+        return [
+            'Personne morale' => self::LEGAL_TYPE_LEGAL_ENTITY,
+            'Personne physique' => self::LEGAL_TYPE_PHYSICAL_PERSON,
+        ];
     }
 
 }

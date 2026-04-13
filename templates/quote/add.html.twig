@@ -1,21 +1,21 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Ajouter un devis{% endblock %}
+{% block title %}Ajouter une proposition commerciale{% endblock %}
 
 {% block body %}
 
 <main class="col-md-12 col-lg-12 p-2">
 <div class="container mt-5">
 
-    <h1 class="text-center bebas text-color-blue mb-5 mt-5">Ajouter un devis</h1>
+    <h1 class="text-center bebas text-color-blue mb-5 mt-5">Ajouter une proposition commerciale</h1>
 
     {{ form_start(form) }}
 
     {# =============================
-       INFORMATION DU DEVIS
+       INFORMATION DE LA PROPOSITION
     ============================== #}
     <div class="card shadow-sm p-4 mb-4">
-        <h5 class="fw-bold mb-3">Informations du devis</h5>
+        <h5 class="fw-bold mb-3">Informations de la proposition commerciale</h5>
         {{ form_row(form.quoteNumber) }}
         {{ form_row(form.expirationDate) }}
         {{ form_row(form.createdAt) }}
@@ -58,7 +58,7 @@
     {% endset %}
 
     {# =============================
-       LISTE DES LIGNES DEVIS
+       LISTE DES LIGNES
     ============================== #}
     <div class="card shadow-sm p-4 mb-4">
         <h5 class="fw-bold mb-3">Produits / Services</h5>
@@ -122,11 +122,11 @@
        TOTAL GLOBAL
     ============================== #}
     <div class="card shadow-sm p-3 mt-4">
-        <h5 class="fw-bold mb-2">Total HT du devis</h5>
+        <h5 class="fw-bold mb-2">Total HT de la proposition</h5>
         <div class="fs-4 text-success fw-bold" id="global-total">0.00 €</div>
     </div>
 
-    <button class="btn btn-primary btn-lg mt-4">Créer le devis</button>
+    <button class="btn btn-primary btn-lg mt-4">Créer la proposition commerciale</button>
 
     {{ form_end(form) }}
 

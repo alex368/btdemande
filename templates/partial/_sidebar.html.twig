@@ -80,7 +80,7 @@
 
 <style>	
     .sidebar {
-        background-color: #166a5d;
+        background: linear-gradient(180deg, #214995 0%, #163a70 100%);
         color: white;
         padding: 2rem 1rem;
         position: fixed;
@@ -102,7 +102,7 @@
     }
 
     .sidebar a:hover {
-        color: #cfd8dc;
+        color: #fbbb3b;
     }
 
     .sidebar .logout {
@@ -219,6 +219,13 @@
         <i class="bi bi-book me-2"></i>Partenaire
     </a>
 </li>
+{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
+<li class="nav-item mb-2">
+    <a href="{{ path('app_service_product') }}">
+        <i class="bi bi-briefcase me-2"></i>Prestations
+    </a>
+</li>
+{% endif %}
 {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
 
 <li class="nav-item mb-2">

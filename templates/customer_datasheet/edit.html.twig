@@ -17,6 +17,10 @@
 
 			{{ form_start(form) }}
 
+			<div class="alert alert-info">
+				Saisis un `SIRET` pour préremplir les données INSEE. Si c'est une personne physique, renseigne `0`. Le type de personne sera défini automatiquement.
+			</div>
+
 			<div class="mb-3">
 				{{ form_label(form.legalName, 'Nom légal', {'label_attr': {'for': 'legalName'}}) }}
 				{{ form_widget(form.legalName, {'attr': {'id': 'legalName', 'class': 'form-control'}}) }}
@@ -61,6 +65,21 @@
 			</div>
 
 			<div class="mb-3">
+				{{ form_label(form.city, 'Ville', {'label_attr': {'for': 'city'}}) }}
+				{{ form_widget(form.city, {'attr': {'id': 'city', 'class': 'form-control'}}) }}
+			</div>
+
+			<div class="mb-3">
+				{{ form_label(form.zipCode, 'Code postal', {'label_attr': {'for': 'zipCode'}}) }}
+				{{ form_widget(form.zipCode, {'attr': {'id': 'zipCode', 'class': 'form-control'}}) }}
+			</div>
+
+			<div class="mb-3">
+				{{ form_label(form.country, 'Pays', {'label_attr': {'for': 'country'}}) }}
+				{{ form_widget(form.country, {'attr': {'id': 'country', 'class': 'form-select'}}) }}
+			</div>
+
+			<div class="mb-3">
 				{{ form_label(form.stage, 'Stage', {'label_attr': {'for': 'stage'}}) }}
 				{{ form_widget(form.stage, {'attr': {'id': 'stage', 'class': 'form-control'}}) }}
 			</div>
@@ -85,10 +104,14 @@ document.getElementById('siret').addEventListener('change', function () {
 
   const clearCompanyFields = () => {
     const ids = [
+      'legalType',
       'legalName',
       'sirenField',
       'sector',
       'adress',
+      'city',
+      'zipCode',
+      'country',
       'stage',
       'creationDate',
     ];
@@ -100,6 +123,14 @@ document.getElementById('siret').addEventListener('change', function () {
 
   if (siret === '0' || /^0+$/.test(siret)) {
     clearCompanyFields();
+    const setFieldValue = (id, value) => {
+      const field = document.getElementById(id);
+      if (field) field.value = value ?? '';
+    };
+
+    setFieldValue('legalType', 'personne_physique');
+    setFieldValue('legalName', 'Personne physique');
+    setFieldValue('sirenField', '0');
     return;
   }
 
@@ -121,10 +152,14 @@ document.getElementById('siret').addEventListener('change', function () {
         else console.warn(`Champ introuvable : #${id}`);
       };
 
+      setFieldValue('legalType', data.legalType);
       setFieldValue('legalName', data.legalName);
       setFieldValue('sirenField', data.siren);
       setFieldValue('sector', data.sector);
       setFieldValue('adress', data.adress);
+      setFieldValue('city', data.city);
+      setFieldValue('zipCode', data.zipCode);
+      setFieldValue('country', data.country);
       setFieldValue('stage', data.stage);
       setFieldValue('creationDate', data.creationDate);
     })

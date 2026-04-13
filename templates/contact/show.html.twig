@@ -567,13 +567,13 @@
 		</div>
 
 
-		{# ===================== DEVIS ===================== #}
+		{# ===================== PROPOSITIONS COMMERCIALES ===================== #}
 
 		<div class="card mb-4 shadow-sm">
 			<div class="card-header d-flex justify-content-between align-items-center bg-warning text-white fw-bold">
 				<span>
 					<i class="bi bi-receipt me-2"></i>
-					Devis
+					Propositions commerciales
 				</span>
 
 				<a href="{{ path('app_quote_add', {id: contact.id}) }}" class="btn btn-light btn-sm">
@@ -585,7 +585,7 @@
 			<div class="card-body">
 
 				{% if quotes is empty %}
-					<p class="text-muted">Aucun devis.</p>
+					<p class="text-muted">Aucune proposition commerciale.</p>
 				{% else %}
 					<ul class="list-group">
 
@@ -602,7 +602,7 @@
 									<span class="badge bg-{{ badgeColor }} me-2">{{ badgeText }}</span>
 
 									<i class="bi bi-receipt me-1"></i>
-									Devis n°
+									Proposition n°
 									<strong>{{ quote.quoteNumber }}</strong>
 
 									<div class="text-muted small">
@@ -623,7 +623,7 @@
 										<i class="bi bi-pencil-square"></i>
 									</a>
 
-									<form method="post" action="{{ path('app_quote_delete', {id: quote.id}) }}" onsubmit="return confirm('Supprimer ce devis ?');">
+									<form method="post" action="{{ path('app_quote_delete', {id: quote.id}) }}" onsubmit="return confirm('Supprimer cette proposition commerciale ?');">
 
 										<input type="hidden" name="_token" value="{{ csrf_token('delete-quote-' ~ quote.id) }}">
 
@@ -680,7 +680,7 @@
 									<span class="badge bg-{{ badgeColor }} me-2">{{ badgeText }}</span>
 
 									<i class="bi bi-file-earmark-text me-1 text-primary"></i>
-									Devis n°
+									Proposition n°
 									<strong>{{ quote.quoteNumber }}</strong>
 
 									<div class="text-muted small mt-1">
@@ -701,7 +701,7 @@
 										<i class="bi bi-pencil-square"></i>
 									</a>
 
-									<form method="post" action="{{ path('app_quote_delete', {id: quote.id}) }}" onsubmit="return confirm('Supprimer ce devis ?');">
+									<form method="post" action="{{ path('app_quote_delete', {id: quote.id}) }}" onsubmit="return confirm('Supprimer cette proposition commerciale ?');">
 										<input type="hidden" name="_token" value="{{ csrf_token('delete-quote-' ~ quote.id) }}">
 										<button class="btn btn-sm btn-outline-danger" type="submit">
 											<i class="bi bi-trash"></i>

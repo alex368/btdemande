@@ -29,12 +29,12 @@ public function add(
     Request $request,
     EntityManagerInterface $em
 ): Response {
-    // Création du devis
+    // Création de la proposition commerciale
     $quote = new Quote();
     $quote->setCustomer($contact);
     $quote->setCreatedAt(new \DateTimeImmutable());
 
-    // Génération auto du numéro de devis
+    // Génération auto du numéro de proposition
     $lastQuote = $em->getRepository(Quote::class)->findOneBy([], ['id' => 'DESC']);
     $nextId = $lastQuote ? $lastQuote->getId() + 1 : 1;
     $quote->setQuoteNumber('Q-' . date('Y') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT));
@@ -58,7 +58,7 @@ public function add(
         $em->persist($quote);
         $em->flush();
 
-        $this->addFlash('success', 'Le devis a été ajouté !');
+        $this->addFlash('success', 'La proposition commerciale a été ajoutée.');
         return $this->redirectToRoute('app_quote_show', ['id' => $quote->getId()]);
     }
 
@@ -88,7 +88,7 @@ public function show(EntityManagerInterface $em, $id): Response
     $quote = $em->getRepository(Quote::class)->find($id);
 
     if (!$quote) {
-        throw $this->createNotFoundException("Ce devis n'existe pas.");
+        throw $this->createNotFoundException("Cette proposition commerciale n'existe pas.");
     }
 
     $idContact = $quote->getCustomer()->getId(); // Charger le contact associé
@@ -112,7 +112,7 @@ public function pdf(Quote $quote, PdfGenerator $pdfGenerator): Response
 
     return new Response($pdf, 200, [
         'Content-Type' => 'application/pdf',
-        'Content-Disposition' => 'attachment; filename="devis-' . $quote->getQuoteNumber() . '.pdf"'
+        'Content-Disposition' => 'attachment; filename="proposition-commerciale-' . $quote->getQuoteNumber() . '.pdf"'
     ]);
 }
 
@@ -135,7 +135,7 @@ public function pdf(Quote $quote, PdfGenerator $pdfGenerator): Response
             $em->remove($quote);
             $em->flush();
 
-            $this->addFlash('success', 'Le devis a été supprimé avec succès.');
+            $this->addFlash('success', 'La proposition commerciale a été supprimée avec succès.');
 
             return $this->redirectToRoute('app_contact_show', [
                 'id' => $contact->getId(),
