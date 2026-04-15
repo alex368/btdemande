@@ -16,7 +16,7 @@
             height: 100%;
             margin: 0;
             padding: 0;
-            background-image: url('../image/fondPapier.png');
+            background-image: url('{{ asset('image/fondPapier.png') }}');
             /* remplace par ton vrai chemin */
             background-size: cover;
             /* couvre tout l'écran */
@@ -259,6 +259,7 @@ thead {
   text-transform: uppercase;
   font-weight: 500;
 }
+
         </style>
         {% endblock %}
 
@@ -267,7 +268,7 @@ thead {
         {% endblock %}
     </head>
       <body data-turbo="false">
-      
+
 {% block sidebar %}
 			{% include 'partial/_sidebar.html.twig'%}
 {% endblock %}
