@@ -3,110 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <title>Roadmap Financière</title>
-
     <style>
         body {
-            font-family: DejaVu Sans, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 28px 32px 36px;
+            font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
+            line-height: 1.55;
+            color: #20365f;
+            background: #ffffff;
         }
 
-        h1 {
-            text-align: center;
-            color: #01368c;
-            margin-bottom: 40px;
+        .report-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #d9e2f3;
         }
 
-        .timeline-container {
-            position: relative;
-            width: 100%;
-            padding-left: 40px;
-            border-left: 4px solid #01368c;
-        }
-
-        .timeline-block {
-            position: relative;
-            margin-bottom: 40px;
-        }
-
-        .timeline-point {
-            width: 16px;
-            height: 16px;
-            background: #01368c;
-            border-radius: 50%;
-            position: absolute;
-            left: -11px;
-            top: 5px;
-            border: 3px solid white;
-        }
-
-        .label-box {
-            background: #f9f9f9;
-            padding: 15px 20px;
-            border-left: 4px solid #01368c;
-            border-radius: 5px;
-        }
-
-        .label-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #01368c;
+        .report-kicker {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: #6d7f9f;
             margin-bottom: 8px;
         }
 
-        .label-text {
-            font-size: 12px;
+        .report-title {
+            margin: 0 0 6px;
+            font-size: 26px;
+            line-height: 1.2;
+            color: #16346c;
         }
 
-        .year-badge {
-            display: inline-block;
-            font-weight: bold;
-            font-size: 11px;
-            background: #01368c;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 3px;
-            margin-bottom: 5px;
+        .report-subtitle {
+            margin: 0;
+            color: #4e6288;
         }
 
-        .section {
+        .report-summary {
+            margin-bottom: 24px;
+            color: #4e6288;
+        }
+
+        .step-card {
+            border: 1px solid #dbe4f3;
+            padding: 18px 20px;
+            margin-bottom: 18px;
             page-break-inside: avoid;
+        }
+
+        .step-heading {
+            margin-bottom: 10px;
+        }
+
+        .step-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: #7a8dac;
+            margin-bottom: 6px;
+        }
+
+        .step-title {
+            margin: 0;
+            font-size: 20px;
+            line-height: 1.3;
+            color: #16346c;
+        }
+
+        .step-meta {
+            margin: 2px 0 0;
+            font-size: 12px;
+            color: #4e6288;
+        }
+
+        .step-description {
+            margin: 14px 0 16px;
+            color: #40557d;
+        }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .details-table th {
+            width: 33.33%;
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #6f82a4;
+            background: #f5f8fd;
+            border: 1px solid #dbe4f3;
+        }
+
+        .details-table td {
+            padding: 12px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #20365f;
+            border: 1px solid #dbe4f3;
+            vertical-align: top;
         }
     </style>
 </head>
 <body>
+    <header class="report-header">
+        <div class="report-kicker">Roadmap financière</div>
+        <h1 class="report-title">
+            {% if campany is defined %}
+                {{ campany.legalName }}
+            {% else %}
+                Rapport de financement
+            {% endif %}
+        </h1>
+        <p class="report-subtitle">
+            Ce rapport présente les étapes de financement prévues, leur temporalité et les informations utiles à leur compréhension.
+        </p>
+    </header>
 
+    <section class="report-summary">
+        Chaque étape indique le dispositif concerné, le trimestre de mobilisation, la date cible, le montant estimatif et le type de dépense associé.
+    </section>
 
-    <h1>Roadmap Financiere{% if campany is defined %} - {{ campany.legalName }}{% endif %}</h1>
+    {% for r in roadmaps %}
+        {% set roadmap = r.entity %}
+        <article class="step-card">
+            <div class="step-heading">
+                <div class="step-label">Étape {{ loop.index }}</div>
+                <h2 class="step-title">
+                    {{ roadmap.product ? roadmap.product.name : 'Dispositif non défini' }}
+                </h2>
+                <p class="step-meta">
+                    {{ roadmap.date|date('Y') }} {{ r.quarter }}{% if roadmap.date is not null %} | {{ roadmap.date|date('d/m/Y') }}{% endif %}
+                </p>
+            </div>
 
-    <div class="timeline-container">
-        {% for r in roadmaps %}
-            {% set roadmap = r.entity %}
-
-            <div class="timeline-block section">
-                <div class="timeline-point"></div>
-                <div class="label-box">
-                    <span class="year-badge">{{ roadmap.date|date('Y') }}</span>
-                    <div class="label-title">
-                        {{ roadmap.product ? roadmap.product.name : 'Produit non defini' }}
-                    </div>
-                    <div class="label-text">
-                        Trimestre : <strong>{{ r.quarter }}</strong><br>
-                        Montant estimatif :
-                        <strong>
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th>Date cible</th>
+                        <th>Montant estimatif</th>
+                        <th>Type de dépense</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ roadmap.date ? roadmap.date|date('d/m/Y') : 'Non renseignée' }}</td>
+                        <td>
                             {% if roadmap.estimatedAmount is not null %}
                                 {{ roadmap.estimatedAmount|number_format(0, ',', ' ') }} €
                             {% else %}
-                                Non renseigne
+                                Non renseigné
                             {% endif %}
-                        </strong><br>
-                        Type de depense : <strong>{{ roadmap.expenseType ?: 'Non renseigne' }}</strong>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-
+                        </td>
+                        <td>{{ roadmap.expenseType ?: 'Non renseigné' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </article>
+    {% endfor %}
 </body>
 </html>

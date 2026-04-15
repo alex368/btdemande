@@ -4,120 +4,130 @@
 {% endblock %}
 
 {% block body %}
-	<div class="col-md-9 col-lg-10 p-4" style="height: 100vh; overflow-y: auto;">
-		<div class="container py-5">
+    <style>
+        .profile-shell {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 2.5rem 1rem 3rem;
+        }
 
-			<div class="text-center mb-5">
-				<img src="{{ asset('image/logo.png') }}" alt="logo" width="70">
-				
-				<h3 class="mt-3 text-success fw-bold text-uppercase">Mon compte</h3>
-			</div>
-			
+        .profile-header {
+            background: linear-gradient(130deg, #173f9a 0%, #214995 52%, #2f6ed6 100%);
+            color: #fff;
+            padding: 1.7rem 1.6rem;
+            box-shadow: 0 16px 34px rgba(23, 63, 154, 0.24);
+            margin-bottom: 1.25rem;
+        }
 
+        .profile-header-title {
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
 
-			<!-- Formulaire -->
-			<form class="mx-auto" style="max-width: 600px;" method="post" action="{{ path('app_profile', {id: app.user.id}) }}">
-             {% for label, messages in app.flashes %}
-            {% for message in messages %}
-                <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+        .profile-header-subtitle {
+            margin: 0.3rem 0 0;
+            opacity: 0.9;
+        }
+
+        .profile-card {
+            border: 1px solid #e6ecf8;
+            background: #fff;
+            padding: 1.5rem;
+            box-shadow: 0 10px 24px rgba(33, 73, 149, 0.08);
+        }
+
+        .profile-card .form-label {
+            color: #214995;
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+
+        .profile-card .form-control {
+            border-radius: 0;
+            border-color: #d8e3f7;
+            min-height: 46px;
+        }
+
+        .profile-card .form-control:focus {
+            border-color: #214995;
+            box-shadow: 0 0 0 0.2rem rgba(33, 73, 149, 0.15);
+        }
+
+        .profile-save-btn {
+            background-color: #214995;
+            border-color: #214995;
+            border-radius: 0;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            min-height: 46px;
+        }
+
+        .profile-password-link {
+            border-radius: 0;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+    </style>
+
+    <main class="p-4 d-flex justify-content-center" style="min-height: 100vh; overflow-y: auto;">
+        <div class="profile-shell">
+            <header class="profile-header">
+                <h1 class="profile-header-title">Mon compte</h1>
+                <p class="profile-header-subtitle">Mets a jour tes informations personnelles.</p>
+            </header>
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label }} alert-dismissible fade show rounded-0" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
             {% endfor %}
-        {% endfor %}
-      {# <div class="d-flex align-items-center justify-content-between bg-light p-3 rounded shadow-sm mb-4">
 
+            <section class="profile-card">
+                <div class="d-flex justify-content-end mb-3">
+                    <a href="{{ path('app_profile_password', { id: profileUser.id }) }}" class="btn btn-outline-warning profile-password-link">
+                        Modifier le mot de passe
+                    </a>
+                </div>
 
-	  
-				<div>
-					🧾 Actuellement sur le plan :
-					<strong class="text-primary text-uppercase">{{ get_plan_name(app.user) }}</strong>
-				</div>
+                {{ form_start(form, {'attr': {'class': 'row g-3'}}) }}
+                    <div class="col-12 col-md-6">
+                        {{ form_label(form.name) }}
+                        {{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(form.name) }}
+                    </div>
 
-				<div>
-					<a href="{{ path('app_change_plan') }}" class="btn btn-outline-success btn-sm text-uppercase">
-						🔄 Changer de formule
-					</a>
-				</div>
+                    <div class="col-12 col-md-6">
+                        {{ form_label(form.lastname) }}
+                        {{ form_widget(form.lastname, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(form.lastname) }}
+                    </div>
 
+                    <div class="col-12">
+                        {{ form_label(form.email) }}
+                        {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(form.email) }}
+                    </div>
 
-				
-			</div> #}
+                    <div class="col-12">
+                        {{ form_label(form.number) }}
+                        {{ form_widget(form.number, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(form.number) }}
+                    </div>
 
-				<div class="d-grid mb-3">
-    {# <a href="{{ path('app_notification_preferences', { code: classroom.code}) }}" class="btn btn-outline-primary text-uppercase fw-bold py-2">
-        <i class="bi bi-bell me-1"></i> Gérer mes notifications
-    </a> #}
-</div>
-				{{ form_start(form, {'attr': {'class': 'mx-auto', 'style': 'max-width: 600px;'}}) }}
-
-				<!-- NOM -->
-				<div class="mb-3">
-					{{ form_label(form.name, null, {'label_attr': {'class': 'form-label text-uppercase small fw-bold'}}) }}
-					{{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
-					{{ form_errors(form.name) }}
-				</div>
-
-				<!-- PRENOM -->
-				<div class="mb-3">
-					{{ form_label(form.lastname, null, {'label_attr': {'class': 'form-label text-uppercase small fw-bold'}}) }}
-					{{ form_widget(form.lastname, {'attr': {'class': 'form-control'}}) }}
-					{{ form_errors(form.lastname) }}
-				</div>
-
-				<!-- EMAIL -->
-				<div class="mb-3">
-					{{ form_label(form.email, null, {'label_attr': {'class': 'form-label text-uppercase small fw-bold'}}) }}
-					{{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
-					{{ form_errors(form.email) }}
-				</div>
-
-				<div class="mb-3">
-					{{ form_label(form.number, null, {'label_attr': {'class': 'form-label text-uppercase small fw-bold'}}) }}
-					{{ form_widget(form.number, {'attr': {'class': 'form-control'}}) }}
-					{{ form_errors(form.number) }}
-				</div>
-
-				<div class="mb-4">
-					<label class="form-label text-uppercase small fw-bold">Mot de passe</label>
-					<div class="d-flex gap-2">
-						<input type="password" class="form-control" value="********" disabled>
-						<a class="btn btn-warning rounded-0 text-uppercase fw-bold" href="{{ path('app_profile_password', {id: app.user.id}) }}">
-							Modifier
-						</a>
-					</div>
-				</div>
-
-				<!-- ENREGISTRER -->
-				<div class="d-grid">
-					<button type="submit" class="btn btn-primary text-uppercase fw-bold py-2">Enregistrer</button>
-				</div>
-
-
-		
-
-
-				{{ form_end(form) }}
-			</form>
-			{# Annuler mon abonnement #}
-
-
-			
-			{# {% if app.user.isPremium and app.user.stripeSubscriptionStatus not in ['canceled', 'one_time'] %}
-				<div class="mt-4 text-center">
-					<form method="post" action="{{ path('app_cancel_subscription') }}">
-						<input type="hidden" name="_token" value="{{ csrf_token('cancel_subscription') }}">
-						<button type="submit" class="btn btn-outline-danger">
-							❌ Annuler mon abonnement
-						</button>
-					</form>
-
-					<p class="text-muted small mt-2">Votre abonnement restera actif jusqu’à la fin de la période actuelle.</p>
-				</div>
-			{% endif %} #}
-		</div>
-
-
-	</div>
-
-</div></div>{% endblock %}
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary w-100 profile-save-btn">Enregistrer</button>
+                    </div>
+                {{ form_end(form) }}
+            </section>
+        </div>
+    </main>
+{% endblock %}

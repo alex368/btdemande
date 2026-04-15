@@ -101,9 +101,17 @@
 										<i class="bi bi-check-circle"></i>
 									</a>
 
-									<a href="{{ path('document_delete', { id: doc.id }) }}" onclick="return confirm('Supprimer ce document ?')" class="btn btn-sm btn-outline-danger" title="Supprimer">
+									<button
+										type="button"
+										class="btn btn-sm btn-outline-danger js-document-delete"
+										title="Supprimer"
+										data-delete-url="{{ path('document_delete', { id: doc.id }) }}"
+										data-delete-name="{{ doc.title ?: (doc.documentDefinition ? doc.documentDefinition.title : 'ce document') }}"
+										data-bs-toggle="modal"
+										data-bs-target="#deleteDocumentModal"
+									>
 										<i class="bi bi-trash"></i>
-									</a>
+									</button>
 
 									<a href="{{ path('document_edit', { id: doc.id }) }}" class="btn btn-sm btn-outline-primary" title="Modifier">
 										<i class="bi bi-pencil-square"></i>
@@ -181,4 +189,44 @@
 </div>
 		</div>
 	</main>
+
+	<div class="modal fade" id="deleteDocumentModal" tabindex="-1" aria-labelledby="deleteDocumentModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content rounded-0">
+				<div class="modal-header">
+					<h5 class="modal-title" id="deleteDocumentModalLabel">Supprimer le document</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+				</div>
+				<div class="modal-body">
+					Vous allez supprimer <strong id="delete-document-name">ce document</strong>. Cette action est immédiate.
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-outline-secondary rounded-0" data-bs-dismiss="modal">Annuler</button>
+					<a href="#" id="delete-document-confirm-link" class="btn btn-danger rounded-0">Confirmer la suppression</a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		document.addEventListener('DOMContentLoaded', () => {
+			const deleteModal = document.getElementById('deleteDocumentModal');
+			if (!deleteModal) {
+				return;
+			}
+
+			const nameTarget = document.getElementById('delete-document-name');
+			const confirmLink = document.getElementById('delete-document-confirm-link');
+
+			document.addEventListener('click', (event) => {
+				const button = event.target.closest('.js-document-delete');
+				if (!button) {
+					return;
+				}
+
+				nameTarget.textContent = button.dataset.deleteName || 'ce document';
+				confirmLink.setAttribute('href', button.dataset.deleteUrl || '#');
+			});
+		});
+	</script>
 {% endblock %}

@@ -84,6 +84,11 @@
 
     <div class="container px-1 px-md-4 py-5 mx-auto">
         <div class="card shadow-sm border-0">
+            {% set statusLabelMap = {
+                'Traitement du dossier': 'Montage du dossier',
+                "Attente chargé d'affaires": 'Attente du financeur'
+            } %}
+
             {# Liste des étapes #}
 
             {# Trouver l’index du statut actuel #}
@@ -92,7 +97,7 @@
          <ul id="progressbar">
     {% for step in steps %}
         <li class="{% if loop.index0 <= currentIndex %}active{% endif %}">
-            <b class="font-weight-bold mt-2">{{ step }}</b>
+            <b class="font-weight-bold mt-2">{{ statusLabelMap[step]|default(step) }}</b>
         </li>
     {% endfor %}
 </ul>
@@ -100,7 +105,7 @@
 {% if request.comment is not empty %}
     <div class="mt-4 px-4">
         <div class="alert alert-light border shadow-sm">
-            <h5 class="mb-2">Statut: {{ request.displayStatus }}</h5>
+            <h5 class="mb-2">Statut: {{ statusLabelMap[request.displayStatus]|default(request.displayStatus) }}</h5>
             <h5 class="mb-2">Commentaire</h5>
             <p class="mb-0">{{ request.comment }}</p>
         </div>
@@ -108,7 +113,7 @@
 {% else %}
     <div class="mt-4 px-4">
         <div class="alert alert-light border shadow-sm">
-            <h5 class="mb-0">Statut: {{ request.displayStatus }}</h5>
+            <h5 class="mb-0">Statut: {{ statusLabelMap[request.displayStatus]|default(request.displayStatus) }}</h5>
         </div>
     </div>
 {% endif %}

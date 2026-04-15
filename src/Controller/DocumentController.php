@@ -46,38 +46,52 @@ final class DocumentController extends AbstractController
 
             if ($action === 'send') {
                 $fundingRequest->setStatus(FundingRequest::STATUS_WAITING_CLIENT);
+                $mailErrors = 0;
                 // 🔹 Mail aux utilisateurs de la société liée à la demande
                 $company = $fundingRequest->getCampany();
                 if ($company) {
-                    foreach ($company->getCustomer() as $user) {
-                        if ($user->getEmail()) {
-                            $mailerService->send(
-                                $user->getEmail(),
-                                'Votre dossier est en attente de complétude',
-                                'emails/default.html.twig',
-                                [
-                                    'client'  => $user,
-                                    'request' => $fundingRequest,
-                                ]
-                            );
+                    foreach ($company->getCustomer() as $companyCustomer) {
+                        if ($companyCustomer->getEmail()) {
+                            try {
+                                $mailerService->send(
+                                    $companyCustomer->getEmail(),
+                                    'Votre dossier est en attente de complétude',
+                                    'emails/default.html.twig',
+                                    [
+                                        'client'  => $companyCustomer,
+                                        'request' => $fundingRequest,
+                                    ]
+                                );
+                            } catch (\Throwable) {
+                                ++$mailErrors;
+                            }
                         }
                     }
                 }
 
                 // 🔹 Mail à l’utilisateur connecté
                 if ($userTest instanceof User && $userTest->getEmail()) {
-                    $mailerService->send(
-                        $userTest->getEmail(),
-                        'Vous avez validé un dossier',
-                        'emails/default.html.twig',
-                        [
-                            'client'    => $userTest,
-                            'request' => $fundingRequest,
-                        ]
-                    );
+                    try {
+                        $mailerService->send(
+                            $userTest->getEmail(),
+                            'Vous avez validé un dossier',
+                            'emails/default.html.twig',
+                            [
+                                'client'  => $userTest,
+                                'request' => $fundingRequest,
+                            ]
+                        );
+                    } catch (\Throwable) {
+                        ++$mailErrors;
+                    }
                 }
 
                 $em->flush();
+                if ($mailErrors > 0) {
+                    $this->addFlash('warning', 'Le dossier a bien été envoyé, mais un ou plusieurs e-mails n’ont pas pu partir.');
+                } else {
+                    $this->addFlash('success', 'Le dossier a bien été envoyé.');
+                }
 
                 return $this->redirectToRoute('app_dashboard');
             }

@@ -1,411 +1,881 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello RoadmapController!
-{% endblock %}
+{% block title %}Roadmap financiere{% endblock %}
 
 {% block body %}
-	<style>
-		.clickable-title {
-			position: relative;
-			display: inline-block;
-			transition: color 0.3s ease;
-		}
+<style>
+    .roadmap-shell {
+        max-width: 1260px;
+        margin: 0 auto 4rem;
+        padding: 2rem 1rem 0;
+    }
 
-		.clickable-title::after {
-			content: "";
-			position: absolute;
-			left: 0;
-			bottom: -3px;
-			width: 0;
-			height: 2px;
-			background-color: #01368c;
-			transition: width 0.3s ease;
-		}
+    .roadmap-hero {
+        background:
+            radial-gradient(circle at top left, rgba(251, 187, 59, 0.28), transparent 34%),
+            linear-gradient(135deg, #0f2e7a 0%, #1847ab 55%, #2f6ed6 100%);
+        color: #fff;
+        border-radius: 0;
+        padding: 2rem;
+        box-shadow: 0 24px 50px rgba(15, 46, 122, 0.2);
+    }
 
-		.clickable-title:hover {
-			color: #01368c;
-			transform: translateY(-2px);
-		}
+    .roadmap-hero p {
+        max-width: 720px;
+        color: rgba(255, 255, 255, 0.86);
+    }
 
-		.clickable-title:hover::after {
-			width: 100%;
-		}
+    .roadmap-toolbar {
+        margin-top: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        justify-content: space-between;
+    }
 
-		.timeline-container {
-			position: relative;
-			display: flex;
-			justify-content: center;
-			margin-top: 60px;
-		}
+    .roadmap-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0 2rem;
+    }
 
-		.vertical {
-			position: absolute;
-			width: 4px;
-			background: #01368c;
-			left: 50%;
-			transform: translateX(-50%);
-			top: 0;
-			bottom: 0;
-			animation: growLine 1s ease-out forwards;
-			opacity: 0;
-		}
+    .roadmap-stat-card {
+        background: #fff;
+        border: 1px solid rgba(1, 54, 140, 0.08);
+        padding: 1.2rem 1.25rem;
+        box-shadow: 0 12px 30px rgba(12, 43, 112, 0.08);
+    }
 
-		@keyframes growLine {
-			from {
-				height: 0;
-				opacity: 0;
-			}
-			to {
-				height: 100%;
-				opacity: 1;
-			}
-		}
+    .roadmap-stat-label {
+        color: #5d6b8a;
+        font-size: 0.9rem;
+        display: block;
+        margin-bottom: 0.35rem;
+    }
 
-		.timeline-point {
-			width: 22px;
-			height: 22px;
-			background: #01368c;
-			border-radius: 50%;
-			position: absolute;
-			left: 50%;
-			transform: translateX(-50%);
-			border: 4px solid white;
-			box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
-		}
+    .roadmap-stat-value {
+        font-size: 1.8rem;
+        line-height: 1;
+        font-weight: 700;
+        color: #0f2e7a;
+    }
 
-		.label-box {
-			background: white;
-			border-left: 4px solid #01368c;
-			padding: 20px;
-			border-radius: 6px;
-			opacity: 0;
-			animation: fadeUp 0.7s ease forwards;
-		}
+    .roadmap-board {
+        position: relative;
+        padding: 1rem 0 1rem;
+    }
 
-		@keyframes fadeUp {
-			from {
-				opacity: 0;
-				transform: translateY(25px);
-			}
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
-		}
+    .roadmap-board::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 50%;
+        width: 3px;
+        transform: translateX(-50%);
+        background: linear-gradient(180deg, #d5def2 0%, #c1cfe9 100%);
+        opacity: 1;
+    }
 
-		.label-title {
-			font-size: 20px;
-			font-weight: 700;
-			color: #01368c;
-		}
+    #roadmap-items {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2.6rem;
+    }
 
-		.year-badge {
-			font-weight: bold;
-			font-size: 14px;
-			background: #01368c;
-			color: white;
-			padding: 3px 10px;
-			border-radius: 4px;
-		}
+    .roadmap-event {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 96px minmax(0, 1fr);
+        align-items: start;
+        width: 100%;
+        margin: 0;
+        box-sizing: border-box;
+    }
 
-		/* ====== RESPONSIVE ====== */
-		@media(max-width: 768px) {
-			.timeline-block {
-				width: 100% !important;
-				position: relative !important;
-				left: 0 !important;
-				right: 0 !important;
-				margin-bottom: 50px;
-			}
+    .roadmap-event-marker {
+        position: absolute;
+        top: 2.1rem;
+        left: 50%;
+        width: 96px;
+        display: flex;
+        justify-content: center;
+        z-index: 1;
+        transform: translateX(-50%);
+    }
 
-			.vertical {
-				left: 10px;
-			}
+    .roadmap-event-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #fbbb3b;
+        border: 4px solid #fff;
+        box-shadow: 0 0 0 4px rgba(194, 207, 233, 0.65);
+    }
 
-			.timeline-point {
-				left: 10px;
-				transform: translateX(-0%);
-			}
+    .roadmap-event-marker::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 48px;
+        height: 1px;
+        background: #d5def2;
+        transform: translateY(-50%);
+    }
 
-			.label-box {
-				margin-left: 40px !important;
-				width: calc(100% - 50px);
-				text-align: left !important;
-			}
-		}
-	</style>
+    .roadmap-event-left .roadmap-event-marker::before {
+        right: 48px;
+    }
 
-	<div class="col-md-12 col-lg-12">
-		<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">La roadmap financière</h1>
+    .roadmap-event-right .roadmap-event-marker::before {
+        left: 48px;
+    }
 
-		<div class="container">
-			<nav aria-label="breadcrumb">
-				<ol class="breadcrumb">
-					{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
-						<li class="breadcrumb-item">
-							<a href="{{ path('app_campany',{id:campanies.id, user:user})}}">Entreprise</a>
-							
-						</li>
-						{% elseif is_granted('ROLE_CUSTOMER') %}
-						<li class="breadcrumb-item">
-							<a href="#">Entreprise</a>
-						</li>
-					{% endif %}
-					<li class="breadcrumb-item active" aria-current="page">Roadmap</li>
-				</ol>
-			</nav>
+    .roadmap-event-card {
+        background: #ffffff;
+        border: 1px solid #e7eefc;
+        padding: 1.2rem 1.25rem;
+        min-height: 100%;
+        position: relative;
+        box-shadow: 0 10px 24px rgba(18, 55, 127, 0.05);
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
 
-			<div class="text-end mb-3">
-				{% if is_granted('ROLE_COLLABORATOR') %}
-					<a href="{{path('app_new_roadmap', {id:campanies.id, user:user})}}" class="btn btn-warning rounded-0">
-						Nouvelle roadmap
-					</a>
-					<a href="{{ path('app_roadmap_export', { id: campanies.id }) }}"
-					class="btn btn-outline-primary rounded-0"
-					target="_blank"
-					rel="noopener noreferrer">
-						📄 Exporter en PDF
-					</a>
+    .roadmap-event-left .roadmap-event-card {
+        grid-column: 1;
+        margin-right: 1.5rem;
+    }
 
-				{% endif %}
-			</div>
+    .roadmap-event-right .roadmap-event-card {
+        grid-column: 3;
+        margin-left: 1.5rem;
+    }
 
-			{# {% if is_granted('ROLE_ADMIN') %} #}
+    .roadmap-event-topline {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        align-items: center;
+    }
 
-			{# {% endif %} #}
+    .roadmap-year,
+    .roadmap-quarter {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 0.28rem 0.7rem;
+        font-weight: 700;
+        font-size: 0.92rem;
+    }
 
+    .roadmap-year {
+        background: #0f2e7a;
+        color: #fff;
+    }
 
-			{# <div class="card shadow-sm rounded-0 border-0 p-5 text-center" style="max-width: 1200px;">
-							<p class="p-2 fs-5 fw-light text-body-secondary">
-								Cette partie représente la stratégie financière que nous avons imaginé pour vous.
-													                Vous aurez la liste des financements correspondant à votre besoin sur 5 ans.
-													                Cliquez sur le nom d’un dispositif pour en savoir plus.
-							</p>
-						</div> #}
+    .roadmap-quarter {
+        background: rgba(251, 187, 59, 0.16);
+        color: #7a5600;
+    }
 
-			{# <div class="col-md-12 col-lg-12" style="height: 100vh; overflow-y: auto;"> #}
-			{# Hauteur dynamique en fonction du nombre d’éléments #}
-			{% set timelineHeight = roadmaps|length * 220 %}
+    .roadmap-event-title {
+        font-size: 1.2rem;
+        margin-bottom: 0.9rem;
+        color: #10317d;
+    }
 
-				<div class="timeline-container" style="height: {{ timelineHeight }}px;"> <div class="vertical"></div>
+    .roadmap-strategy-note {
+        margin: 0 0 1.5rem;
+        padding: 0.85rem 1rem;
+        background: linear-gradient(90deg, rgba(251, 187, 59, 0.14), rgba(28, 88, 203, 0.05));
+        border-left: 4px solid #fbbb3b;
+        color: #41557d;
+        font-size: 0.95rem;
+    }
 
-				{% for r in roadmaps %}
-					{% set roadmap = r.entity %}
-					{% set isLeft = loop.index is odd %}
-					{% set topPos = loop.index0 * 200 %}
+    .roadmap-drag-handle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        min-height: 28px;
+        background: rgba(15, 46, 122, 0.08);
+        color: #0f2e7a;
+        cursor: grab;
+        font-weight: 700;
+        letter-spacing: -0.18em;
+        user-select: none;
+    }
 
-					{# Point sur la ligne #}
-					<div class="timeline-point" style="top: {{ topPos + 20 }}px;"></div>
+    .roadmap-event.is-dragging {
+        opacity: 0.45;
+    }
 
-					{% if isLeft %}
-						<!-- Gauche -->
-						<div class="timeline-block position-absolute" style="top: {{ topPos }}px; left: 0; width: 45%;">
-							<div class="label-box text-end ms-auto">
+    .roadmap-event-card.is-drop-target {
+        outline: 2px dashed #fbbb3b;
+        outline-offset: 6px;
+    }
 
-								<span class="year-badge">
-									{{ roadmap.date|date('Y') }}
-								</span>
+    .clickable-title {
+        color: inherit;
+        font-weight: 700;
+    }
 
-								<h5 class="label-title">
-									{% if roadmap.product %}
-										<button
-											type="button"
-											class="btn p-0 border-0 bg-transparent text-decoration-none clickable-title js-product-modal"
-											data-bs-toggle="modal"
-											data-bs-target="#roadmapProductModal"
-											data-product-name="{{ roadmap.product.name }}"
-											data-product-description-html="{{ roadmap.product.productDescription|default('')|e('html_attr') }}"
-										>
-											{{ roadmap.product.name }}
-										</button>
-									{% else %}
-										Produit non défini
-									{% endif %}
-								</h5>
+    .clickable-title:hover {
+        color: #1c58cb;
+    }
 
+    .roadmap-metadata {
+        display: grid;
+        gap: 0.75rem;
+    }
 
-								<div class="label-line"></div>
+    .roadmap-metadata-item {
+        padding: 0.7rem 0.8rem;
+        background: #fff;
+        border: 1px solid #edf2fd;
+    }
 
-								<p class="label-text">
-									Trimestre :
-									<strong>{{ r.quarter }}</strong><br>
+    .roadmap-metadata-label {
+        display: block;
+        font-size: 0.74rem;
+        color: #607196;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.2rem;
+    }
 
-									{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
-										Date :
-										{{ roadmap.date|date('d/m/Y') }}<br>
-									{% endif %}
-									Montant estimatif :
-									<strong>
-										{% if roadmap.estimatedAmount is not null %}
-											{{ roadmap.estimatedAmount|number_format(0, ',', ' ') }}
-											€
-										{% else %}
-											Non renseigné
-										{% endif %}
-									</strong><br>
-									Type de dépense :
-									<strong>{{ roadmap.expenseType ?: 'Non renseigné' }}</strong>
+    .roadmap-event-actions {
+        margin-top: 1.25rem;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        width: 100%;
+    }
 
-								</p>
+    .roadmap-event-action-group {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(124px, max-content);
+        gap: 0.65rem;
+        justify-content: end;
+        align-items: center;
+    }
 
-								{% if is_granted('ROLE_ADMIN') %}
-									<a href="{{ path('app_edit_roadmap', { id: roadmap.id }) }}" class="btn btn-sm btn-primary rounded-0 mt-2">
-										✏️ Modifier
-									</a>
-								{% endif %}
+    .roadmap-event-action-group .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 136px;
+        white-space: nowrap;
+    }
 
-								{% if is_granted('ROLE_ADMIN') %}
-									<form action="{{ path('app_delete_roadmap', { id: roadmap.id }) }}" method="POST" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cette roadmap ?');">
-										<input type="hidden" name="_token" value="{{ csrf_token('delete_roadmap_' ~ roadmap.id) }}">
-										<button type="submit" class="btn btn-sm btn-danger rounded-0 mt-2">🗑️ Supprimer</button>
-									</form>
-								{% endif %}
+    .roadmap-empty {
+        background: #fff;
+        border: 2px dashed rgba(15, 46, 122, 0.18);
+        padding: 3rem 1.5rem;
+        text-align: center;
+        color: #5d6b8a;
+    }
 
-							</div>
-						</div>
+    .roadmap-floating-cta {
+        position: fixed;
+        right: 1.5rem;
+        bottom: 1.5rem;
+        z-index: 1040;
+    }
 
-					{% else %}
-						<!-- Droite -->
-						<div class="timeline-block position-absolute" style="top: {{ topPos }}px; right: 0; width: 45%;">
-							<div class="label-box text-start me-auto">
+    .roadmap-floating-cta .btn {
+        min-width: 210px;
+        padding: 0.95rem 1.4rem;
+        box-shadow: 0 18px 34px rgba(15, 46, 122, 0.18);
+    }
 
-								<span class="year-badge">
-									{{ roadmap.date|date('Y') }}
-								</span>
+    @media (max-width: 767.98px) {
+        .roadmap-floating-cta {
+            right: 1rem;
+            left: 1rem;
+            bottom: 1rem;
+        }
 
-								<h5 class="label-title">
-									{% if roadmap.product %}
-										<button
-											type="button"
-											class="btn p-0 border-0 bg-transparent text-decoration-none clickable-title js-product-modal"
-											data-bs-toggle="modal"
-											data-bs-target="#roadmapProductModal"
-											data-product-name="{{ roadmap.product.name }}"
-											data-product-description-html="{{ roadmap.product.productDescription|default('')|e('html_attr') }}"
-										>
-											{{ roadmap.product.name }}
-										</button>
-									{% else %}
-										Produit non défini
-									{% endif %}
-								</h5>
-								<div class="label-line"></div>
+        .roadmap-floating-cta .btn {
+            width: 100%;
+            min-width: 0;
+        }
+    }
 
-								<p class="label-text">
-									Trimestre :
-									<strong>{{ r.quarter }}</strong><br>
+    .roadmap-flash-zone {
+        position: sticky;
+        top: 1rem;
+        z-index: 1055;
+        margin-top: 1rem;
+    }
 
-									{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
-										Date :
-										{{ roadmap.date|date('d/m/Y') }}<br>
-									{% endif %}
-									Montant estimatif :
-									<strong>
-										{% if roadmap.estimatedAmount is not null %}
-											{{ roadmap.estimatedAmount|number_format(0, ',', ' ') }}
-											€
-										{% else %}
-											Non renseigné
-										{% endif %}
-									</strong><br>
-									Type de dépense :
-									<strong>{{ roadmap.expenseType ?: 'Non renseigné' }}</strong>
-								</p>
+    .roadmap-modal-copy {
+        border-bottom: 1px solid rgba(15, 46, 122, 0.08);
+        padding-bottom: 1rem;
+    }
 
-								{% if is_granted('ROLE_ADMIN') %}
-									<a href="{{ path('app_edit_roadmap', { id: roadmap.id }) }}" class="btn btn-sm btn-primary rounded-0 mt-2">
-										✏️ Modifier
-									</a>
-								{% endif %}
+    @media (max-width: 767.98px) {
+        .roadmap-board::before {
+            left: 12px;
+            transform: none;
+        }
 
-								{% if is_granted('ROLE_ADMIN') %}
-									<form action="{{ path('app_delete_roadmap', { id: roadmap.id }) }}" method="POST" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment supprimer cette roadmap ?');">
-										<input type="hidden" name="_token" value="{{ csrf_token('delete_roadmap_' ~ roadmap.id) }}">
-										<button type="submit" class="btn btn-sm btn-danger rounded-0 mt-2">🗑️ Supprimer</button>
-									</form>
-								{% endif %}
-							</div>
-						</div>
+        #roadmap-items {
+            gap: 1.5rem;
+        }
 
-					{% endif %}
-				{% endfor %}
-			</div>
-		</div>
-	</div>
+        .roadmap-event {
+            display: block;
+            width: 100%;
+            padding-left: 2.8rem;
+        }
 
-	<div class="modal fade" id="roadmapProductModal" tabindex="-1" aria-labelledby="roadmapProductModalLabel" aria-hidden="true">
-		<div class="modal-dialog modal-lg modal-dialog-centered">
-			<div class="modal-content rounded-0">
-				<div class="modal-header">
-					<h5 class="modal-title" id="roadmapProductModalLabel">Produit</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-				</div>
-				<div class="modal-body">
-					<p class="mb-2">
-						<strong>Name :</strong>
-						<span id="roadmap-modal-product-name"></span>
-					</p>
-					<p class="mb-0">
-						<strong>Product description :</strong><br>
-						<span id="roadmap-modal-product-description"></span>
-					</p>
-				</div>
-			</div>
-		</div>
-	</div>
+        .roadmap-event-left .roadmap-event-card,
+        .roadmap-event-right .roadmap-event-card {
+            margin-left: 0;
+            margin-right: 0;
+        }
 
-	<script>
-		document.addEventListener('DOMContentLoaded', () => {
-			const nameTarget = document.getElementById('roadmap-modal-product-name');
-			const descriptionTarget = document.getElementById('roadmap-modal-product-description');
-			const buttons = document.querySelectorAll('.js-product-modal');
+        .roadmap-event-marker,
+        .roadmap-event-left .roadmap-event-marker,
+        .roadmap-event-right .roadmap-event-marker {
+            left: 11px;
+            width: 48px;
+            transform: none;
+        }
 
-			const sanitizeAndRenderHtml = (unsafeHtml) => {
-				const parser = new DOMParser();
-				const doc = parser.parseFromString(unsafeHtml || '', 'text/html');
-				const allowedTags = new Set(['P', 'BR', 'UL', 'OL', 'LI', 'STRONG', 'EM', 'B', 'I', 'A']);
+        .roadmap-event-marker::before,
+        .roadmap-event-left .roadmap-event-marker::before,
+        .roadmap-event-right .roadmap-event-marker::before {
+            left: 22px;
+            right: auto;
+            width: 24px;
+        }
+    }
+</style>
 
-				const cleanNode = (node) => {
-					if (node.nodeType === Node.ELEMENT_NODE) {
-						if (!allowedTags.has(node.tagName)) {
-							const textNode = document.createTextNode(node.textContent || '');
-							node.replaceWith(textNode);
-							return;
-						}
+<div class="roadmap-shell">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR') %}
+                <li class="breadcrumb-item">
+                    <a href="{{ path('app_campany', { id: campanies.id, user: user }) }}">Entreprise</a>
+                </li>
+            {% else %}
+                <li class="breadcrumb-item">
+                    <a href="#">Entreprise</a>
+                </li>
+            {% endif %}
+            <li class="breadcrumb-item active" aria-current="page">Roadmap</li>
+        </ol>
+    </nav>
 
-						[...node.attributes].forEach((attr) => {
-							const isHref = node.tagName === 'A' && attr.name.toLowerCase() === 'href';
-							if (!isHref) {
-								node.removeAttribute(attr.name);
-								return;
-							}
+    <section class="roadmap-hero">
+        <span class="badge bg-warning text-dark rounded-pill px-3 py-2 mb-3">Roadmap financiere</span>
+        <h1 class="display-6 fw-bold mb-3">{{ campanies.legalName }}</h1>
+        <p class="mb-0">
+            Construis la projection financiere directement depuis cette page. Chaque etape peut etre ajoutee, modifiee ou supprimee
+            en modal, sans casser ton rythme ni changer d’ecran.
+        </p>
 
-							const value = attr.value.trim().toLowerCase();
-							const isSafeLink = value.startsWith('http://') || value.startsWith('https://') || value.startsWith('mailto:');
-							if (!isSafeLink) {
-								node.removeAttribute('href');
-							} else {
-								node.setAttribute('rel', 'noopener noreferrer');
-								node.setAttribute('target', '_blank');
-							}
-						});
-					}
+        <div class="roadmap-toolbar">
+            <div class="d-flex flex-wrap gap-2">
+                <a
+                    href="{{ path('app_roadmap_export', { id: campanies.id }) }}"
+                    class="btn btn-outline-light rounded-0"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Exporter en PDF
+                </a>
+            </div>
 
-					[...node.childNodes].forEach(cleanNode);
-				};
+            <div class="text-white-50 small">
+                Mise a jour dynamique de la timeline
+            </div>
+        </div>
+    </section>
 
-				[...doc.body.childNodes].forEach(cleanNode);
-				return doc.body.innerHTML.trim();
-			};
+    <div class="roadmap-flash-zone" id="roadmap-flash-zone"></div>
 
-			buttons.forEach((button) => {
-				button.addEventListener('click', () => {
-					nameTarget.textContent = button.dataset.productName || '';
-					const sanitizedHtml = sanitizeAndRenderHtml(button.dataset.productDescriptionHtml || '');
-					descriptionTarget.innerHTML = sanitizedHtml !== '' ? sanitizedHtml : '<em>Non renseigné</em>';
-				});
-			});
-		});
-	</script>
+    {% set totalEstimatedAmount = 0 %}
+    {% for item in roadmaps %}
+        {% set totalEstimatedAmount = totalEstimatedAmount + (item.entity.estimatedAmount ?? 0) %}
+    {% endfor %}
 
+    <section class="roadmap-stats">
+        <article class="roadmap-stat-card">
+            <span class="roadmap-stat-label">Etapes planifiees</span>
+            <strong class="roadmap-stat-value" id="roadmap-count">{{ roadmaps|length }}</strong>
+        </article>
+        <article class="roadmap-stat-card">
+            <span class="roadmap-stat-label">Montant total estime</span>
+            <strong class="roadmap-stat-value" id="roadmap-total-amount">
+                {{ totalEstimatedAmount|number_format(0, ',', ' ') }} €
+            </strong>
+        </article>
+        <article class="roadmap-stat-card">
+            <span class="roadmap-stat-label">Premiere projection</span>
+            <strong class="roadmap-stat-value" id="roadmap-first-date">
+                {% if roadmaps|length > 0 %}{{ roadmaps|first.entity.date|date('d/m/Y') }}{% else %}-{% endif %}
+            </strong>
+        </article>
+    </section>
+
+    <p class="roadmap-strategy-note">
+        La frise se lit comme une stratégie de financement : une étape, une priorité, un moment d’activation. Tu peux déplacer les cartes pour réordonner le scénario.
+    </p>
+
+    <section class="roadmap-board" id="roadmap-board" data-roadmap-reorder-url="{{ path('app_reorder_roadmap', { id: campanies.id, user: user }) }}">
+        {% if roadmaps is empty %}
+            <div class="roadmap-empty" id="roadmap-empty-state">
+                <h2 class="h4 mb-3">Aucune etape pour l’instant</h2>
+                <p class="mb-0">Commence par ajouter une projection pour construire la roadmap financiere directement depuis cette page.</p>
+            </div>
+        {% else %}
+            <div id="roadmap-items">
+                {% for r in roadmaps %}
+                    {% include 'roadmap/_roadmap_item.html.twig' with {
+                        roadmap: r.entity,
+                        quarter: r.quarter,
+                        index: loop.index0,
+                        user: user
+                    } only %}
+                {% endfor %}
+            </div>
+            <div class="roadmap-empty d-none" id="roadmap-empty-state">
+                <h2 class="h4 mb-3">Aucune etape pour l’instant</h2>
+                <p class="mb-0">Commence par ajouter une projection pour construire la roadmap financiere directement depuis cette page.</p>
+            </div>
+        {% endif %}
+
+    </section>
+</div>
+
+{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR') %}
+    <div class="roadmap-floating-cta">
+        <button
+            type="button"
+            class="btn btn-warning rounded-0 fw-semibold js-roadmap-create"
+            data-roadmap-create-url="{{ path('app_new_roadmap', { id: campanies.id, user: user }) }}"
+        >
+            Nouvelle etape
+        </button>
+    </div>
+{% endif %}
+
+<div class="modal fade" id="roadmapEditorModal" tabindex="-1" aria-labelledby="roadmapEditorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content rounded-0 border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roadmapEditorModalLabel">Roadmap</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body" id="roadmap-editor-modal-body">
+                {% include 'roadmap/_form_modal_body.html.twig' with {
+                    form: roadmapForm,
+                    title: 'Ajouter une etape a la roadmap',
+                    submitLabel: 'Ajouter'
+                } only %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="roadmapDeleteModal" tabindex="-1" aria-labelledby="roadmapDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-0 border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roadmapDeleteModalLabel">Supprimer cette etape</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">Tu es sur le point de retirer <strong id="roadmap-delete-name">cette etape</strong> de la roadmap.</p>
+                <p class="text-muted mb-0">La suppression se fait sans recharger la page.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary rounded-0" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger rounded-0" id="roadmap-delete-confirm">Supprimer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="roadmapProductModal" tabindex="-1" aria-labelledby="roadmapProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-0">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roadmapProductModalLabel">Produit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">
+                    <strong>Name :</strong>
+                    <span id="roadmap-modal-product-name"></span>
+                </p>
+                <p class="mb-0">
+                    <strong>Product description :</strong><br>
+                    <span id="roadmap-modal-product-description"></span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const roadmapBoard = document.getElementById('roadmap-board');
+        const roadmapItems = document.getElementById('roadmap-items') || (() => {
+            const wrapper = document.createElement('div');
+            wrapper.id = 'roadmap-items';
+            roadmapBoard.prepend(wrapper);
+            return wrapper;
+        })();
+        const reorderUrl = roadmapBoard.dataset.roadmapReorderUrl || '';
+        const emptyState = document.getElementById('roadmap-empty-state');
+        const flashZone = document.getElementById('roadmap-flash-zone');
+        const countTarget = document.getElementById('roadmap-count');
+        const totalTarget = document.getElementById('roadmap-total-amount');
+        const firstDateTarget = document.getElementById('roadmap-first-date');
+        const editorModalElement = document.getElementById('roadmapEditorModal');
+        const editorModalBody = document.getElementById('roadmap-editor-modal-body');
+        const editorModal = new bootstrap.Modal(editorModalElement);
+        const deleteModalElement = document.getElementById('roadmapDeleteModal');
+        const deleteModal = new bootstrap.Modal(deleteModalElement);
+        const deleteNameTarget = document.getElementById('roadmap-delete-name');
+        const deleteConfirmButton = document.getElementById('roadmap-delete-confirm');
+        let deleteContext = null;
+        let draggedItem = null;
+
+        const showFlash = (message, type = 'success') => {
+            flashZone.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show rounded-0 shadow-sm mb-0" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+        };
+
+        const sanitizeAndRenderHtml = (unsafeHtml) => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(unsafeHtml || '', 'text/html');
+            const allowedTags = new Set(['P', 'BR', 'UL', 'OL', 'LI', 'STRONG', 'EM', 'B', 'I', 'A']);
+
+            const cleanNode = (node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    if (!allowedTags.has(node.tagName)) {
+                        const textNode = document.createTextNode(node.textContent || '');
+                        node.replaceWith(textNode);
+                        return;
+                    }
+
+                    [...node.attributes].forEach((attr) => {
+                        const isHref = node.tagName === 'A' && attr.name.toLowerCase() === 'href';
+                        if (!isHref) {
+                            node.removeAttribute(attr.name);
+                            return;
+                        }
+
+                        const value = attr.value.trim().toLowerCase();
+                        const isSafeLink = value.startsWith('http://') || value.startsWith('https://') || value.startsWith('mailto:');
+                        if (!isSafeLink) {
+                            node.removeAttribute('href');
+                        } else {
+                            node.setAttribute('rel', 'noopener noreferrer');
+                            node.setAttribute('target', '_blank');
+                        }
+                    });
+                }
+
+                [...node.childNodes].forEach(cleanNode);
+            };
+
+            [...doc.body.childNodes].forEach(cleanNode);
+            return doc.body.innerHTML.trim();
+        };
+
+        const updateProductModal = (button) => {
+            document.getElementById('roadmap-modal-product-name').textContent = button.dataset.productName || '';
+            const sanitizedHtml = sanitizeAndRenderHtml(button.dataset.productDescriptionHtml || '');
+            document.getElementById('roadmap-modal-product-description').innerHTML = sanitizedHtml !== '' ? sanitizedHtml : '<em>Non renseigné</em>';
+        };
+
+        const recalculateStats = () => {
+            const items = [...roadmapItems.querySelectorAll('.roadmap-event[data-roadmap-id]')];
+            countTarget.textContent = String(items.length);
+
+            const dates = items
+                .map((item) => item.dataset.roadmapDate)
+                .filter(Boolean)
+                .sort();
+
+            if (dates.length > 0) {
+                const [year, month, day] = dates[0].split('-');
+                firstDateTarget.textContent = `${day}/${month}/${year}`;
+            } else {
+                firstDateTarget.textContent = '-';
+            }
+
+            let total = 0;
+            items.forEach((item) => {
+                total += Number(item.dataset.roadmapAmount || '0') || 0;
+            });
+
+            totalTarget.textContent = `${total.toLocaleString('fr-FR')} €`;
+            emptyState.classList.toggle('d-none', items.length > 0);
+        };
+
+        const applyAlternatingLayout = () => {
+            const items = [...roadmapItems.querySelectorAll('.roadmap-event[data-roadmap-id]')];
+            items.forEach((item, index) => {
+                item.classList.toggle('roadmap-event-left', index % 2 === 0);
+                item.classList.toggle('roadmap-event-right', index % 2 === 1);
+            });
+            recalculateStats();
+        };
+
+        const persistRoadmapOrder = async () => {
+            if (!reorderUrl) {
+                return;
+            }
+
+            const orderedIds = [...roadmapItems.querySelectorAll('.roadmap-event[data-roadmap-id]')].map((item) => Number(item.dataset.roadmapId));
+
+            const response = await fetch(reorderUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ orderedIds })
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.message || 'Impossible d’enregistrer le nouvel ordre.');
+            }
+        };
+
+        const openFormModal = async (url) => {
+            const response = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            const payload = await response.json();
+            if (!response.ok && !payload.formHtml) {
+                throw new Error(payload.message || 'Impossible de charger le formulaire.');
+            }
+
+            editorModalBody.innerHTML = payload.formHtml;
+            editorModal.show();
+        };
+
+        const submitRoadmapForm = async (form) => {
+            const response = await fetch(form.action, {
+                method: form.method || 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+
+            const payload = await response.json();
+
+            if (!response.ok && payload.formHtml) {
+                editorModalBody.innerHTML = payload.formHtml;
+                return;
+            }
+
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.message || 'Une erreur est survenue pendant l’enregistrement.');
+            }
+
+            const existingItem = roadmapItems.querySelector(`.roadmap-event[data-roadmap-id="${payload.roadmapId}"]`);
+            if (existingItem) {
+                existingItem.outerHTML = payload.itemHtml;
+            } else {
+                roadmapItems.insertAdjacentHTML('beforeend', payload.itemHtml);
+            }
+
+            applyAlternatingLayout();
+            editorModal.hide();
+            showFlash(payload.message, 'success');
+        };
+
+        const clearDropTargets = () => {
+            roadmapItems.querySelectorAll('.roadmap-event-card.is-drop-target').forEach((card) => {
+                card.classList.remove('is-drop-target');
+            });
+        };
+
+        document.addEventListener('click', async (event) => {
+            const createButton = event.target.closest('.js-roadmap-create');
+            if (createButton) {
+                event.preventDefault();
+                try {
+                    await openFormModal(createButton.dataset.roadmapCreateUrl);
+                } catch (error) {
+                    showFlash(error.message, 'danger');
+                }
+                return;
+            }
+
+            const editButton = event.target.closest('.js-roadmap-edit');
+            if (editButton) {
+                event.preventDefault();
+                try {
+                    await openFormModal(editButton.dataset.roadmapEditUrl);
+                } catch (error) {
+                    showFlash(error.message, 'danger');
+                }
+                return;
+            }
+
+            const deleteButton = event.target.closest('.js-roadmap-delete');
+            if (deleteButton) {
+                event.preventDefault();
+                deleteContext = {
+                    id: deleteButton.dataset.roadmapId,
+                    url: deleteButton.dataset.roadmapDeleteUrl,
+                    token: deleteButton.dataset.roadmapDeleteToken
+                };
+                deleteNameTarget.textContent = deleteButton.dataset.roadmapName || 'cette étape';
+                deleteModal.show();
+                return;
+            }
+
+            const productButton = event.target.closest('.js-product-modal');
+            if (productButton) {
+                updateProductModal(productButton);
+            }
+        });
+
+        document.addEventListener('submit', async (event) => {
+            const form = event.target.closest('.js-roadmap-form');
+            if (!form) {
+                return;
+            }
+
+            event.preventDefault();
+
+            try {
+                await submitRoadmapForm(form);
+            } catch (error) {
+                showFlash(error.message, 'danger');
+            }
+        });
+
+        deleteConfirmButton.addEventListener('click', async () => {
+            if (!deleteContext) {
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('_token', deleteContext.token);
+
+                const response = await fetch(deleteContext.url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                const payload = await response.json();
+
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.message || 'La suppression a échoué.');
+                }
+
+                roadmapItems.querySelector(`.roadmap-event[data-roadmap-id="${deleteContext.id}"]`)?.remove();
+                applyAlternatingLayout();
+                deleteModal.hide();
+                showFlash(payload.message, 'success');
+            } catch (error) {
+                showFlash(error.message, 'danger');
+            }
+        });
+
+        roadmapItems.addEventListener('dragstart', (event) => {
+            const item = event.target.closest('.roadmap-event[data-roadmap-id]');
+            if (!item) {
+                return;
+            }
+
+            draggedItem = item;
+            item.classList.add('is-dragging');
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', item.dataset.roadmapId || '');
+        });
+
+        roadmapItems.addEventListener('dragend', () => {
+            draggedItem?.classList.remove('is-dragging');
+            draggedItem = null;
+            clearDropTargets();
+        });
+
+        roadmapItems.addEventListener('dragover', (event) => {
+            if (!draggedItem) {
+                return;
+            }
+
+            event.preventDefault();
+            const targetItem = event.target.closest('.roadmap-event[data-roadmap-id]');
+            if (!targetItem || targetItem === draggedItem) {
+                return;
+            }
+
+            clearDropTargets();
+            targetItem.querySelector('.roadmap-event-card')?.classList.add('is-drop-target');
+        });
+
+        roadmapItems.addEventListener('drop', async (event) => {
+            if (!draggedItem) {
+                return;
+            }
+
+            event.preventDefault();
+            const targetItem = event.target.closest('.roadmap-event[data-roadmap-id]');
+            if (!targetItem || targetItem === draggedItem) {
+                clearDropTargets();
+                return;
+            }
+
+            const draggedRect = draggedItem.getBoundingClientRect();
+            const targetRect = targetItem.getBoundingClientRect();
+            const shouldInsertAfter = draggedRect.top < targetRect.top;
+
+            if (shouldInsertAfter) {
+                targetItem.after(draggedItem);
+            } else {
+                targetItem.before(draggedItem);
+            }
+
+            clearDropTargets();
+            applyAlternatingLayout();
+
+            try {
+                await persistRoadmapOrder();
+                showFlash('L’ordre de la roadmap a été mis à jour.', 'success');
+            } catch (error) {
+                showFlash(error.message, 'danger');
+            }
+        });
+
+        applyAlternatingLayout();
+    });
+</script>
 {% endblock %}
