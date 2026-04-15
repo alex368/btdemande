@@ -1,0 +1,87 @@
+{% set isLeft = index is even %}
+{% set year = roadmap.date ? roadmap.date|date('Y') : 'Date manquante' %}
+
+<article
+    class="roadmap-event {{ isLeft ? 'roadmap-event-left' : 'roadmap-event-right' }}"
+    data-roadmap-id="{{ roadmap.id }}"
+    data-roadmap-date="{{ roadmap.date ? roadmap.date|date('Y-m-d') : '' }}"
+    data-roadmap-amount="{{ roadmap.estimatedAmount ?? 0 }}"
+    draggable="true"
+>
+    <div class="roadmap-event-marker">
+        <span class="roadmap-event-dot"></span>
+    </div>
+
+    <div class="roadmap-event-card shadow-sm">
+        <div class="roadmap-event-topline">
+            <div class="d-flex align-items-center gap-2">
+                <span class="roadmap-drag-handle" title="Déplacer la timeline" aria-hidden="true">⋮⋮</span>
+                <span class="roadmap-year">{{ year }}</span>
+            </div>
+            <span class="roadmap-quarter">{{ quarter }}</span>
+        </div>
+
+        <h3 class="roadmap-event-title">
+            {% if roadmap.product %}
+                <button
+                    type="button"
+                    class="btn p-0 border-0 bg-transparent text-decoration-none clickable-title js-product-modal"
+                    data-bs-toggle="modal"
+                    data-bs-target="#roadmapProductModal"
+                    data-product-name="{{ roadmap.product.name }}"
+                    data-product-description-html="{{ roadmap.product.productDescription|default('')|e('html_attr') }}"
+                >
+                    {{ roadmap.product.name }}
+                </button>
+            {% else %}
+                Produit non défini
+            {% endif %}
+        </h3>
+
+        <div class="roadmap-metadata">
+            <div class="roadmap-metadata-item">
+                <span class="roadmap-metadata-label">Date</span>
+                <strong>{{ roadmap.date ? roadmap.date|date('d/m/Y') : 'Non renseignée' }}</strong>
+            </div>
+            <div class="roadmap-metadata-item">
+                <span class="roadmap-metadata-label">Montant estimatif</span>
+                <strong>
+                    {% if roadmap.estimatedAmount is not null %}
+                        {{ roadmap.estimatedAmount|number_format(0, ',', ' ') }} €
+                    {% else %}
+                        Non renseigné
+                    {% endif %}
+                </strong>
+            </div>
+            <div class="roadmap-metadata-item">
+                <span class="roadmap-metadata-label">Type de dépense</span>
+                <strong>{{ roadmap.expenseType ?: 'Non renseigné' }}</strong>
+            </div>
+        </div>
+
+        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR') %}
+            <div class="roadmap-event-actions">
+                <div class="roadmap-event-action-group">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-primary rounded-0 js-roadmap-edit"
+                        data-roadmap-edit-url="{{ path('app_edit_roadmap', { id: roadmap.id }) }}"
+                    >
+                        Modifier
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger rounded-0 js-roadmap-delete"
+                        data-roadmap-id="{{ roadmap.id }}"
+                        data-roadmap-name="{{ roadmap.product ? roadmap.product.name : 'cette étape' }}"
+                        data-roadmap-delete-url="{{ path('app_delete_roadmap', { id: roadmap.id }) }}"
+                        data-roadmap-delete-token="{{ csrf_token('delete_roadmap_' ~ roadmap.id) }}"
+                    >
+                        Supprimer
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</article>

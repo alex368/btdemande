@@ -58,6 +58,9 @@ class Roadmap
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?FundingRequest $fundingRequest = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $position = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -131,6 +134,18 @@ class Roadmap
     public function setFundingRequest(?FundingRequest $fundingRequest): static
     {
         $this->fundingRequest = $fundingRequest;
+
+        return $this;
+    }
+
+    public function getPosition(): ?int
+    {
+        return $this->position;
+    }
+
+    public function setPosition(?int $position): static
+    {
+        $this->position = $position;
 
         return $this;
     }

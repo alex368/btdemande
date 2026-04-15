@@ -1,0 +1,32 @@
+<div class="roadmap-modal-copy mb-4">
+    <span class="badge text-bg-warning text-dark rounded-pill px-3 py-2 mb-3">Roadmap dynamique</span>
+    <h5 class="mb-2">{{ title }}</h5>
+    <p class="text-muted mb-0">Ajoute ou ajuste une étape sans quitter la timeline. Les modifications sont enregistrées directement sur cette page.</p>
+</div>
+
+{{ form_start(form, {
+    attr: {
+        class: 'js-roadmap-form',
+        novalidate: 'novalidate'
+    }
+}) }}
+    <div class="row g-3">
+        <div class="col-12 col-lg-6">
+            {{ form_row(form.date) }}
+        </div>
+        <div class="col-12 col-lg-6">
+            {{ form_row(form.product) }}
+        </div>
+        <div class="col-12 col-lg-6">
+            {{ form_row(form.estimatedAmount) }}
+        </div>
+        <div class="col-12 col-lg-6">
+            {{ form_row(form.expenseType) }}
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-outline-secondary rounded-0" data-bs-dismiss="modal">Fermer</button>
+        <button type="submit" class="btn btn-primary rounded-0">{{ submitLabel }}</button>
+    </div>
+{{ form_end(form) }}
