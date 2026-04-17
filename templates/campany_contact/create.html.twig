@@ -3,7 +3,7 @@
 {% block body %}
 	<main class="col-md-12 col-lg-12 p-2">
 		<div class="container mt-5">
-			<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Ajouter une nouvelle entreprise</h1>
+			<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Créer l'entreprise du contact</h1>
 
 			<div class="mb-4">
 				<form method="get" action="">
@@ -20,13 +20,13 @@
 
 			{# Chaque champ avec un id explicite #}
 			<div class="mb-3">
-				{{ form_label(form.legalName, 'Nom légal', {'label_attr': {'for': 'legalName'}}) }}
-				{{ form_widget(form.legalName, {'attr': {'id': 'legalName', 'class': 'form-control'}}) }}
+				{{ form_label(form.legalName, 'Nom légal', {'label_attr': {'for': 'legalNameField'}}) }}
+				{{ form_widget(form.legalName, {'attr': {'id': 'legalNameField', 'class': 'form-control'}}) }}
 			</div>
 
 			<div class="mb-3">
-				{{ form_label(form.projectName, 'Nom du projet', {'label_attr': {'for': 'legalName'}}) }}
-				{{ form_widget(form.projectName, {'attr': {'id': 'legalName', 'class': 'form-control'}}) }}
+				{{ form_label(form.projectName, 'Nom du projet', {'label_attr': {'for': 'projectNameField'}}) }}
+				{{ form_widget(form.projectName, {'attr': {'id': 'projectNameField', 'class': 'form-control'}}) }}
 			</div>
 
 
@@ -68,9 +68,17 @@
 				{{ form_widget(form.creationDate, {'attr': {'id': 'creationDate', 'class': 'form-control'}}) }}
 			</div>
 
+			{% if form.createAccount is defined %}
+				<div class="mb-3 form-check">
+					{{ form_widget(form.createAccount, {'attr': {'class': 'form-check-input'}}) }}
+					{{ form_label(form.createAccount, null, {'label_attr': {'class': 'form-check-label'}}) }}
+					<div class="form-text">Optionnel: créer aussi le compte client lié à ce contact.</div>
+				</div>
+			{% endif %}
+
 			<button type="submit" class="btn btn-warning mt-3">
 				<i class="bi bi-check2-circle me-1"></i>
-				Save
+				Enregistrer
 			</button>
 
 <button type="button" class="btn btn-secondary mt-3" onclick="history.back();">

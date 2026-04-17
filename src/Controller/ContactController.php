@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Activity;
 use App\Entity\Campany;
+use App\Entity\CampanyContact;
 use App\Entity\Contact;
 use App\Entity\ContactStageHistory;
 use App\Entity\Opportunity;
@@ -22,6 +23,7 @@ use Google\Service\AndroidProvisioningPartner\Company;
 use Knp\Component\Pager\PaginatorInterface;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -85,29 +87,34 @@ final class ContactController extends AbstractController
     }
 
     #[Route('/contact/add', name: 'app_contact_add')]
-    public function add(EntityManagerInterface $em, Request $request): Response
+    public function add(EntityManagerInterface $em, Request $request, UserPasswordHasherInterface $passwordHasher): Response
     {
 
         $contact = new Contact();
         $form = $this->createForm(ContactType::class, $contact);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var UploadedFile $logoFile */
             $em->persist($contact);
+            $plainPassword = $this->handleOptionalCompanyAndAccount($contact, $form, $em, $passwordHasher);
             $em->flush();
 
-            $this->addFlash('success', 'contact created successfully.');
+            if ($plainPassword !== null) {
+                $this->addFlash('success', sprintf('Contact enregistré. Compte client créé (mot de passe temporaire : %s).', $plainPassword));
+            } else {
+                $this->addFlash('success', 'Contact enregistré avec succès.');
+            }
 
             return $this->redirectToRoute('app_contact');
         }
         return $this->render('contact/add.html.twig', [
             'form' => $form->createView(),
+            'hasAccount' => false,
         ]);
     }
 
 
     #[Route('/contact/{id}/edit', name: 'app_contact_edit')]
-    public function edit(Contact $contact, Request $request, EntityManagerInterface $em): Response
+    public function edit(Contact $contact, Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher): Response
     {
         // Contact est automatiquement récupéré grâce au ParamConverter
 
@@ -115,10 +122,14 @@ final class ContactController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
+            $plainPassword = $this->handleOptionalCompanyAndAccount($contact, $form, $em, $passwordHasher);
             $em->flush();
 
-            $this->addFlash('success', 'Le contact a été mis à jour.');
+            if ($plainPassword !== null) {
+                $this->addFlash('success', sprintf('Contact mis à jour. Compte client créé (mot de passe temporaire : %s).', $plainPassword));
+            } else {
+                $this->addFlash('success', 'Le contact a été mis à jour.');
+            }
 
             return $this->redirectToRoute('app_contact'); // page liste
         }
@@ -126,6 +137,7 @@ final class ContactController extends AbstractController
         return $this->render('contact/edit.html.twig', [
             'form' => $form->createView(),
             'contact' => $contact,
+            'hasAccount' => $contact->getAccount() !== null,
         ]);
     }
 
@@ -452,6 +464,75 @@ public function createFromSiren(
         'legalName' => $campany->getLegalName(),
         'siren' => $campany->getSiren()
     ]);
+}
+
+private function handleOptionalCompanyAndAccount(
+    Contact $contact,
+    FormInterface $form,
+    EntityManagerInterface $em,
+    UserPasswordHasherInterface $passwordHasher
+): ?string {
+    $plainPassword = null;
+
+    $shouldCreateCompany = (bool) $form->get('createCompany')->getData();
+    if ($shouldCreateCompany) {
+        $companyLegalName = trim((string) $form->get('companyLegalName')->getData());
+        $companyProjectName = trim((string) $form->get('companyProjectName')->getData());
+        $companySiren = trim((string) $form->get('companySiren')->getData());
+
+        if ($companyLegalName !== '' || $companyProjectName !== '' || $companySiren !== '') {
+            $campanyContact = new CampanyContact();
+            $campanyContact->addContact($contact);
+            $campanyContact->setLegalName($companyLegalName !== '' ? $companyLegalName : 'Entreprise');
+            $campanyContact->setProjectName($companyProjectName !== '' ? $companyProjectName : null);
+            $campanyContact->setSiren($companySiren !== '' ? $companySiren : '0');
+            $campanyContact->setSector($form->get('companySector')->getData());
+            $campanyContact->setAdress($form->get('companyAddress')->getData());
+            $campanyContact->setStage($form->get('companyStage')->getData());
+            $campanyContact->setCreationDate($form->get('companyCreationDate')->getData());
+            $em->persist($campanyContact);
+        }
+    }
+
+    $shouldCreateAccount = $form->has('createAccount') && (bool) $form->get('createAccount')->getData();
+    if ($shouldCreateAccount && $contact->getAccount() === null) {
+        $primaryEmail = $this->extractPrimaryEmail($contact);
+        if ($primaryEmail === null) {
+            throw new \RuntimeException('Impossible de créer un compte sans adresse email.');
+        }
+
+        $existingUser = $em->getRepository(User::class)->findOneBy(['email' => $primaryEmail]);
+        if ($existingUser instanceof User) {
+            $contact->setAccount($existingUser);
+            return null;
+        }
+
+        $user = $contact->toUser();
+        $plainPassword = bin2hex(random_bytes(5));
+        $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
+        $user->setRoles(['ROLE_CUSTOMER']);
+        $contact->setAccount($user);
+        $em->persist($user);
+    }
+
+    return $plainPassword;
+}
+
+private function extractPrimaryEmail(Contact $contact): ?string
+{
+    $emails = $contact->getEmail();
+    if (!is_array($emails)) {
+        return null;
+    }
+
+    foreach ($emails as $email) {
+        $value = trim((string) $email);
+        if ($value !== '') {
+            return $value;
+        }
+    }
+
+    return null;
 }
 
 }

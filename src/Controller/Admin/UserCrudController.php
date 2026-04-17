@@ -14,6 +14,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -65,6 +66,7 @@ class UserCrudController extends AbstractCrudController
             TextField::new('lastname', 'Nom'),
             TextField::new('name', 'Prénom'),
             TextField::new('number', 'Numéro'),
+            BooleanField::new('isActive', 'Compte actif'),
             ChoiceField::new('roles', 'Rôles')
                 ->setChoices($roleChoices)
                 ->allowMultipleChoices()
@@ -86,6 +88,7 @@ class UserCrudController extends AbstractCrudController
 
         $roles = $this->sanitizeRoles($entityInstance->getRoles());
         $this->guardRolePolicy($entityInstance, $roles);
+        $this->guardActivePolicy($entityInstance, $roles);
         $entityInstance->setRoles($roles);
 
         $plainPassword = $this->getSubmittedPlainPassword();
@@ -108,6 +111,7 @@ class UserCrudController extends AbstractCrudController
 
         $roles = $this->sanitizeRoles($entityInstance->getRoles());
         $this->guardRolePolicy($entityInstance, $roles);
+        $this->guardActivePolicy($entityInstance, $roles);
         $entityInstance->setRoles($roles);
 
         $plainPassword = $this->getSubmittedPlainPassword();
@@ -150,6 +154,30 @@ class UserCrudController extends AbstractCrudController
 
         if (!$isSuperAdmin && count($existingSuperAdmins) === 0 && $editedUser->getId() !== null) {
             throw new ForbiddenActionException('Il doit toujours y avoir un super admin actif.');
+        }
+    }
+
+    /**
+     * @param list<string> $roles
+     */
+    private function guardActivePolicy(User $editedUser, array $roles): void
+    {
+        if ($editedUser->isActive()) {
+            return;
+        }
+
+        $isSuperAdmin = in_array('ROLE_SUPER_ADMIN', $roles, true);
+        if (!$isSuperAdmin) {
+            return;
+        }
+
+        $otherActiveSuperAdmins = array_filter(
+            $this->userRepository->findByRole('ROLE_SUPER_ADMIN'),
+            static fn(User $user): bool => $user->getId() !== $editedUser->getId() && $user->isActive()
+        );
+
+        if (count($otherActiveSuperAdmins) === 0) {
+            throw new ForbiddenActionException('Impossible de désactiver le seul super admin actif.');
         }
     }
 

@@ -21,6 +21,18 @@
 			</nav>
 
 		<div class="container mt-5">
+			<div class="d-flex justify-content-end mb-3">
+				{% if allDocumentsValid %}
+					<form method="post">
+						<button type="submit" name="action" value="suivant"
+							class="btn text-white rounded-0"
+							style="background-color:#1E3A8A;">
+							Suivant
+						</button>
+					</form>
+				{% endif %}
+			</div>
+
 			<h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Documents à fournir pour la demande</h1>
 			<!-- Table des documents basés sur les modèles -->
 			<div class="d-flex justify-content-between align-items-center mb-3">
@@ -137,16 +149,6 @@
 			</table>
 
 			<form method="post" class="d-flex justify-content-end gap-2 mt-4">
-			{% if allDocumentsValid %}
-    <button type="submit" name="action" value="suivant"
-        class="btn text-white rounded-0"
-        style="background-color:#1E3A8A;">
-        Suivant
-    </button>
-{% endif %}
-
-
-
     <button type="submit" name="action" value="save"
         class="btn text-white rounded-0"
         style="background-color:#1E3A8A;">

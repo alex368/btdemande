@@ -7,8 +7,10 @@ use App\Entity\Contact;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\CountryType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -196,6 +198,89 @@ class ContactType extends AbstractType
                         'message' => 'Code postal invalide (5 chiffres).'
                     ])
                 ],
+                'attr' => ['class' => 'form-control']
+            ])
+
+            // ENTREPRISE (optionnelle)
+            ->add('createCompany', CheckboxType::class, [
+                'label' => 'Créer aussi une entreprise',
+                'mapped' => false,
+                'required' => false,
+                'attr' => ['class' => 'form-check-input']
+            ])
+            ->add('createAccount', CheckboxType::class, [
+                'label' => 'Créer aussi un compte client',
+                'mapped' => false,
+                'required' => false,
+                'attr' => ['class' => 'form-check-input']
+            ])
+            ->add('companyLegalName', TextType::class, [
+                'label' => 'Nom de l’entreprise',
+                'mapped' => false,
+                'required' => false,
+                'attr' => ['class' => 'form-control']
+            ])
+            ->add('companyProjectName', TextType::class, [
+                'label' => 'Projet',
+                'mapped' => false,
+                'required' => false,
+                'attr' => ['class' => 'form-control']
+            ])
+            ->add('companySiren', TextType::class, [
+                'label' => 'SIREN',
+                'mapped' => false,
+                'required' => false,
+                'constraints' => [
+                    new Regex([
+                        'pattern' => '/^(?:0|\d{9})?$/',
+                        'message' => 'Le SIREN doit contenir 9 chiffres (ou 0 pour personne physique).'
+                    ])
+                ],
+                'attr' => ['class' => 'form-control', 'placeholder' => '0 ou 9 chiffres']
+            ])
+            ->add('companySector', ChoiceType::class, [
+                'label' => 'Secteur',
+                'mapped' => false,
+                'required' => false,
+                'placeholder' => 'Sélectionner',
+                'choices' => [
+                    'Biotech' => 'biotech',
+                    'Fintech' => 'fintech',
+                    'Entreprise' => 'entreprise',
+                    'HRTech' => 'hrtech',
+                    'EdTech' => 'edtech',
+                    'LegalTech' => 'legaltech',
+                    'Retail' => 'retail',
+                    'AI / Data' => 'ai',
+                    'Other' => 'other',
+                ],
+                'attr' => ['class' => 'form-select']
+            ])
+            ->add('companyAddress', TextType::class, [
+                'label' => 'Adresse',
+                'mapped' => false,
+                'required' => false,
+                'attr' => ['class' => 'form-control']
+            ])
+            ->add('companyStage', ChoiceType::class, [
+                'label' => 'Stade de l’entreprise',
+                'mapped' => false,
+                'required' => false,
+                'placeholder' => 'Sélectionner',
+                'choices' => [
+                    'Idéation' => 'ideation',
+                    'Croissance' => 'croissance',
+                    'Développement' => 'developpement',
+                    'Maturité' => 'maturite',
+                    'Déclin / Repositionnement' => 'declin',
+                ],
+                'attr' => ['class' => 'form-select']
+            ])
+            ->add('companyCreationDate', DateType::class, [
+                'label' => 'Date de création',
+                'mapped' => false,
+                'required' => false,
+                'widget' => 'single_text',
                 'attr' => ['class' => 'form-control']
             ]);
     }

@@ -5,6 +5,7 @@ use App\Entity\Campany;
 use App\Entity\CampanyContact;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -124,7 +125,7 @@ class CampanyContactType extends AbstractType
                 ],
                 'row_attr' => ['class' => 'mb-3']
             ])
-     ->add('stage', ChoiceType::class, [
+            ->add('stage', ChoiceType::class, [
     'label' => 'Stade de l\'entreprise',
     'choices' => [
         'Idéation' => 'ideation',
@@ -143,12 +144,27 @@ class CampanyContactType extends AbstractType
         new NotBlank()
     ]
     ]);
+
+        if ($options['include_create_account']) {
+            $builder->add('createAccount', CheckboxType::class, [
+                'label' => 'Créer aussi un compte client',
+                'mapped' => false,
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-check-input',
+                ],
+                'row_attr' => ['class' => 'mb-3'],
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => CampanyContact::class,
+            'include_create_account' => true,
         ]);
+
+        $resolver->setAllowedTypes('include_create_account', 'bool');
     }
 }

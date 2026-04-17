@@ -150,9 +150,51 @@
                 <div class="col-md-6">
                     {{ form_row(form.occupation) }}
                 </div>
-                {# <div class="col-md-6">
-                    {{ form_row(form.campany) }}
-                </div> #}
+            </div>
+
+            <div class="mt-3">
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#companyModal">
+                    <i class="bi bi-building"></i> Créer une entreprise (optionnel)
+                </button>
+            </div>
+
+            <div class="d-none">
+                {{ form_widget(form.createCompany, {'attr': {'id': 'create-company-flag'}}) }}
+            </div>
+
+            <div class="modal fade" id="companyModal" tabindex="-1" aria-labelledby="companyModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="companyModalLabel">Entreprise (optionnel)</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">{{ form_row(form.companyLegalName) }}</div>
+                                <div class="col-md-6">{{ form_row(form.companyProjectName) }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">{{ form_row(form.companySiren) }}</div>
+                                <div class="col-md-4">{{ form_row(form.companySector) }}</div>
+                                <div class="col-md-4">{{ form_row(form.companyStage) }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-8">{{ form_row(form.companyAddress) }}</div>
+                                <div class="col-md-4">{{ form_row(form.companyCreationDate) }}</div>
+                            </div>
+                            <hr>
+                            <div class="form-check">
+                                {{ form_widget(form.createAccount, {'attr': {'class': 'form-check-input', 'id': 'create-account-flag'}}) }}
+                                {{ form_label(form.createAccount, 'Créer aussi un compte client (optionnel)', {'label_attr': {'class': 'form-check-label', 'for': 'create-account-flag'}}) }}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" id="clear-company-data">Retirer l’entreprise</button>
+                            <button type="button" class="btn btn-primary" id="save-company-modal" data-bs-dismiss="modal">Valider</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <button class="btn btn-success mt-4 px-4">
@@ -192,6 +234,41 @@ document.addEventListener('click', (e) => {
         e.target.parentNode.remove();
     }
 });
+
+const companyFlag = document.getElementById('create-company-flag');
+const saveCompanyModal = document.getElementById('save-company-modal');
+const clearCompanyData = document.getElementById('clear-company-data');
+const companyInputs = [
+    document.getElementById('{{ form.companyLegalName.vars.id }}'),
+    document.getElementById('{{ form.companyProjectName.vars.id }}'),
+    document.getElementById('{{ form.companySiren.vars.id }}'),
+    document.getElementById('{{ form.companySector.vars.id }}'),
+    document.getElementById('{{ form.companyStage.vars.id }}'),
+    document.getElementById('{{ form.companyAddress.vars.id }}'),
+    document.getElementById('{{ form.companyCreationDate.vars.id }}')
+];
+
+const companyHasData = () => companyInputs.some((el) => el && String(el.value || '').trim() !== '');
+
+if (saveCompanyModal && companyFlag) {
+    saveCompanyModal.addEventListener('click', () => {
+        companyFlag.checked = companyHasData();
+    });
+}
+
+if (clearCompanyData && companyFlag) {
+    clearCompanyData.addEventListener('click', () => {
+        companyInputs.forEach((el) => {
+            if (!el) return;
+            if (el.tagName === 'SELECT') {
+                el.selectedIndex = 0;
+            } else {
+                el.value = '';
+            }
+        });
+        companyFlag.checked = false;
+    });
+}
 </script>
 
 {% endblock %}

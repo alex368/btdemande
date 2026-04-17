@@ -223,11 +223,12 @@
 				</table>
 
 				<div class="mt-3">
-
-					<a href="{{ path('contact_convert_user', { id: contact.id }) }}" class="btn btn-primary">
-						<i class="bi bi-person-plus"></i>
-						Convertir en client
-					</a>
+					{% if not contact.account %}
+						<a href="{{ path('contact_convert_user', { id: contact.id }) }}" class="btn btn-primary">
+							<i class="bi bi-person-plus"></i>
+							Convertir en client
+						</a>
+					{% endif %}
 
 					{% if contact.account %}
 						<a href="{{ path('app_customer_datasheet', { id: contact.account.id }) }}" class="btn btn-outline-primary">
@@ -537,9 +538,20 @@
 
 								<div class="d-flex gap-2">
 
-									<a href="{{ path('app_activity_show', { id: act.id }) }}" class="btn btn-sm btn-outline-info" title="Voir">
+									<button
+										type="button"
+										class="btn btn-sm btn-outline-info js-activity-modal-trigger"
+										title="Voir"
+										data-bs-toggle="modal"
+										data-bs-target="#activityDetailModal"
+										data-activity-id="{{ act.id }}"
+										data-activity-type="{{ act.type|capitalize }}"
+										data-activity-description="{{ (act.description ?? 'Aucune description')|striptags|e('html_attr') }}"
+										data-activity-date="{{ act.activityDate|date('d/m/Y H:i') }}"
+										data-activity-status="{{ act.status|replace({'_':' '})|capitalize }}"
+									>
 										<i class="bi bi-eye"></i>
-									</a>
+									</button>
 
 									<a href="{{ path('app_activity_edit', { id: act.id }) }}" class="btn btn-sm btn-outline-warning" title="Modifier">
 										<i class="bi bi-pencil-square"></i>
@@ -641,10 +653,39 @@
 					</ul>
 				{% endif %}
 
-			</div>
-
-
 		</div>
+
+
+	</div>
+
+	<div class="modal fade" id="activityDetailModal" tabindex="-1" aria-labelledby="activityDetailModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="activityDetailModalLabel">Détails de l'activité</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+				</div>
+				<div class="modal-body">
+					<dl class="row mb-0">
+						<dt class="col-sm-4">Type</dt>
+						<dd class="col-sm-8" id="modalActivityType">-</dd>
+
+						<dt class="col-sm-4">Description</dt>
+						<dd class="col-sm-8" id="modalActivityDescription">-</dd>
+
+						<dt class="col-sm-4">Date</dt>
+						<dd class="col-sm-8" id="modalActivityDate">-</dd>
+
+						<dt class="col-sm-4">Statut</dt>
+						<dd class="col-sm-8" id="modalActivityStatus">-</dd>
+					</dl>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
 
 		<div class="card mb-4 shadow-sm border-0">
@@ -747,6 +788,37 @@
 </tr> #}
 
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+    const activityModal = document.getElementById('activityDetailModal');
+    const fillActivityModal = (trigger) => {
+        if (!trigger) {
+            return;
+        }
+
+        document.getElementById('modalActivityType').textContent = trigger.getAttribute('data-activity-type') || '-';
+        document.getElementById('modalActivityDescription').textContent = trigger.getAttribute('data-activity-description') || '-';
+        document.getElementById('modalActivityDate').textContent = trigger.getAttribute('data-activity-date') || '-';
+        document.getElementById('modalActivityStatus').textContent = trigger.getAttribute('data-activity-status') || '-';
+    };
+
+    if (activityModal) {
+        document.querySelectorAll('.js-activity-modal-trigger').forEach((btn) => {
+            btn.addEventListener('click', () => fillActivityModal(btn));
+        });
+
+        const url = new URL(window.location.href);
+        const activityId = url.searchParams.get('activity');
+        if (activityId) {
+            const trigger = document.querySelector(`.js-activity-modal-trigger[data-activity-id="${activityId}"]`);
+            if (trigger && window.bootstrap) {
+                fillActivityModal(trigger);
+                const modal = bootstrap.Modal.getOrCreateInstance(activityModal);
+                modal.show();
+            }
+        }
+    }
+});
+
 function createCampany(siren) {
 
     if (!siret || siret.length !== 14) {

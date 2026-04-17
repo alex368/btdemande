@@ -73,6 +73,18 @@
                     <thead class="table-primary text-white">
                         <tr>
                             <th>
+                                {{ knp_pagination_sortable(pagination, 'Projet', 'c.projetName') }}
+                                <span class="customer-portal-sort-indicator {{ currentSort == 'c.projetName' ? '' : 'is-inactive' }}">
+                                    {{ currentSort == 'c.projetName' ? (currentDirection == 'asc' ? '↑' : '↓') : '↕' }}
+                                </span>
+                            </th>
+                            <th>
+                                {{ knp_pagination_sortable(pagination, 'Entreprise', 'c.legalName') }}
+                                <span class="customer-portal-sort-indicator {{ currentSort == 'c.legalName' ? '' : 'is-inactive' }}">
+                                    {{ currentSort == 'c.legalName' ? (currentDirection == 'asc' ? '↑' : '↓') : '↕' }}
+                                </span>
+                            </th>
+                            <th>
                                 {{ knp_pagination_sortable(pagination, 'Nom', 'u.lastname') }}
                                 <span class="customer-portal-sort-indicator {{ currentSort == 'u.lastname' ? '' : 'is-inactive' }}">
                                     {{ currentSort == 'u.lastname' ? (currentDirection == 'asc' ? '↑' : '↓') : '↕' }}
@@ -90,18 +102,6 @@
                                     {{ currentSort == 'r.lastname' ? (currentDirection == 'asc' ? '↑' : '↓') : '↕' }}
                                 </span>
                             </th>
-                            <th>
-                                {{ knp_pagination_sortable(pagination, 'Entreprise', 'c.legalName') }}
-                                <span class="customer-portal-sort-indicator {{ currentSort == 'c.legalName' ? '' : 'is-inactive' }}">
-                                    {{ currentSort == 'c.legalName' ? (currentDirection == 'asc' ? '↑' : '↓') : '↕' }}
-                                </span>
-                            </th>
-                            <th>
-                                {{ knp_pagination_sortable(pagination, 'Projet', 'c.projetName') }}
-                                <span class="customer-portal-sort-indicator {{ currentSort == 'c.projetName' ? '' : 'is-inactive' }}">
-                                    {{ currentSort == 'c.projetName' ? (currentDirection == 'asc' ? '↑' : '↓') : '↕' }}
-                                </span>
-                            </th>
                             {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
                                 <th>
                                     {{ knp_pagination_sortable(pagination, 'Affectation', 'r.lastname') }}
@@ -116,11 +116,11 @@
                     <tbody>
                         {% for customer in pagination %}
                             <tr>
-                                <td>{{ customer.lastname }}</td>
-                                <td>{{ customer.name }}</td>
                                 <td>
-                                    {% if customer.referent %}
-                                        {{ customer.referent.lastname }} {{ customer.referent.name }}
+                                    {% if customer.campanies|length > 0 %}
+                                        {% for campanyItem in customer.campanies %}
+                                            {{ campanyItem.projetName ?: '-' }}{% if not loop.last %}, {% endif %}
+                                        {% endfor %}
                                     {% else %}
                                         -
                                     {% endif %}
@@ -134,11 +134,11 @@
                                         -
                                     {% endif %}
                                 </td>
+                                <td>{{ customer.lastname }}</td>
+                                <td>{{ customer.name }}</td>
                                 <td>
-                                    {% if customer.campanies|length > 0 %}
-                                        {% for campanyItem in customer.campanies %}
-                                            {{ campanyItem.projetName ?: '-' }}{% if not loop.last %}, {% endif %}
-                                        {% endfor %}
+                                    {% if customer.referent %}
+                                        {{ customer.referent.lastname }} {{ customer.referent.name }}
                                     {% else %}
                                         -
                                     {% endif %}

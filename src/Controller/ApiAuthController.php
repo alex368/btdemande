@@ -38,6 +38,12 @@ final class ApiAuthController extends AbstractController
             ], Response::HTTP_UNAUTHORIZED);
         }
 
+        if (!$user->isActive()) {
+            return new JsonResponse([
+                'message' => 'Account is disabled.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         return new JsonResponse([
             'token_type' => 'Bearer',
             'access_token' => $tokenManager->createToken($user),

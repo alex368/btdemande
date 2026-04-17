@@ -99,8 +99,9 @@ public function delete(Activity $activity, Request $request, EntityManagerInterf
     #[Route('/activity/show/{id}', name: 'app_activity_show')]
 public function show(Activity $activity): Response
 {
-    return $this->render('activity/show.html.twig', [
-        'activity' => $activity,
+    return $this->redirectToRoute('app_contact_show', [
+        'id' => $activity->getContact()->getId(),
+        'activity' => $activity->getId(),
     ]);
 }
 
