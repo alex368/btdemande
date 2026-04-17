@@ -44,7 +44,7 @@ public function index(EntityManagerInterface $em, $id, Request $request): Respon
         $em->persist($opportunity);
         $em->flush();
 
-        $this->addFlash('success', 'Opportunity ajoutée.');
+        $this->addFlash('success', 'Opportunité ajoutée.');
         return $this->redirectToRoute('app_contact_show', ['id' => $contact->getId()]);
     }
 
@@ -71,7 +71,7 @@ public function index(EntityManagerInterface $em, $id, Request $request): Respon
 
             $em->persist($opportunity);
             $em->flush();
-            $this->addFlash('success', 'Opportunity ajoutée.');
+            $this->addFlash('success', 'Opportunité mise à jour.');
             return $this->redirectToRoute('app_contact_show', ['id' => $opportunity->getContact()->getId()]);
         }
 

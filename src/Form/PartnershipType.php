@@ -32,7 +32,7 @@ class PartnershipType extends AbstractType
             ])
 
             ->add('occupation', TextType::class, [
-                'label' => 'Metier / Fonction',
+                'label' => 'Métier / Fonction',
                 'required' => false,
                 'constraints' => [
                     new Length([

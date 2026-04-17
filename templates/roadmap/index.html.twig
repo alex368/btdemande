@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Roadmap financiere{% endblock %}
+{% block title %}Roadmap financière{% endblock %}
 
 {% block body %}
 <style>
@@ -379,11 +379,11 @@
     </nav>
 
     <section class="roadmap-hero">
-        <span class="badge bg-warning text-dark rounded-pill px-3 py-2 mb-3">Roadmap financiere</span>
+        <span class="badge bg-warning text-dark rounded-pill px-3 py-2 mb-3">Roadmap financière</span>
         <h1 class="display-6 fw-bold mb-3">{{ campanies.legalName }}</h1>
         <p class="mb-0">
-            Construis la projection financiere directement depuis cette page. Chaque etape peut etre ajoutee, modifiee ou supprimee
-            en modal, sans casser ton rythme ni changer d’ecran.
+            Construis la projection financière directement depuis cette page. Chaque étape peut être ajoutée, modifiée ou supprimée
+            en modal, sans casser ton rythme ni changer d’écran.
         </p>
 
         <div class="roadmap-toolbar">
@@ -399,7 +399,7 @@
             </div>
 
             <div class="text-white-50 small">
-                Mise a jour dynamique de la timeline
+                Mise à jour dynamique de la timeline
             </div>
         </div>
     </section>
@@ -413,17 +413,17 @@
 
     <section class="roadmap-stats">
         <article class="roadmap-stat-card">
-            <span class="roadmap-stat-label">Etapes planifiees</span>
+            <span class="roadmap-stat-label">Étapes planifiées</span>
             <strong class="roadmap-stat-value" id="roadmap-count">{{ roadmaps|length }}</strong>
         </article>
         <article class="roadmap-stat-card">
-            <span class="roadmap-stat-label">Montant total estime</span>
+            <span class="roadmap-stat-label">Montant total estimé</span>
             <strong class="roadmap-stat-value" id="roadmap-total-amount">
                 {{ totalEstimatedAmount|number_format(0, ',', ' ') }} €
             </strong>
         </article>
         <article class="roadmap-stat-card">
-            <span class="roadmap-stat-label">Premiere projection</span>
+            <span class="roadmap-stat-label">Première projection</span>
             <strong class="roadmap-stat-value" id="roadmap-first-date">
                 {% if roadmaps|length > 0 %}{{ roadmaps|first.entity.date|date('d/m/Y') }}{% else %}-{% endif %}
             </strong>
@@ -437,8 +437,8 @@
     <section class="roadmap-board" id="roadmap-board" data-roadmap-reorder-url="{{ path('app_reorder_roadmap', { id: campanies.id, user: user }) }}">
         {% if roadmaps is empty %}
             <div class="roadmap-empty" id="roadmap-empty-state">
-                <h2 class="h4 mb-3">Aucune etape pour l’instant</h2>
-                <p class="mb-0">Commence par ajouter une projection pour construire la roadmap financiere directement depuis cette page.</p>
+                <h2 class="h4 mb-3">Aucune étape pour l’instant</h2>
+                <p class="mb-0">Commence par ajouter une projection pour construire la roadmap financière directement depuis cette page.</p>
             </div>
         {% else %}
             <div id="roadmap-items">
@@ -452,8 +452,8 @@
                 {% endfor %}
             </div>
             <div class="roadmap-empty d-none" id="roadmap-empty-state">
-                <h2 class="h4 mb-3">Aucune etape pour l’instant</h2>
-                <p class="mb-0">Commence par ajouter une projection pour construire la roadmap financiere directement depuis cette page.</p>
+                <h2 class="h4 mb-3">Aucune étape pour l’instant</h2>
+                <p class="mb-0">Commence par ajouter une projection pour construire la roadmap financière directement depuis cette page.</p>
             </div>
         {% endif %}
 
@@ -467,7 +467,7 @@
             class="btn btn-warning rounded-0 fw-semibold js-roadmap-create"
             data-roadmap-create-url="{{ path('app_new_roadmap', { id: campanies.id, user: user }) }}"
         >
-            Nouvelle etape
+            Nouvelle étape
         </button>
     </div>
 {% endif %}
@@ -482,7 +482,7 @@
             <div class="modal-body" id="roadmap-editor-modal-body">
                 {% include 'roadmap/_form_modal_body.html.twig' with {
                     form: roadmapForm,
-                    title: 'Ajouter une etape a la roadmap',
+                    title: 'Ajouter une étape à la roadmap',
                     submitLabel: 'Ajouter'
                 } only %}
             </div>
@@ -494,11 +494,11 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-0 border-0 shadow-lg">
             <div class="modal-header">
-                <h5 class="modal-title" id="roadmapDeleteModalLabel">Supprimer cette etape</h5>
+                <h5 class="modal-title" id="roadmapDeleteModalLabel">Supprimer cette étape</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
             <div class="modal-body">
-                <p class="mb-2">Tu es sur le point de retirer <strong id="roadmap-delete-name">cette etape</strong> de la roadmap.</p>
+                <p class="mb-2">Tu es sur le point de retirer <strong id="roadmap-delete-name">cette étape</strong> de la roadmap.</p>
                 <p class="text-muted mb-0">La suppression se fait sans recharger la page.</p>
             </div>
             <div class="modal-footer">

@@ -134,7 +134,7 @@ final class CampanyContactController extends AbstractController
 
             $entityManager->flush();
 
-            $this->addFlash('success', 'Entreprise mise a jour !');
+            $this->addFlash('success', 'Entreprise mise à jour !');
             return $this->redirectToRoute('app_campany_contact_show', ['id' => $campany->getId()]);
         }
 

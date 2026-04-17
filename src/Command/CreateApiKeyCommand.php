@@ -14,7 +14,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
     name: 'app:create-api-key',
-    description: 'Genere une cle API personnelle pour un admin ou collaborateur.',
+    description: 'Génère une clé API personnelle pour un admin ou collaborateur.',
 )]
 class CreateApiKeyCommand extends Command
 {
@@ -29,7 +29,7 @@ class CreateApiKeyCommand extends Command
     {
         $this
             ->addArgument('email', InputArgument::REQUIRED, "Email de l'utilisateur")
-            ->addArgument('name', InputArgument::OPTIONAL, 'Nom de la cle API', 'openclawMailer');
+            ->addArgument('name', InputArgument::OPTIONAL, 'Nom de la clé API', 'openclawMailer');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -40,7 +40,7 @@ class CreateApiKeyCommand extends Command
 
         $user = $this->userRepository->findOneBy(['email' => $email]);
         if (!$user) {
-            $io->error(sprintf('Aucun utilisateur trouve pour "%s".', $email));
+            $io->error(sprintf('Aucun utilisateur trouvé pour "%s".', $email));
 
             return Command::FAILURE;
         }
@@ -51,7 +51,7 @@ class CreateApiKeyCommand extends Command
             || \in_array('ROLE_COLLABORATEUR', $roles, true);
 
         if (!$isAllowed) {
-            $io->error('La cle API ne peut etre creee que pour un admin ou un collaborateur.');
+            $io->error('La clé API ne peut être créée que pour un admin ou un collaborateur.');
 
             return Command::FAILURE;
         }
@@ -68,7 +68,7 @@ class CreateApiKeyCommand extends Command
         $this->em->persist($apiKey);
         $this->em->flush();
 
-        $io->success('Cle API creee. Copie-la maintenant, elle ne sera plus reaffichee.');
+        $io->success('Clé API créée. Copie-la maintenant, elle ne sera plus réaffichée.');
         $io->writeln(sprintf('Utilisateur : %s', $user->getEmail()));
         $io->writeln(sprintf('Nom : %s', $name));
         $io->writeln(sprintf('Cle API : %s', $plainToken));

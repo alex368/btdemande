@@ -156,7 +156,7 @@ final class CustomerDatasheetController extends AbstractController
 
             $entityManager->flush();
 
-            $this->addFlash('success', 'Entreprise mise a jour !');
+            $this->addFlash('success', 'Entreprise mise à jour !');
             $customer = $campany->getCustomer()->first();
             if ($customer instanceof User) {
                 return $this->redirectToRoute('app_campany', [
@@ -318,7 +318,7 @@ final class CustomerDatasheetController extends AbstractController
         }
 
         if ($createdRequests === []) {
-            $this->addFlash('info', 'Aucun nouveau dossier: une demande est déjà en attente.');
+            $this->addFlash('info', 'Aucun nouveau dossier : une demande est déjà en attente.');
 
             return $this->redirectToRoute('app_campany', ['id' => $id, 'user' => $user]);
         }

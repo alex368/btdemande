@@ -155,7 +155,7 @@ class ContactType extends AbstractType
 
             // FONCTION
             ->add('occupation', TextType::class, [
-                'label' => 'Metier / Fonction',
+                'label' => 'Métier / Fonction',
                 'required' => false,
                 'constraints' => [
                     new Length([
@@ -190,7 +190,7 @@ class ContactType extends AbstractType
 
             // CODE POSTAL
             ->add('zipCode', TextType::class, [
-                'label' => 'Code Postal',
+                'label' => 'Code postal',
                 'required' => false,
                 'constraints' => [
                     new Regex([

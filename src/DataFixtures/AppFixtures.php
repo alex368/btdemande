@@ -543,7 +543,7 @@ class AppFixtures extends Fixture implements DependentFixtureInterface
                 ->setDescription('Business plan consolide avec scenario prudent et scenario cible.')
                 ->setTitle('Business plan Atelier Nova')
                 ->setStatus(false)
-                ->setComment('En attente d une mise a jour financiere'),
+                ->setComment('En attente d’une mise à jour financière'),
             $this->entity($manager, Document::class, ['filename' => 'transition-plan-green-pulse.pdf'])
                 ->setFilename('transition-plan-green-pulse.pdf')
                 ->setDocumentDefinition($documentTemplates[3])
@@ -700,7 +700,7 @@ class AppFixtures extends Fixture implements DependentFixtureInterface
 
         if ([] === $owners) {
             throw new \RuntimeException(sprintf(
-                'Aucun utilisateur funding_request.user n a ete trouve pour les IDs autorises : %s',
+                'Aucun utilisateur funding_request.user n’a été trouvé pour les IDs autorisés : %s',
                 implode(', ', self::FUNDING_REQUEST_OWNER_IDS)
             ));
         }

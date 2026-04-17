@@ -98,7 +98,7 @@ final class DocumentController extends AbstractController
 
             if ($action === 'suivant') {
                 if (!$allDocumentsValid) {
-                    $this->addFlash('danger', 'Tous les documents doivent etre valides avant de passer a l\'etape suivante.');
+                    $this->addFlash('danger', 'Tous les documents doivent être validés avant de passer à l’étape suivante.');
                     return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
                 }
 
@@ -128,7 +128,7 @@ final class DocumentController extends AbstractController
 
                 $em->flush();
 
-                $this->addFlash('success', 'La demande a ete reinitialisee.');
+                $this->addFlash('success', 'La demande a été réinitialisée.');
                 return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
             }
         }

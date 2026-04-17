@@ -34,7 +34,7 @@ final class ActivityController extends AbstractController
             $em->persist($opportunity);
             $em->flush();
 
-            $this->addFlash('success', 'Opportunity ajoutée.');
+            $this->addFlash('success', 'Activité ajoutée.');
             return $this->redirectToRoute('app_contact_show', ['id' => $contact->getId()]);
         }
 
@@ -63,7 +63,7 @@ final class ActivityController extends AbstractController
             $em->persist($activity);
             $em->flush();
 
-            $this->addFlash('success', 'Opportunity ajoutée.');
+            $this->addFlash('success', 'Activité mise à jour.');
             return $this->redirectToRoute('app_contact_show', ['id' => $activity->getContact()->getId()]);
         }
 

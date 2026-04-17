@@ -75,7 +75,7 @@ final class ResetPasswordController extends AbstractController
 
         $now = new \DateTime();
         if ($now > $resetPassword->getCreatedAt()->modify('+ 3 hour')) {
-            $this->addFlash('notice', 'Votre demande de mot de passe à expiré');
+            $this->addFlash('notice', 'Votre demande de mot de passe a expiré');
             return $this->redirectToRoute('app_reset_password');
         }
 
@@ -87,7 +87,7 @@ final class ResetPasswordController extends AbstractController
             $password = $encoder->hashPassword($resetPassword->getUser(), $new_pwd);
             $resetPassword->getUser()->setPassword($password);
             $this->entityManager->flush();
-            $this->addFlash('warning', 'Votre mot de passe a été mise à jour');
+            $this->addFlash('warning', 'Votre mot de passe a été mis à jour');
             return $this->redirectToRoute('app_login');
         }
 

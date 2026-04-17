@@ -42,7 +42,7 @@ class CampanyContactType extends AbstractType
                 'row_attr' => ['class' => 'mb-3']
             ])
             ->add('legalName', TextType::class, [
-                'label' => 'Raison social',
+                'label' => 'Raison sociale',
                 'attr' => [
                     'id' => 'campany_legalName',
                     'placeholder' => 'Enter the legal name',
