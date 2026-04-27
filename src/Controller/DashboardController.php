@@ -8,18 +8,22 @@ use App\Repository\EventCustomerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class DashboardController extends AbstractController
 {
     #[Route('/dashboard', name: 'app_dashboard')]
-    public function index(EventCustomerRepository $eventRepository, EntityManagerInterface $em): Response
+    public function index(Request $request, EventCustomerRepository $eventRepository, EntityManagerInterface $em): Response
     {
         $currentUser = $this->getUser();
         if (!$currentUser instanceof User) {
             return $this->redirectToRoute('app_login');
         }
+
+        $scope = strtolower((string) $request->query->get('scope', 'global'));
+        $adminPersonalScope = $this->isGranted('ROLE_ADMIN') && $scope === 'personal';
 
         $tz = new \DateTimeZone('Europe/Paris');
 
@@ -39,10 +43,10 @@ final class DashboardController extends AbstractController
 
         $requestsQb = $em->getRepository(FundingRequest::class)->createQueryBuilder('fr')
             ->orderBy('fr.id', 'DESC');
-        $this->applyRoleScope($requestsQb, $currentUser);
+        $this->applyRoleScope($requestsQb, $currentUser, $adminPersonalScope);
         $dashboardRequests = $requestsQb->getQuery()->getResult();
 
-        $buildValidatedAmountQb = function (string $type) use ($em, $currentUser): QueryBuilder {
+        $buildValidatedAmountQb = function (string $type) use ($em, $currentUser, $adminPersonalScope): QueryBuilder {
             $qb = $em->getRepository(FundingRequest::class)->createQueryBuilder('fr')
                 ->join('fr.product', 'p')
                 ->andWhere('fr.status = :closedStatus')
@@ -54,7 +58,7 @@ final class DashboardController extends AbstractController
                 ->setParameter('type', $type)
                 ->orderBy('fr.id', 'DESC');
 
-            $this->applyRoleScope($qb, $currentUser);
+            $this->applyRoleScope($qb, $currentUser, $adminPersonalScope);
 
             return $qb;
         };
@@ -67,7 +71,7 @@ final class DashboardController extends AbstractController
         $baseFinanceurQb = $em->getRepository(FundingRequest::class)->createQueryBuilder('fr')
             ->join('fr.product', 'p')
             ->leftJoin('p.fundingMechanism', 'fm');
-        $this->applyRoleScope($baseFinanceurQb, $currentUser);
+        $this->applyRoleScope($baseFinanceurQb, $currentUser, $adminPersonalScope);
 
         $ongoingRequests = (clone $baseFinanceurQb)
             ->andWhere('fr.status = :inProgressStatus')
@@ -116,12 +120,23 @@ final class DashboardController extends AbstractController
             'statusWaitingClient' => FundingRequest::STATUS_WAITING_CLIENT,
             'statusBackFromClient' => FundingRequest::STATUS_BACK_FROM_CLIENT,
             'trackingStatuses' => FundingRequest::getTrackingStatuses(),
+            'dashboardScopeLabel' => $this->isGranted('ROLE_ADMIN')
+                ? ($adminPersonalScope ? 'Vue personnelle' : 'Vue globale équipe')
+                : 'Vue personnelle',
+            'dashboardScope' => $this->isGranted('ROLE_ADMIN')
+                ? ($adminPersonalScope ? 'personal' : 'global')
+                : 'personal',
+            'canChooseDashboardScope' => $this->isGranted('ROLE_ADMIN'),
         ]);
     }
 
-    private function applyRoleScope(QueryBuilder $qb, User $currentUser): void
+    private function applyRoleScope(QueryBuilder $qb, User $currentUser, bool $adminPersonalScope = false): void
     {
         if ($this->isGranted('ROLE_ADMIN')) {
+            if ($adminPersonalScope) {
+                $qb->andWhere('fr.user = :currentUser')
+                    ->setParameter('currentUser', $currentUser);
+            }
             return;
         }
 

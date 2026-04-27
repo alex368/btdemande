@@ -70,9 +70,9 @@
                             <img src="/uploads/logos/{{ funders.logo }}" 
                                  alt="Logo" 
                                  class="img-fluid" 
-                                 style="max-width: 150px;">
+                                 style="max-width: 180px; max-height: 120px; object-fit: contain; background:#fff;">
                         {% else %}
-                            <em>No logo uploaded.</em>
+                            <em>Aucun logo téléversé.</em>
                         {% endif %}
                     </td>
                 </tr>
@@ -86,9 +86,9 @@
 
                 <form method="post"
                       action="{{ path('app_funder_delete', { id: funders.id }) }}"
-                      onsubmit="return confirm('Are you sure you want to delete this funder ?');">
+                      onsubmit="return confirm('Voulez-vous vraiment supprimer ce financeur ?');">
                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ funders.id) }}">
-                    <button class="btn btn-danger">Delete</button>
+                    <button class="btn btn-danger">Supprimer</button>
                 </form>
                 {% endif %}
             </div>

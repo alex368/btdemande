@@ -71,9 +71,6 @@ services:
     
     LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface: '@App\Service\ServiceOllamaEmbeddingGenerator'
 
-    App\Schedule\GmailSchedule:
-        tags: ['schedule.provider']
-
     App\Security\ApiJwtTokenManager:
         arguments:
             $secret: '%env(API_JWT_SECRET)%'

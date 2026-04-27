@@ -10,8 +10,11 @@ use App\Form\CustomDocumentType;
 use App\Service\MailerService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class DocumentController extends AbstractController
@@ -99,17 +102,17 @@ final class DocumentController extends AbstractController
             if ($action === 'suivant') {
                 if (!$allDocumentsValid) {
                     $this->addFlash('danger', 'Tous les documents doivent être validés avant de passer à l’étape suivante.');
-                    return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
+                    return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $user]);
                 }
 
-                return $this->redirectToRoute('app_status_demande', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
+                return $this->redirectToRoute('app_status_demande', ['id' => $fundingRequest->getId(), 'user' => $user]);
             }
 
             if ($action === 'save') {
                 $fundingRequest->setStatus(FundingRequest::STATUS_IN_PROGRESS);
                 $em->flush();
 
-                return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
+                return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $user]);
             }
 
             if ($action === 'reset' || $action === 'cancel') {
@@ -129,7 +132,7 @@ final class DocumentController extends AbstractController
                 $em->flush();
 
                 $this->addFlash('success', 'La demande a été réinitialisée.');
-                return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
+                return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $user]);
             }
         }
 
@@ -182,7 +185,7 @@ final class DocumentController extends AbstractController
             $this->addFlash('success', 'Document modifié avec succès.');
             return $this->redirectToRoute('app_document_index', [
                 'id' => $document->getFundingRequest()->getId(),
-                'user' => $document->getFundingRequest()->getUser()->getId(),
+                'user' => $this->resolveDocumentRouteUserId($document),
             ]);
         }
 
@@ -258,7 +261,7 @@ final class DocumentController extends AbstractController
             $this->addFlash('success', 'Documents assignés avec succès.');
             return $this->redirectToRoute('app_document_index', [
                 'id' => $fundingRequest->getId(),
-                'user' => $fundingRequest->getUser()->getId(),
+                'user' => $this->resolveFundingRequestRouteUserId($fundingRequest),
             ]);
         }
 
@@ -278,7 +281,7 @@ final class DocumentController extends AbstractController
         $em->flush();
 
         $this->addFlash('success', 'Document supprimé.');
-        return $this->redirectToRoute('app_document_index', ['id' => $fundingRequestId, 'user' => $document->getFundingRequest()->getUser()->getId()]);
+        return $this->redirectToRoute('app_document_index', ['id' => $fundingRequestId, 'user' => $this->resolveDocumentRouteUserId($document)]);
     }
 
     #[Route('/document/refuse/{id}', name: 'document_refuse')]
@@ -294,7 +297,7 @@ final class DocumentController extends AbstractController
 
 
         $this->addFlash('success', 'Document supprimé.');
-        return $this->redirectToRoute('app_document_index', ['id' => $fundingRequestId, 'user' => $document->getFundingRequest()->getUser()->getId()]);
+        return $this->redirectToRoute('app_document_index', ['id' => $fundingRequestId, 'user' => $this->resolveDocumentRouteUserId($document)]);
     }
 
     #[Route('/document/validate/{id}', name: 'document_validate')]
@@ -310,7 +313,7 @@ final class DocumentController extends AbstractController
 
 
         $this->addFlash('success', 'Document supprimé.');
-        return $this->redirectToRoute('app_document_index', ['id' => $fundingRequestId, 'user' => $document->getFundingRequest()->getUser()->getId()]);
+        return $this->redirectToRoute('app_document_index', ['id' => $fundingRequestId, 'user' => $this->resolveDocumentRouteUserId($document)]);
     }
 
 
@@ -352,34 +355,95 @@ final class DocumentController extends AbstractController
 
 
     #[Route('/client/documents/{id}', name: 'client_documents', methods: ['GET', 'POST'])]
-    public function clientDocuments(FundingRequest $fundingRequest, Request $request, EntityManagerInterface $em, $id): Response
+    public function clientDocuments(FundingRequest $fundingRequest, Request $request, EntityManagerInterface $em): Response
     {
-
-
-
-        $fundingRequest = $em->getRepository(FundingRequest::class)->find($id);
-        $company = $fundingRequest->getCampany();
-        $customer = $company->getCustomer();
-
-        $users = [];
-
-        foreach ($customer as $client) {
-            $users = $client;
+        $userConnected = $this->getUser();
+        if (!$userConnected instanceof User) {
+            throw $this->createAccessDeniedException('Vous devez être connecté.');
         }
 
+        $company = $fundingRequest->getCampany();
+        $isAllowedCustomer = false;
 
-        $userConnected = $this->getUser();
+        if ($company !== null) {
+            foreach ($company->getCustomer() as $companyCustomer) {
+                if (
+                    $companyCustomer instanceof User
+                    && $companyCustomer->getId() !== null
+                    && $companyCustomer->getId() === $userConnected->getId()
+                ) {
+                    $isAllowedCustomer = true;
+                    break;
+                }
+            }
+        }
 
-        if ($userConnected !== $users) {
+        if (
+            !$isAllowedCustomer
+            && !$this->isGranted('ROLE_ADMIN')
+            && !$this->isGranted('ROLE_COLLABORATOR')
+            && !$this->isGranted('ROLE_SUPER_ADMIN')
+        ) {
             $this->addFlash('error', 'Accès refusé aux documents de cette demande.');
             return $this->redirectToRoute('app_dashboard');
         }
 
-
-
+        $documents = $em->getRepository(Document::class)->findBy(
+            ['fundingRequest' => $fundingRequest],
+            ['id' => 'ASC']
+        );
+        $documentsById = [];
+        foreach ($documents as $document) {
+            $documentsById[(int) $document->getId()] = $document;
+        }
 
         if ($request->isMethod('POST')) {
             $action = $request->request->get('action');
+            $hasChanges = false;
+
+            $deletedFiles = $request->request->all('delete_file');
+            if (\is_array($deletedFiles)) {
+                foreach (array_keys($deletedFiles) as $documentIdRaw) {
+                    $documentId = (int) $documentIdRaw;
+                    $document = $documentsById[$documentId] ?? null;
+                    if (!$document instanceof Document) {
+                        continue;
+                    }
+
+                    $document->setFilename('');
+                    $document->setStatus(false);
+                    $hasChanges = true;
+                }
+            }
+
+            $uploadedFiles = $request->files->all('files');
+            if (\is_array($uploadedFiles)) {
+                foreach ($uploadedFiles as $documentIdRaw => $uploadedFile) {
+                    $documentId = (int) $documentIdRaw;
+                    $document = $documentsById[$documentId] ?? null;
+                    if (!$document instanceof Document || $uploadedFile === null) {
+                        continue;
+                    }
+
+                    if (!method_exists($uploadedFile, 'getClientOriginalName')) {
+                        continue;
+                    }
+
+                    $originalExtension = strtolower((string) pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_EXTENSION));
+                    $extension = $originalExtension !== '' ? $originalExtension : (string) ($uploadedFile->guessExtension() ?: 'bin');
+                    $filename = uniqid('doc_', true) . '.' . $extension;
+                    try {
+                        $uploadedFile->move((string) $this->getParameter('documents_directory'), $filename);
+                    } catch (FileException) {
+                        $this->addFlash('danger', 'Impossible de téléverser un des fichiers sélectionnés.');
+                        continue;
+                    }
+
+                    $document->setFilename($filename);
+                    $document->setStatus(false);
+                    $hasChanges = true;
+                }
+            }
 
             if ($action === 'validate') {
                 $fundingRequest->setStatus(FundingRequest::STATUS_BACK_FROM_CLIENT);
@@ -389,11 +453,19 @@ final class DocumentController extends AbstractController
                 $this->addFlash('success', 'Vos documents ont été validés et envoyés.');
                 return $this->redirectToRoute('app_dashboard'); // ou une autre route pour le client
             }
+
+            if ($action === 'save' || $hasChanges) {
+                $em->flush();
+                $this->addFlash('success', 'Vos modifications ont bien été enregistrées.');
+                return $this->redirectToRoute('client_documents', [
+                    'id' => $fundingRequest->getId(),
+                ]);
+            }
         }
 
         return $this->render('document/documents.html.twig', [
             'request'   => $fundingRequest,
-            'documents' => $em->getRepository(Document::class)->findBy(['status' => false]),
+            'documents' => $documents,
         ]);
     }
 
@@ -417,12 +489,53 @@ final class DocumentController extends AbstractController
             $em->flush();
 
             $this->addFlash('success', 'Document personnalisé ajouté avec succès.');
-            return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $fundingRequest->getUser()->getId()]);
+            return $this->redirectToRoute('app_document_index', ['id' => $fundingRequest->getId(), 'user' => $this->resolveFundingRequestRouteUserId($fundingRequest)]);
         }
 
         return $this->render('document/add_custom.html.twig', [
             'request' => $fundingRequest,
             'form' => $form->createView(),
         ]);
+    }
+
+    #[Route('/document/template/download/{id}', name: 'app_document_template_download', methods: ['GET'])]
+    public function downloadTemplate(DocumentTemplate $documentTemplate): Response
+    {
+        $filename = trim((string) $documentTemplate->getTemplate());
+        if ($filename === '') {
+            throw $this->createNotFoundException('Template introuvable.');
+        }
+
+        $path = rtrim((string) $this->getParameter('documents_directory'), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename;
+        if (!is_file($path) || !is_readable($path)) {
+            throw $this->createNotFoundException('Fichier template introuvable.');
+        }
+
+        $response = new BinaryFileResponse($path);
+        $response->setContentDisposition(
+            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+            $filename
+        );
+
+        return $response;
+    }
+
+    private function resolveFundingRequestRouteUserId(FundingRequest $fundingRequest): int
+    {
+        if ($fundingRequest->getUser() instanceof User) {
+            return (int) $fundingRequest->getUser()->getId();
+        }
+
+        $currentUser = $this->getUser();
+        if ($currentUser instanceof User && $currentUser->getId() !== null) {
+            return (int) $currentUser->getId();
+        }
+
+        return 0;
+    }
+
+    private function resolveDocumentRouteUserId(Document $document): int
+    {
+        return $this->resolveFundingRequestRouteUserId($document->getFundingRequest());
     }
 }

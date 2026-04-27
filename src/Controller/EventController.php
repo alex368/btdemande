@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\EventCustomer;
 use App\Form\EventCustomerType;
 use App\Repository\EventCustomerRepository;
+use App\Repository\UserRepository;
+use App\Service\MailerService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -47,18 +49,122 @@ class EventController extends AbstractController
 #[Route('/{slug}', name: 'app_event_show', methods: ['GET'])]
 public function show(
     string $slug,
-    EventCustomerRepository $repository
+    EventCustomerRepository $repository,
+    UserRepository $userRepository
 ): Response {
     $event = $repository->findOneBy(['slug' => $slug]);
 
     if (!$event) {
-        throw $this->createNotFoundException('Event not found');
+        throw $this->createNotFoundException('Événement introuvable.');
+    }
+
+    $rawMembers = array_merge(
+        $userRepository->findByRole('ROLE_SUPER_ADMIN'),
+        $userRepository->findByRole('ROLE_ADMIN'),
+        $userRepository->findByRole('ROLE_COLLABORATOR')
+    );
+    $teamMembers = [];
+    $seenIds = [];
+    foreach ($rawMembers as $member) {
+        $memberId = (int) $member->getId();
+        if ($memberId <= 0 || isset($seenIds[$memberId])) {
+            continue;
+        }
+
+        $seenIds[$memberId] = true;
+        $teamMembers[] = $member;
     }
 
     return $this->render('event/show.html.twig', [
         'event' => $event,
+        'teamMembers' => $teamMembers,
     ]);
 }
+
+    #[Route('/{id}/invite-members', name: 'app_event_invite_members', methods: ['POST'])]
+    public function inviteMembers(
+        EventCustomer $event,
+        Request $request,
+        UserRepository $userRepository,
+        MailerService $mailerService
+    ): Response {
+        if (
+            !$this->isGranted('ROLE_COLLABORATOR')
+            && !$this->isGranted('ROLE_ADMIN')
+            && !$this->isGranted('ROLE_SUPER_ADMIN')
+        ) {
+            throw $this->createAccessDeniedException('Accès refusé.');
+        }
+
+        if (!$this->isCsrfTokenValid('invite-members-' . $event->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Jeton de sécurité invalide.');
+            return $this->redirectToRoute('app_event_show', ['slug' => $event->getSlug()]);
+        }
+
+        $memberIds = array_map('intval', (array) $request->request->all('member_ids'));
+        $memberIds = array_values(array_filter($memberIds, static fn (int $id): bool => $id > 0));
+
+        if ($memberIds === []) {
+            $this->addFlash('warning', 'Sélectionnez au moins un membre de l’équipe.');
+            return $this->redirectToRoute('app_event_show', ['slug' => $event->getSlug()]);
+        }
+
+        $rawCandidates = array_merge(
+            $userRepository->findByRole('ROLE_SUPER_ADMIN'),
+            $userRepository->findByRole('ROLE_ADMIN'),
+            $userRepository->findByRole('ROLE_COLLABORATOR')
+        );
+        $allCandidates = [];
+        $seenIds = [];
+        foreach ($rawCandidates as $candidate) {
+            $candidateId = (int) $candidate->getId();
+            if ($candidateId <= 0 || isset($seenIds[$candidateId])) {
+                continue;
+            }
+
+            $seenIds[$candidateId] = true;
+            $allCandidates[] = $candidate;
+        }
+
+        $sentCount = 0;
+        $errors = 0;
+
+        foreach ($allCandidates as $candidate) {
+            if (!in_array((int) $candidate->getId(), $memberIds, true)) {
+                continue;
+            }
+
+            $email = trim((string) $candidate->getEmail());
+            if ($email === '') {
+                continue;
+            }
+
+            try {
+                $mailerService->send(
+                    $email,
+                    'Invitation meeting: ' . (string) $event->getTitle(),
+                    'emails/event_invitation.html.twig',
+                    [
+                        'event' => $event,
+                        'member' => $candidate,
+                    ]
+                );
+                ++$sentCount;
+            } catch (\Throwable) {
+                ++$errors;
+            }
+        }
+
+        if ($sentCount > 0 && $errors === 0) {
+            $this->addFlash('success', 'Invitation envoyée à ' . $sentCount . ' membre(s) de l’équipe.');
+        } elseif ($sentCount > 0) {
+            $this->addFlash('warning', 'Invitation partiellement envoyée (' . $sentCount . ' envois, ' . $errors . ' erreur(s)).');
+        } else {
+            $this->addFlash('danger', 'Aucune invitation n’a pu être envoyée.');
+        }
+
+        return $this->redirectToRoute('app_event_show', ['slug' => $event->getSlug()]);
+    }
 
 
     #[Route('/{id}/edit', name: 'app_event_edit', methods: ['GET', 'POST'])]

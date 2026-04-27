@@ -22,7 +22,7 @@ class UserPasswordType extends AbstractType
                 'attr' => ['class' => 'form-control'],
                 'label_attr' => ['class' => 'form-label text-uppercase small fw-bold'],
                 'constraints' => [
-                    new NotBlank(['message' => 'Le mot de passe actuel est requis.']),
+                    new NotBlank(message: 'Le mot de passe actuel est requis.'),
                 ],
             ])
             ->add('newPassword', RepeatedType::class, [
@@ -34,27 +34,27 @@ class UserPasswordType extends AbstractType
                     'attr' => ['class' => 'form-control'],
                     'label_attr' => ['class' => 'form-label text-uppercase small fw-bold'],
                     'constraints' => [
-                        new NotBlank(['message' => 'Le nouveau mot de passe est requis.']),
-                        new Length([
-                            'min' => 8,
-                            'minMessage' => 'Le mot de passe doit contenir au moins 8 caractères.',
-                        ]),
-                        new Regex([
-                            'pattern' => '/[A-Z]/',
-                            'message' => 'Le mot de passe doit contenir au moins une majuscule.',
-                        ]),
-                        new Regex([
-                            'pattern' => '/[a-z]/',
-                            'message' => 'Le mot de passe doit contenir au moins une minuscule.',
-                        ]),
-                        new Regex([
-                            'pattern' => '/\d/',
-                            'message' => 'Le mot de passe doit contenir au moins un chiffre.',
-                        ]),
-                        new Regex([
-                            'pattern' => '/[\W_]/',
-                            'message' => 'Le mot de passe doit contenir au moins un caractère spécial.',
-                        ]),
+                        new NotBlank(message: 'Le nouveau mot de passe est requis.'),
+                        new Length(
+                            min: 8,
+                            minMessage: 'Le mot de passe doit contenir au moins 8 caractères.',
+                        ),
+                        new Regex(
+                            pattern: '/[A-Z]/',
+                            message: 'Le mot de passe doit contenir au moins une majuscule.',
+                        ),
+                        new Regex(
+                            pattern: '/[a-z]/',
+                            message: 'Le mot de passe doit contenir au moins une minuscule.',
+                        ),
+                        new Regex(
+                            pattern: '/\d/',
+                            message: 'Le mot de passe doit contenir au moins un chiffre.',
+                        ),
+                        new Regex(
+                            pattern: '/[\W_]/',
+                            message: 'Le mot de passe doit contenir au moins un caractère spécial.',
+                        ),
                     ],
                 ],
                 'second_options' => [

@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ event.title }} | Event{% endblock %}
+{% block title %}{{ event.title }} | Événement{% endblock %}
 
 {% block body %}
 <div class="container mt-5">
@@ -58,6 +58,19 @@
                         </p>
                     </div>
 
+                    {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_SUPER_ADMIN') %}
+                        <div class="mb-4">
+                            <button
+                                type="button"
+                                class="btn btn-outline-primary rounded-0"
+                                data-bs-toggle="modal"
+                                data-bs-target="#inviteTeamModal"
+                            >
+                                Inviter un membre de l’équipe
+                            </button>
+                        </div>
+                    {% endif %}
+
                     <!-- Navigation -->
                     <div class="d-flex justify-content-between">
                         <a href="{{ path('app_event_index') }}"
@@ -79,6 +92,41 @@
 
         </div>
     </div>
+
+    {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_SUPER_ADMIN') %}
+        <div class="modal fade" id="inviteTeamModal" tabindex="-1" aria-labelledby="inviteTeamModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-0">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="inviteTeamModalLabel">Inviter des membres de l’équipe</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <form method="post" action="{{ path('app_event_invite_members', { id: event.id }) }}">
+                        <div class="modal-body">
+                            <input type="hidden" name="_token" value="{{ csrf_token('invite-members-' ~ event.id) }}">
+                            <p class="text-muted small">Sélectionne un ou plusieurs membres à inviter à ce meeting.</p>
+                            <div class="d-grid gap-2">
+                                {% for member in teamMembers %}
+                                    {% if member.email %}
+                                        <label class="form-check d-flex align-items-center gap-2">
+                                            <input class="form-check-input" type="checkbox" name="member_ids[]" value="{{ member.id }}">
+                                            <span class="form-check-label">
+                                                {{ member.lastname }} {{ member.name }} <small class="text-muted">({{ member.email }})</small>
+                                            </span>
+                                        </label>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary rounded-0" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-primary rounded-0">Envoyer les invitations</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
 </div>
 {% endblock %}

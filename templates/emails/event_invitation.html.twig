@@ -1,0 +1,17 @@
+<h2>Invitation à un événement</h2>
+
+<p>Bonjour {{ member.name ?: member.email }},</p>
+
+<p>Vous êtes invité(e) à participer à l’événement suivant :</p>
+
+<ul>
+    <li><strong>Titre :</strong> {{ event.title }}</li>
+    <li><strong>Début :</strong> {{ event.startDate ? event.startDate|date('d/m/Y H:i') : '-' }}</li>
+    <li><strong>Fin :</strong> {{ event.endDate ? event.endDate|date('d/m/Y H:i') : '-' }}</li>
+    <li><strong>Thème :</strong> {{ event.theme ?: '-' }}</li>
+    {% if event.url %}
+        <li><strong>Lien :</strong> <a href="{{ event.url }}">{{ event.url }}</a></li>
+    {% endif %}
+</ul>
+
+<p>{{ event.description|default('')|raw }}</p>

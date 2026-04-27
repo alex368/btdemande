@@ -7,6 +7,14 @@
     <h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">Portail client</h1>
 
     <div class="container">
+        <div class="d-flex justify-content-end mb-3">
+            {% if is_granted('ROLE_CUSTOMER') and currentUser %}
+                <a href="{{ path('app_campany_create', { id: currentUser.id }) }}" class="btn btn-warning rounded-0">
+                    Créer une nouvelle entreprise
+                </a>
+            {% endif %}
+        </div>
+
         <style>
             .customer-portal-table thead a {
                 color: #fff !important;

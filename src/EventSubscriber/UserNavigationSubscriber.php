@@ -32,6 +32,18 @@ class UserNavigationSubscriber implements EventSubscriberInterface
 
         $request = $event->getRequest();
         $route = (string) $request->attributes->get('_route', '');
+        $session = $request->hasSession() ? $request->getSession() : null;
+
+        if ($session !== null && $this->shouldTrackNavigation($request, $route)) {
+            $currentUri = (string) $request->getRequestUri();
+            $lastCurrentUri = (string) $session->get('nav.current_uri', '');
+
+            if ($lastCurrentUri !== '' && $lastCurrentUri !== $currentUri) {
+                $session->set('nav.previous_uri', $lastCurrentUri);
+            }
+
+            $session->set('nav.current_uri', $currentUri);
+        }
 
         if ($route === '' || str_starts_with($route, '_')) {
             return;
@@ -51,5 +63,28 @@ class UserNavigationSubscriber implements EventSubscriberInterface
         }
 
         $this->eventLogger->logRequest($user, $request, 'page_view');
+    }
+
+    private function shouldTrackNavigation(\Symfony\Component\HttpFoundation\Request $request, string $route): bool
+    {
+        if ($route === '' || str_starts_with($route, '_')) {
+            return false;
+        }
+
+        if (!in_array($request->getMethod(), ['GET'], true)) {
+            return false;
+        }
+
+        if ($request->isXmlHttpRequest()) {
+            return false;
+        }
+
+        $excludedRoutes = [
+            'app_user_event_track',
+            'app_back',
+            'app_logout',
+        ];
+
+        return !in_array($route, $excludedRoutes, true);
     }
 }

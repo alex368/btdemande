@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\UserType;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,12 +28,18 @@ final class RegisterController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             // Si tu dois encoder un mot de passe (optionnel)
            
-               $hashedPassword = $hasher->hashPassword($user, $user->getPassword());
+            $hashedPassword = $hasher->hashPassword($user, $user->getPassword());
             $user->setPassword($hashedPassword);
             $user->setRoles(['ROLE_CUSTOMER']);
             // Persistance de l'utilisateur
             $em->persist($user);
-            $em->flush();
+
+            try {
+                $em->flush();
+            } catch (UniqueConstraintViolationException) {
+                $this->addFlash('danger', 'Impossible de créer le compte : cet email existe déjà.');
+                return $this->redirectToRoute('app_register');
+            }
 
             // Redirection ou message flash
             $this->addFlash('success', 'Utilisateur créé avec succès.');

@@ -35,10 +35,10 @@ class ImportpartnershipsType extends AbstractType
                 'label' => 'Nom',
                 'required' => false,
                 'constraints' => [
-                    new Regex([
-                        'pattern' => '/^[a-zA-ZÀ-ÿ\' -]{2,40}$/u',
-                        'message' => 'Le nom contient des caractères invalides.'
-                    ])
+                    new Regex(
+                        pattern: '/^[a-zA-ZÀ-ÿ\' -]{2,40}$/u',
+                        message: 'Le nom contient des caractères invalides.'
+                    )
                 ],
                 'attr' => ['class' => 'form-control']
             ])
@@ -46,10 +46,10 @@ class ImportpartnershipsType extends AbstractType
                 'label' => 'Prénom',
                 'required' => false,
                 'constraints' => [
-                    new Regex([
-                        'pattern' => '/^[a-zA-ZÀ-ÿ\' -]{2,40}$/u',
-                        'message' => 'Le prénom contient des caractères invalides.'
-                    ])
+                    new Regex(
+                        pattern: '/^[a-zA-ZÀ-ÿ\' -]{2,40}$/u',
+                        message: 'Le prénom contient des caractères invalides.'
+                    )
                 ],
                 'attr' => ['class' => 'form-control']
             ])
@@ -63,10 +63,10 @@ class ImportpartnershipsType extends AbstractType
                 'label' => false,
                 'entry_options' => [
                     'constraints' => [
-                        new Regex([
-                            'pattern' => '/^[^\s@]+@[^\s@]+\.[^\s@]+$/',
-                            'message' => 'Adresse email invalide.'
-                        ])
+                        new Regex(
+                            pattern: '/^[^\s@]+@[^\s@]+\.[^\s@]+$/',
+                            message: 'Adresse email invalide.'
+                        )
                     ],
                     'attr' => ['class' => 'form-control', 'placeholder' => 'Adresse email']
                 ]
@@ -80,10 +80,10 @@ class ImportpartnershipsType extends AbstractType
                 'required' => false,
                 'entry_options' => [
                     'constraints' => [
-                        new Regex([
-                            'pattern' => '/^0[1-9](\s?\d{2}){4}$/',
-                            'message' => 'Numéro fixe invalide (format FR attendu).'
-                        ])
+                        new Regex(
+                            pattern: '/^0[1-9](\s?\d{2}){4}$/',
+                            message: 'Numéro fixe invalide (format FR attendu).'
+                        )
                     ],
                     'attr' => ['class' => 'form-control', 'placeholder' => 'Numéro fixe']
                 ]
@@ -97,10 +97,10 @@ class ImportpartnershipsType extends AbstractType
                 'required' => false,
                 'entry_options' => [
                     'constraints' => [
-                        new Regex([
-                            'pattern' => '/^(\+33|0)[67](\s?\d{2}){4}$/',
-                            'message' => 'Numéro mobile invalide.'
-                        ])
+                        new Regex(
+                            pattern: '/^(\+33|0)[67](\s?\d{2}){4}$/',
+                            message: 'Numéro mobile invalide.'
+                        )
                     ],
                     'attr' => ['class' => 'form-control', 'placeholder' => 'Téléphone mobile']
                 ]
@@ -114,10 +114,10 @@ class ImportpartnershipsType extends AbstractType
                 'required' => false,
                 'entry_options' => [
                     'constraints' => [
-                        new Regex([
-                            'pattern' => '/^(https?:\/\/)?([\w.-]+)\.\w{2,}(\/.*)?$/i',
-                            'message' => 'Lien de réseau social invalide.'
-                        ])
+                        new Regex(
+                            pattern: '/^(https?:\/\/)?([\w.-]+)\.\w{2,}(\/.*)?$/i',
+                            message: 'Lien de réseau social invalide.'
+                        )
                     ],
                     'attr' => ['class' => 'form-control', 'placeholder' => 'Lien réseau social']
                 ]
@@ -136,10 +136,10 @@ class ImportpartnershipsType extends AbstractType
                 'label' => 'Ville',
                 'required' => false,
                 'constraints' => [
-                    new Regex([
-                        'pattern' => '/^[a-zA-ZÀ-ÿ\' -]{2,60}$/u',
-                        'message' => 'La ville est invalide.'
-                    ])
+                    new Regex(
+                        pattern: '/^[a-zA-ZÀ-ÿ\' -]{2,60}$/u',
+                        message: 'La ville est invalide.'
+                    )
                 ],
                 'attr' => ['class' => 'form-control']
             ])
@@ -154,10 +154,10 @@ class ImportpartnershipsType extends AbstractType
                 'label' => 'Métier / Fonction',
                 'required' => false,
                 'constraints' => [
-                    new Length([
-                        'max' => 100,
-                        'maxMessage' => 'La fonction est trop longue.'
-                    ])
+                    new Length(
+                        max: 100,
+                        maxMessage: 'La fonction est trop longue.'
+                    )
                 ],
                 'attr' => ['class' => 'form-control']
             ])
@@ -176,10 +176,10 @@ class ImportpartnershipsType extends AbstractType
                 'label' => 'Site Web',
                 'required' => false,
                 'constraints' => [
-                    new Regex([
-                        'pattern' => '~^(https?://)?[a-z0-9.-]+\.[a-z]{2,6}(/.*)?$~i',
-                        'message' => 'URL invalide.'
-                    ])
+                    new Regex(
+                        pattern: '~^(https?://)?[a-z0-9.-]+\.[a-z]{2,6}(/.*)?$~i',
+                        message: 'URL invalide.'
+                    )
                 ],
                 'attr' => ['class' => 'form-control']
             ])
@@ -189,10 +189,10 @@ class ImportpartnershipsType extends AbstractType
                 'label' => 'Code postal',
                 'required' => false,
                 'constraints' => [
-                    new Regex([
-                        'pattern' => '/^\d{5}$/',
-                        'message' => 'Code postal invalide (5 chiffres).'
-                    ])
+                    new Regex(
+                        pattern: '/^\d{5}$/',
+                        message: 'Code postal invalide (5 chiffres).'
+                    )
                 ],
                 'attr' => ['class' => 'form-control']
             ]);

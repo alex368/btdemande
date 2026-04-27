@@ -1,10 +1,12 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Log in!{% endblock %}
+{% block title %}Connexion{% endblock %}
 
 {% block body %}
 
  {% block sidebar '' %}
+
+{% include 'partial/_back_arrow.html.twig' %}
 
 
 
@@ -55,7 +57,7 @@
    <div class="mb-3 mt-2">
     <label for="password" class="form-label fw-bold bebas">Mot de passe</label>
 
-    <div class="input-group shadow">
+    <div class="password-field-wrap shadow">
         <input 
             type="password" 
             name="_password" 
@@ -64,13 +66,14 @@
             autocomplete="current-password" 
             required
         >
-
-        <button 
-            type="button" 
-            class="btn btn-outline-secondary border-0 px-3"
-            onclick="togglePasswordVisibility()"
+        <button
+            type="button"
+            class="password-eye-toggle"
+            id="login-password-toggle"
+            aria-label="Afficher le mot de passe"
+            onclick="togglePasswordField('password', 'login-password-toggle')"
         >
-            <i class="bi bi-eye" id="togglePasswordIcon"></i>
+            <i class="bi bi-eye"></i>
         </button>
     </div>
 </div>
@@ -107,7 +110,7 @@
             </div>
 
             <!-- Colonne droite : carte -->
-            <div class="col-md-6 d-none d-md-block"
+    <div class="col-md-6 d-none d-md-block"
                 style=" background-image: url('{{asset('image/imageLogin.png')}}');  background-size: cover; background-position: center; background-repeat: no-repeat; height: 100%; ">
             </div>
 
@@ -116,23 +119,16 @@
 
         </div>
     </div>
+    <script>
+        function togglePasswordField(inputId, buttonId) {
+            const input = document.getElementById(inputId);
+            const button = document.getElementById(buttonId);
+            if (!input || !button) return;
 
-       <script>
-        function togglePasswordVisibility() {
-            var passwordField = document.getElementById('password');
-            var toggleIcon = document.getElementById('togglePasswordIcon');
-            if (passwordField.type === "password") {
-                passwordField.type = "text";
-                toggleIcon.classList.remove('bi-eye');
-                toggleIcon.classList.add('bi-eye-slash');
-            } else {
-                passwordField.type = "password";
-                toggleIcon.classList.remove('bi-eye-slash');
-                toggleIcon.classList.add('bi-eye');
-            }
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            button.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+            button.setAttribute('aria-label', isPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
         }
     </script>
-
-
-
 {% endblock %}

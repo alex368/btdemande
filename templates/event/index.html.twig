@@ -1,10 +1,10 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Evenements{% endblock %}
+{% block title %}Événements{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="mb-0">Evenements</h1>
+  <h1 class="mb-0">Événements</h1>
 
   {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
   <a href="{{ path('app_event_new') }}" class="btn btn-primary">
@@ -29,11 +29,18 @@
 
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
+                locale: 'fr',
                 height: 'auto',
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                buttonText: {
+                    today: "Aujourd'hui",
+                    month: 'Mois',
+                    week: 'Semaine',
+                    day: 'Jour'
                 },
                 events: [
                     {% for event in events %}

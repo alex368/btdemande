@@ -35,10 +35,10 @@ class PartnershipType extends AbstractType
                 'label' => 'Métier / Fonction',
                 'required' => false,
                 'constraints' => [
-                    new Length([
-                        'max' => 100,
-                        'maxMessage' => 'La fonction est trop longue.'
-                    ])
+                    new Length(
+                        max: 100,
+                        maxMessage: 'La fonction est trop longue.'
+                    )
                 ],
                 'attr' => ['class' => 'form-control']
             ])
@@ -48,10 +48,10 @@ class PartnershipType extends AbstractType
                 'label' => 'Nom',
                 'required' => false,
                 'constraints' => [
-                    new Regex([
-                        'pattern' => '/^[a-zA-ZÀ-ÿ\' -]{2,40}$/u',
-                        'message' => 'Le nom contient des caractères invalides.'
-                    ])
+                    new Regex(
+                        pattern: '/^[a-zA-ZÀ-ÿ\' -]{2,40}$/u',
+                        message: 'Le nom contient des caractères invalides.'
+                    )
                 ],
                 'attr' => ['class' => 'form-control']
             ])
@@ -59,10 +59,10 @@ class PartnershipType extends AbstractType
                 'label' => 'Prénom',
                 'required' => false,
                 'constraints' => [
-                    new Regex([
-                        'pattern' => '/^[a-zA-ZÀ-ÿ\' -]{2,40}$/u',
-                        'message' => 'Le prénom contient des caractères invalides.'
-                    ])
+                    new Regex(
+                        pattern: '/^[a-zA-ZÀ-ÿ\' -]{2,40}$/u',
+                        message: 'Le prénom contient des caractères invalides.'
+                    )
                 ],
                 'attr' => ['class' => 'form-control']
             ])
@@ -72,10 +72,10 @@ class PartnershipType extends AbstractType
                 'label' => 'LinkedIn',
                 'required' => false,
                 'constraints' => [
-                    new Regex([
-                        'pattern' => '#^(https?://)?(www\.)?linkedin\.com/(in|company)/[a-zA-Z0-9\-_%]+/?$#',
-                        'message' => 'Veuillez entrer un lien LinkedIn valide (profil ou entreprise).'
-                    ])
+                    new Regex(
+                        pattern: '#^(https?://)?(www\.)?linkedin\.com/(in|company)/[a-zA-Z0-9\-_%]+/?$#',
+                        message: 'Veuillez entrer un lien LinkedIn valide (profil ou entreprise).'
+                    )
                 ],
                 'attr' => ['class' => 'form-control']
             ])
@@ -90,10 +90,10 @@ class PartnershipType extends AbstractType
                 'label' => false,
                 'entry_options' => [
                     'constraints' => [
-                        new Regex([
-                            'pattern' => '/^[^\s@]+@[^\s@]+\.[^\s@]+$/',
-                            'message' => 'Adresse email invalide.'
-                        ])
+                        new Regex(
+                            pattern: '/^[^\s@]+@[^\s@]+\.[^\s@]+$/',
+                            message: 'Adresse email invalide.'
+                        )
                     ],
                     'attr' => ['class' => 'form-control', 'placeholder' => 'Adresse email']
                 ]
@@ -107,10 +107,10 @@ class PartnershipType extends AbstractType
                 'required' => false,
                 'entry_options' => [
                     'constraints' => [
-                        new Regex([
-                            'pattern' => '/^(\+33|0)[67](\s?\d{2}){4}$/',
-                            'message' => 'Numéro mobile invalide.'
-                        ])
+                        new Regex(
+                            pattern: '/^(\+33|0)[67](\s?\d{2}){4}$/',
+                            message: 'Numéro mobile invalide.'
+                        )
                     ],
                     'attr' => ['class' => 'form-control', 'placeholder' => 'Téléphone mobile']
                 ]

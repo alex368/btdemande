@@ -16,7 +16,14 @@
 				<div class="col-12 col-md-6 col-lg-3">
 					<div class="card border-0 shadow p-3 text-center h-100">
 						{% if mainRequest and mainRequest.product and mainRequest.product.fundingMechanism %}
-							<img src="{{ asset('uploads/logos/' ~ mainRequest.product.fundingMechanism.logo )}}" alt="Logo" width="40" class="me-2">
+							<img
+								src="{{ asset('uploads/logos/' ~ mainRequest.product.fundingMechanism.logo )}}"
+								alt="Logo {{ mainRequest.product.fundingMechanism.name }}"
+								width="48"
+								height="48"
+								class="me-2 rounded bg-white p-1"
+								style="object-fit: contain;"
+							>
 						{% endif %}
 
 						<div class="text-center fw-bold">{{ campany.legalName }}</div>

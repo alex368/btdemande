@@ -25,19 +25,17 @@ class ResetPasswordType extends AbstractType
                 'invalid_message' => 'Les deux mots de passe doivent être identiques.',
                 'mapped' => false,
                 'constraints' => [
-                    new Assert\NotBlank([
-                        'message' => 'Veuillez saisir un mot de passe.'
-                    ]),
-                    new Assert\Length([
-                        'min' => 8,
-                        'max' => 30,
-                        'minMessage' => 'Le mot de passe doit contenir au moins {{ limit }} caractères.',
-                        'maxMessage' => 'Le mot de passe ne peut pas dépasser {{ limit }} caractères.'
-                    ]),
-                    new Assert\Regex([
-                        'pattern' => '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/',
-                        'message' => 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial.'
-                    ])
+                    new Assert\NotBlank(message: 'Veuillez saisir un mot de passe.'),
+                    new Assert\Length(
+                        min: 8,
+                        max: 30,
+                        minMessage: 'Le mot de passe doit contenir au moins {{ limit }} caractères.',
+                        maxMessage: 'Le mot de passe ne peut pas dépasser {{ limit }} caractères.'
+                    ),
+                    new Assert\Regex(
+                        pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/',
+                        message: 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial.'
+                    )
                 ],
                 'first_options' => [
                     'label' => 'Mot de passe',

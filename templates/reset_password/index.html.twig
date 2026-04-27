@@ -1,83 +1,61 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Réinitialisation
-{% endblock %}
+{% block title %}Réinitialisation{% endblock %}
+
+{% block sidebar '' %}
 
 {% block body %}
-{# On vide complètement la sidebar #}
-{% block sidebar %}{% endblock %}
-{# {% include 'partials/_navbar.html.twig' %} #}
- {# <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background-color: #FFFEFC;
-        }
-
-        .card-img-top {
-            width: 100%;
-            aspect-ratio: 1/1;
-            object-fit: cover;
-        }
-        .container-fluid {
-            height: 80%;
-        }
-        .card {
-            background-color: #136F63;
-        }
-        .px-8 {
-            padding-left: 4rem !important;
-            padding-right: 4rem !important;
-        }
-    </style> #}
-	
+    {% include 'partial/_back_arrow.html.twig' %}
     <div class="container-fluid">
-        <div class="row h-100">
-            <!-- Colonne gauche : formulaire -->
-            <div class="col-md-6 mb-5 d-flex flex-column justify-content-center px-8">
-					<h1 class="text-center text-xl-start">Réinitialisation</h1>
-					<p class="text-center text-xl-start pb-3 mb-5">
-						Vous avez déjà un compte ?
-						<a href="{{'app_login'}}">Connectez-vous</a>
-					</p>
-
-					<form
-						method="post" class="needs-validation" novalidate>
-						<!-- Email -->
-						<div class="mb-3">
-							<label for="inputEmail" class="form-label">Email</label>
-							<input type="email" id="inputEmail" class="form-control" name="email" placeholder="Entrez votre email" required/>
-							<div class="invalid-feedback">Veuillez entrer un email valide.</div>
-						</div>
-
-						<!-- Submit Button -->
-						<div class="mb-5 d-grid">
-							<button type="submit" class="btn btn-icon btn-custom-dark btn-lg w-100">Réinitialiser</button>
-						</div>
-
-						<!-- Link to Login -->
-						<div class="text-center">
-							<span>Retourner à la
-								<a href="{{ path('app_login') }}">connexion</a>
-							</span>
-						</div>
-					</form>
-				</div>
-
-							<!-- Colonne droite : carte -->
-	       
-
-            <!-- Colonne droite : carte -->
-            <div class="col-md-6 d-none d-md-block"
-                style=" background-image: url('{{asset('image/imageLogin.png')}}');  background-size: cover; background-position: center; background-repeat: no-repeat; height: 100%; ">
+    <div class="row h-100">
+        <div class="col-md-6 mb-5 d-flex flex-column justify-content-center px-8">
+            <div class="text-center my-3">
+                <img src="{{ asset('image/logo.png') }}" alt="Logo" width="80">
             </div>
 
+            <h1 class="form-label text-center bebas mb-3" style="color:#FBBB3B;">Réinitialiser le mot de passe</h1>
+            <p class="text-center mb-4">
+                Saisis ton email pour recevoir le lien de réinitialisation.
+            </p>
 
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label }} alert-dismissible fade show rounded-0" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
 
+            <form method="post" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label for="inputEmail" class="form-label fw-bold bebas">Email</label>
+                    <input
+                        type="email"
+                        id="inputEmail"
+                        class="form-control border-0 rounded-0 shadow py-3 px-4 fs-5"
+                        name="email"
+                        placeholder="Entrez votre email"
+                        autocomplete="email"
+                        required
+                    />
+                    <div class="invalid-feedback">Veuillez entrer un email valide.</div>
+                </div>
 
+                <div class="d-grid gap-3 mt-4">
+                    <button type="submit" class="btn btn-lg bebas button-custom rounded-0 py-3 px-4 fs-5" style="color:#FFF;">
+                        Envoyer le lien
+                    </button>
+                    <a href="{{ path('app_login') }}" class="text-center bebas fs-5 text-decoration-none" style="color:#214995;">
+                        Retour à la connexion
+                    </a>
+                </div>
+            </form>
         </div>
-			</div>
-		</section>
-	</main>
+
+        <div class="col-md-6 d-none d-md-block"
+             style="background-image: url('{{ asset('image/imageLogin.png') }}'); background-size: cover; background-position: center; background-repeat: no-repeat; height: 100%;">
+        </div>
+    </div>
+</div>
 {% endblock %}

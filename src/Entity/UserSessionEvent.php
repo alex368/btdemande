@@ -7,7 +7,8 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserSessionEventRepository::class)]
-#[ORM\Table(name: 'user_session_event', uniqueConstraints: [new ORM\UniqueConstraint(name: 'uniq_user_session_event_user', columns: ['user_id'])])]
+#[ORM\Table(name: 'user_session_event')]
+#[ORM\UniqueConstraint(name: 'uniq_user_session_event_user', columns: ['user_id'])]
 #[ORM\Index(columns: ['session_id'], name: 'idx_user_session_event_session')]
 #[ORM\Index(columns: ['event_type'], name: 'idx_user_session_event_type')]
 #[ORM\Index(columns: ['occurred_at'], name: 'idx_user_session_event_occurred')]

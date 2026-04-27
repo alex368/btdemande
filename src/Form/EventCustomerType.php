@@ -33,7 +33,7 @@ class EventCustomerType extends AbstractType
             ->add('slug', TextType::class, [
                 'label' => 'Slug',
                 'required' => false, // important
-                'help' => 'Used in the event URL (e.g. startup-pitch-night)',
+                'help' => 'Utilisé dans l’URL de l’événement (ex. startup-pitch-night)',
                 'attr' => [
                     'class' => 'form-control',
                     'placeholder' => 'startup-pitch-night',
@@ -57,21 +57,21 @@ class EventCustomerType extends AbstractType
 ])
 
             ->add('startDate', DateTimeType::class, [
-                'label' => 'Start date & time',
+                'label' => 'Date et heure de début',
                 'widget' => 'single_text',
                 'attr' => ['class' => 'form-control'],
                 'row_attr' => ['class' => 'mb-3'],
             ])
 
             ->add('endDate', DateTimeType::class, [
-                'label' => 'End date & time',
+                'label' => 'Date et heure de fin',
                 'widget' => 'single_text',
                 'attr' => ['class' => 'form-control'],
                 'row_attr' => ['class' => 'mb-3'],
             ])
 
             ->add('url', TextType::class, [
-                'label' => 'Event website',
+                'label' => 'Site web de l’événement',
                 'required' => false,
                 'attr' => [
                     'class' => 'form-control',
@@ -86,7 +86,7 @@ class EventCustomerType extends AbstractType
                     'class' => 'form-control wysiwyg',
                     'rows' => 6,
                     'data-editor' => 'tinymce',
-                    'placeholder' => 'Describe the event, agenda, speakers…',
+                    'placeholder' => 'Décrivez l’événement, le déroulé, les intervenants…',
                 ],
                 'row_attr' => ['class' => 'mb-4'],
             ])

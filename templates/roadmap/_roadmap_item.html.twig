@@ -38,6 +38,13 @@
             {% endif %}
         </h3>
 
+        <p class="mb-3 text-muted small">
+            Organisme financeur :
+            <strong class="text-color-blue">
+                {{ roadmap.product and roadmap.product.fundingMechanism ? roadmap.product.fundingMechanism.name : 'Non renseigné' }}
+            </strong>
+        </p>
+
         <div class="roadmap-metadata">
             <div class="roadmap-metadata-item">
                 <span class="roadmap-metadata-label">Date</span>

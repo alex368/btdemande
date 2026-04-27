@@ -11,11 +11,26 @@
         </a>
     </div>
 
+    <div class="alert alert-light border rounded-0 mb-3">
+        <strong>Relation Kanban / Prospects :</strong>
+        le Kanban affiche les prospects actifs et leur progression par étape.
+        Les prospects archivés restent consultables dans la page dédiée.
+    </div>
+
     <div class="d-flex justify-content-end mb-3 gap-2">
         <span class="badge bg-secondary">Total : {{ stats.total }}</span>
         <span class="badge bg-success">Gagnés : {{ stats.won }}</span>
         <span class="badge bg-danger">Perdus : {{ stats.lost }}</span>
         <span class="badge bg-info">Ouverts : {{ stats.open }}</span>
+        <span class="badge bg-dark">Archivés : {{ stats.archived|default(0) }}</span>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        {% for stageKey, stageLabel in stages %}
+            <span class="badge bg-light text-dark border">
+                {{ stageLabel }} : {{ stats.by_stage[stageKey]|default(0) }}
+            </span>
+        {% endfor %}
     </div>
 
     <div class="d-flex flex-row gap-3 overflow-auto" style="min-height: 70vh;">

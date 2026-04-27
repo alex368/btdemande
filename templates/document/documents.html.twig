@@ -17,7 +17,7 @@
 						{% if document.documentDefinition and document.documentDefinition.template %}
 							<p class="text-muted mb-2">
 								📄 Modèle à remplir :
-								<a href="{{ asset('uploads/documents/' ~ document.documentDefinition.template) }}" target="_blank">
+								<a href="{{ path('app_document_template_download', { id: document.documentDefinition.id }) }}">
 									{{ document.documentDefinition.template }}
 								</a>
 							</p>
@@ -42,7 +42,7 @@
 								</label>
 
 								{# Bouton supprimer #}
-								<button type="submit" name="delete_file[{{ document.id }}]" value="1" class="btn btn-danger rounded-0 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+								<button type="submit" name="delete_file[{{ document.id }}]" value="1" class="btn btn-danger rounded-0 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;" onclick="return confirm('Voulez-vous vraiment supprimer ce document ?');">
 									<i class="bi bi-trash"></i>
 								</button>
 							{% else %}
@@ -76,16 +76,14 @@
 				<!-- Buttons -->
 				<div class="row justify-content-center mt-5">
 					<div class="col-auto">
-						<button type="submit" class="btn rounded-0 button-custom me-2">
+						<button type="submit" name="action" value="save" class="btn rounded-0 button-custom me-2">
 							Enregistrer
 						</button>
 					</div>
 					<div class="col-auto">
-						<form method="post" class="mt-3">
-							<button type="submit" name="action" value="validate" class="btn button-custom-true rounded-0" onclick="return confirm('Confirmez-vous l\'envoi de vos documents ?')">
-								Valider la demande
-							</button>
-						</form>
+						<button type="submit" name="action" value="validate" class="btn button-custom-true rounded-0" onclick="return confirm('Confirmez-vous l\'envoi de vos documents ?')">
+							Valider la demande
+						</button>
 					</div>
 
 				</div>

@@ -51,7 +51,7 @@ class CampanyContactType extends AbstractType
                 'row_attr' => ['class' => 'mb-3'],
                 'constraints' => [
                     new NotBlank(),
-                    new Length(['min' => 2])
+                    new Length(min: 2)
                 ]
             ])
                         ->add('projectName', TextType::class, [
@@ -64,7 +64,7 @@ class CampanyContactType extends AbstractType
                 'row_attr' => ['class' => 'mb-3'],
                 'constraints' => [
                     new NotBlank(),
-                    new Length(['min' => 2])
+                    new Length(min: 2)
                 ]
             ])
         ->add('sector', ChoiceType::class, [
@@ -109,10 +109,10 @@ class CampanyContactType extends AbstractType
                 'row_attr' => ['class' => 'mb-3'],
                 'constraints' => [
                     new NotBlank(),
-                    new Regex([
-                        'pattern' => '/^(?:0|\d{9})$/',
-                        'message' => 'The SIREN must be exactly 9 digits.',
-                    ])
+                    new Regex(
+                        pattern: '/^(?:0|\d{9})$/',
+                        message: 'The SIREN must be exactly 9 digits.',
+                    )
                 ]
             ])
             ->add('creationDate', DateType::class, [

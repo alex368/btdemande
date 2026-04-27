@@ -61,6 +61,12 @@ final class ProspectController extends AbstractController
             }
         }
 
+        $stats['archived'] = count($this->findVisibleContacts($em, true));
+        $stats['by_stage'] = [];
+        foreach ($columns as $stageKey => $items) {
+            $stats['by_stage'][$stageKey] = count($items);
+        }
+
         return $this->render('prospect/kanban.html.twig', [
             'stages' => $stages,
             'columns' => $columns,

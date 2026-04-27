@@ -14,7 +14,7 @@ services:
       APP_ENV: ${APP_ENV:-dev}
       APP_SECRET: ${APP_SECRET:-}
       API_JWT_SECRET: ${API_JWT_SECRET:-}
-      DATABASE_URL: ${DOCKER_DATABASE_URL:-mysql://btdemande:btdemande@db:3306/btdemande?serverVersion=mariadb-11.4.0&charset=utf8mb4}
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-mysql://btdemande:btdemande@db:3306/btdemande?serverVersion=11.4.10-MariaDB&charset=utf8mb4}
       MAILER_DSN: ${MAILER_DSN:-null://null}
       MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:-doctrine://default?auto_setup=0}
       UPLOAD_DIR: ${UPLOAD_DIR:-uploads/documents}

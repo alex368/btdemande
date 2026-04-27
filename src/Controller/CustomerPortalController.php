@@ -31,12 +31,15 @@ public function index(
         10
     );
 
+    $currentUser = $this->getUser();
+
     return $this->render('customer_portal/index.html.twig', [
         'pagination' => $pagination,
         'search' => $search,
         'campany' => $campany,
         'project' => $project,
         'referents' => $userRepository->findByRole('ROLE_COLLABORATOR'),
+        'currentUser' => $currentUser instanceof User ? $currentUser : null,
     ]);
 }
 

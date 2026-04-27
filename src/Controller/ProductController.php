@@ -131,8 +131,10 @@ private function handleDocumentTemplates(Product $product, iterable $documentFor
 
         if ($uploadedFile) {
             $originalFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $originalExtension = strtolower((string) pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_EXTENSION));
             $safeFilename = (string) $slugger->slug($originalFilename ?: 'document');
-            $newFilename = $safeFilename . '-' . uniqid() . '.' . $uploadedFile->guessExtension();
+            $extension = $originalExtension !== '' ? $originalExtension : (string) ($uploadedFile->guessExtension() ?: 'bin');
+            $newFilename = $safeFilename . '-' . uniqid() . '.' . $extension;
 
             try {
                 $uploadedFile->move($this->getParameter('documents_directory'), $newFilename);
