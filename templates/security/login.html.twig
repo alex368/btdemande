@@ -6,8 +6,6 @@
 
  {% block sidebar '' %}
 
-{% include 'partial/_back_arrow.html.twig' %}
-
 
 
 
@@ -29,6 +27,13 @@
 
                 <!-- Connexion -->
                 <h1 class="form-label text-center bebas" style="color: #FBBB3B;">Connexion</h1>
+                {% if app.user %}
+                    <div class="text-center mb-3">
+                        <a href="{{ path('app_dashboard') }}" class="btn btn-outline-primary rounded-0">
+                            Aller au dashboard
+                        </a>
+                    </div>
+                {% endif %}
 
 
                 <!-- Formulaire de connexion -->
