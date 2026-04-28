@@ -16,6 +16,17 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/event')]
 class EventController extends AbstractController
 {
+    private function denyEventManagementForCustomers(): void
+    {
+        if (
+            !$this->isGranted('ROLE_COLLABORATOR')
+            && !$this->isGranted('ROLE_ADMIN')
+            && !$this->isGranted('ROLE_SUPER_ADMIN')
+        ) {
+            throw $this->createAccessDeniedException('Accès refusé.');
+        }
+    }
+
     #[Route('', name: 'app_event_index', methods: ['GET'])]
     public function index(EventCustomerRepository $repository): Response
     {
@@ -29,6 +40,8 @@ class EventController extends AbstractController
         Request $request,
         EntityManagerInterface $em
     ): Response {
+        $this->denyEventManagementForCustomers();
+
         $event = new EventCustomer();
         $form = $this->createForm(EventCustomerType::class, $event);
 
@@ -88,13 +101,7 @@ public function show(
         UserRepository $userRepository,
         MailerService $mailerService
     ): Response {
-        if (
-            !$this->isGranted('ROLE_COLLABORATOR')
-            && !$this->isGranted('ROLE_ADMIN')
-            && !$this->isGranted('ROLE_SUPER_ADMIN')
-        ) {
-            throw $this->createAccessDeniedException('Accès refusé.');
-        }
+        $this->denyEventManagementForCustomers();
 
         if (!$this->isCsrfTokenValid('invite-members-' . $event->getId(), (string) $request->request->get('_token'))) {
             $this->addFlash('danger', 'Jeton de sécurité invalide.');
@@ -173,6 +180,8 @@ public function show(
         EventCustomer $event,
         EntityManagerInterface $em
     ): Response {
+        $this->denyEventManagementForCustomers();
+
         $form = $this->createForm(EventCustomerType::class, $event);
         $form->handleRequest($request);
 
@@ -194,6 +203,8 @@ public function show(
         EventCustomer $event,
         EntityManagerInterface $em
     ): Response {
+        $this->denyEventManagementForCustomers();
+
         if ($this->isCsrfTokenValid('delete'.$event->getId(), $request->request->get('_token'))) {
             $em->remove($event);
             $em->flush();

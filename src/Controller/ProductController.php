@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Product;
 use App\Form\ProductType;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,13 +16,33 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 final class ProductController extends AbstractController
 {
     #[Route('/product', name: 'app_product')]
-    public function index(EntityManagerInterface $em): Response
+    public function index(EntityManagerInterface $em, Request $request, PaginatorInterface $paginator): Response
     {
+        $search = trim((string) $request->query->get('q', ''));
 
-        $products = $em->getRepository(Product::class)->findAll();
+        $qb = $em->getRepository(Product::class)
+            ->createQueryBuilder('p')
+            ->leftJoin('p.fundingMechanism', 'fm')
+            ->addSelect('fm')
+            ->orderBy('p.name', 'ASC');
+
+        if ($search !== '') {
+            $qb
+                ->andWhere('LOWER(p.name) LIKE :search OR LOWER(p.productDescription) LIKE :search OR LOWER(p.typeProduct) LIKE :search OR LOWER(fm.name) LIKE :search')
+                ->setParameter('search', '%' . mb_strtolower($search) . '%');
+        }
+
+        $products = $paginator->paginate(
+            $qb,
+            $request->query->getInt('page', 1),
+            10
+        );
+
+        $products->setParam('q', $search);
 
         return $this->render('product/index.html.twig', [
             'products' => $products,
+            'search' => $search,
         ]);
     }
 

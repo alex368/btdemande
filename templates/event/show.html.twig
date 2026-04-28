@@ -17,23 +17,25 @@
                             {{ event.title }}
                         </h1>
 
-                        <!-- Actions -->
-                        <div class="btn-group">
-                            <a href="{{ path('app_event_edit', { id: event.id }) }}"
-                               class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-pencil"></i> Modifier
-                            </a>
+                        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_SUPER_ADMIN') %}
+                            <!-- Actions -->
+                            <div class="btn-group">
+                                <a href="{{ path('app_event_edit', { id: event.id }) }}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i> Modifier
+                                </a>
 
-                            <form method="post"
-                                  action="{{ path('app_event_delete', { id: event.id }) }}"
-                                  onsubmit="return confirm('Voulez-vous vraiment supprimer cet événement ?');">
-                                <input type="hidden" name="_token"
-                                       value="{{ csrf_token('delete' ~ event.id) }}">
-                                <button class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-trash"></i> Supprimer
-                                </button>
-                            </form>
-                        </div>
+                                <form method="post"
+                                      action="{{ path('app_event_delete', { id: event.id }) }}"
+                                      onsubmit="return confirm('Voulez-vous vraiment supprimer cet événement ?');">
+                                    <input type="hidden" name="_token"
+                                           value="{{ csrf_token('delete' ~ event.id) }}">
+                                    <button class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i> Supprimer
+                                    </button>
+                                </form>
+                            </div>
+                        {% endif %}
                     </div>
 
                     <!-- Meta -->
