@@ -32,12 +32,18 @@ class UserSessionEventCrudController extends AbstractCrudController
 
     public function configureActions(Actions $actions): Actions
     {
+        $visualReport = Action::new('visualReport', 'Voir la synthèse visuelle', 'fa fa-chart-line')
+            ->linkToRoute('app_admin_tracking_report_view', static fn(UserSessionEvent $event): array => ['id' => $event->getId()]);
+
         $downloadReport = Action::new('downloadReport', 'Télécharger la synthèse', 'fa fa-download')
             ->linkToRoute('app_admin_tracking_report', static fn(UserSessionEvent $event): array => ['id' => $event->getId()]);
 
         return $actions
+            ->add(Crud::PAGE_INDEX, $visualReport)
+            ->add(Crud::PAGE_DETAIL, $visualReport)
             ->add(Crud::PAGE_INDEX, $downloadReport)
             ->add(Crud::PAGE_DETAIL, $downloadReport)
+            ->setPermission('visualReport', 'ROLE_SUPER_ADMIN')
             ->setPermission('downloadReport', 'ROLE_SUPER_ADMIN')
             ->disable(Action::NEW, Action::EDIT, Action::DELETE);
     }

@@ -40,35 +40,13 @@
 				{{ form_start(form) }}
 				<div class="mb-3">
 					<label class="form-label" for="password">Mot de passe</label>
-					<div class="password-field-wrap">
-						{{ form_widget(form.password.first, {'attr': {'class': 'form-control', 'id': 'password'}}) }}
-						<button
-							type="button"
-							class="password-eye-toggle"
-							id="reset-password-toggle"
-							aria-label="Afficher le mot de passe"
-							onclick="togglePasswordField('password', 'reset-password-toggle')"
-						>
-							<i class="bi bi-eye"></i>
-						</button>
-					</div>
+					{{ form_widget(form.password.first, {'attr': {'class': 'form-control shadow', 'id': 'password'}}) }}
 					<div class="invalid-feedback">Merci d'entrer un mot de passe.</div>
 				</div>
 
 				<div class="mb-3">
 					<label class="form-label" for="confirmPassword">Confirmer le mot de passe</label>
-					<div class="password-field-wrap">
-						{{ form_widget(form.password.second, {'attr': {'class': 'form-control', 'id': 'confirmPassword'}}) }}
-						<button
-							type="button"
-							class="password-eye-toggle"
-							id="reset-confirm-password-toggle"
-							aria-label="Afficher le mot de passe"
-							onclick="togglePasswordField('confirmPassword', 'reset-confirm-password-toggle')"
-						>
-							<i class="bi bi-eye"></i>
-						</button>
-					</div>
+					{{ form_widget(form.password.second, {'attr': {'class': 'form-control shadow', 'id': 'confirmPassword'}}) }}
 					<div class="invalid-feedback">Merci de confirmer votre mot de passe.</div>
 				</div>
 
@@ -83,16 +61,4 @@
 			<div class="col-md-6 d-none d-md-block" style=" background-image: url('{{asset('image/imageLogin.png')}}');  background-size: cover; background-position: center; background-repeat: no-repeat; height: 100%; "></div>
 		</div>
 	</section>
-	<script>
-		function togglePasswordField(inputId, buttonId) {
-			const input = document.getElementById(inputId);
-			const button = document.getElementById(buttonId);
-			if (!input || !button) return;
-
-			const isPassword = input.type === 'password';
-			input.type = isPassword ? 'text' : 'password';
-			button.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
-			button.setAttribute('aria-label', isPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
-		}
-	</script>
 {% endblock %}

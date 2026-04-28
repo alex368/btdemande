@@ -44,26 +44,9 @@
                     {{ form_errors(form.email) }}
                 </div>
 
-                <div class="mb-3">
-                    {{ form_label(form.number, null, {'label_attr': {'class': 'form-label fw-bold bebas'}}) }}
-                    {{ form_widget(form.number) }}
-                    {{ form_errors(form.number) }}
-                </div>
-
                 <div class="mb-0">
                     {{ form_label(form.password, null, {'label_attr': {'class': 'form-label fw-bold bebas'}}) }}
-                    <div class="password-field-wrap shadow">
-                        {{ form_widget(form.password, {'attr': {'id': 'register-password', 'class': 'form-control border-0 py-3 px-4 fs-5'}}) }}
-                        <button
-                            type="button"
-                            class="password-eye-toggle"
-                            id="register-password-toggle"
-                            aria-label="Afficher le mot de passe"
-                            onclick="togglePasswordField('register-password', 'register-password-toggle')"
-                        >
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
+                    {{ form_widget(form.password, {'attr': {'class': 'form-control border-0 shadow py-3 px-4 fs-5'}}) }}
                     {{ form_errors(form.password) }}
                 </div>
             </div>
@@ -86,16 +69,4 @@
     </div>
 </div>
 
-<script>
-function togglePasswordField(inputId, buttonId) {
-    const input = document.getElementById(inputId);
-    const button = document.getElementById(buttonId);
-    if (!input || !button) return;
-
-    const isPassword = input.type === 'password';
-    input.type = isPassword ? 'text' : 'password';
-    button.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
-    button.setAttribute('aria-label', isPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
-}
-</script>
 {% endblock %}

@@ -1,0 +1,148 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Synthèse visuelle utilisateur{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+            <h1 class="h3 mb-1 text-color-blue">Synthèse visuelle utilisateur</h1>
+            <div class="text-muted">
+                {{ report.user.name ?: 'Utilisateur inconnu' }} · {{ report.user.email ?: 'Email inconnu' }}
+            </div>
+        </div>
+        <a href="{{ path('app_admin_tracking_report', { id: tracking.id }) }}" class="btn btn-outline-primary rounded-0">
+            Télécharger la synthèse JSON
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card rounded-0 border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Événements</div>
+                    <div class="display-6 fw-bold text-color-blue">{{ report.global.events }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card rounded-0 border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Pages vues</div>
+                    <div class="display-6 fw-bold text-color-blue">{{ report.global.page_views }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card rounded-0 border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Clics</div>
+                    <div class="display-6 fw-bold text-color-blue">{{ report.global.clicks }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="card rounded-0 border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold">Pages les plus visitées</div>
+                <div class="card-body">
+                    {% if report.pages is empty %}
+                        <p class="text-muted mb-0">Aucune donnée.</p>
+                    {% else %}
+                        {% set maxViews = 1 %}
+                        {% for p in report.pages %}
+                            {% if p.views|default(0) > maxViews %}
+                                {% set maxViews = p.views %}
+                            {% endif %}
+                        {% endfor %}
+
+                        <div class="d-grid gap-3">
+                            {% for path, p in report.pages|slice(0, 12) %}
+                                {% set views = p.views|default(0) %}
+                                {% set width = ((views / maxViews) * 100)|round(0, 'floor') %}
+                                <div>
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span class="text-truncate me-2">{{ path }}</span>
+                                        <strong>{{ views }}</strong>
+                                    </div>
+                                    <div class="progress rounded-0" style="height: 8px;">
+                                        <div class="progress-bar bg-primary" style="width: {{ width }}%"></div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card rounded-0 border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold">Sessions récentes</div>
+                <div class="card-body">
+                    {% if report.sessions is empty %}
+                        <p class="text-muted mb-0">Aucune session.</p>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Session</th>
+                                        <th>Dernière page</th>
+                                        <th class="text-end">Pages</th>
+                                        <th class="text-end">Clics</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sessionId, s in report.sessions|slice(0, 10) %}
+                                        <tr>
+                                            <td class="small">{{ sessionId|slice(0, 16) }}…</td>
+                                            <td class="small">{{ s.last_page|default('-') }}</td>
+                                            <td class="text-end">{{ s.page_views|default(0) }}</td>
+                                            <td class="text-end">{{ s.clicks|default(0) }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card rounded-0 border-0 shadow-sm mt-3">
+        <div class="card-header bg-white fw-bold">Actions récentes</div>
+        <div class="card-body">
+            {% if report.recent_actions is empty %}
+                <p class="text-muted mb-0">Aucune action récente.</p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Action</th>
+                                <th>Page</th>
+                                <th>Cible</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for action in report.recent_actions|slice(0, 25) %}
+                                <tr>
+                                    <td class="small">{{ action.at|default('') ? action.at|date('d/m/Y H:i:s') : '-' }}</td>
+                                    <td>{{ action.name|default('-') }}</td>
+                                    <td class="small">{{ action.page|default('-') }}</td>
+                                    <td class="small">{{ action.target|default('-') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

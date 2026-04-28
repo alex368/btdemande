@@ -61,26 +61,14 @@
 
    <div class="mb-3 mt-2">
     <label for="password" class="form-label fw-bold bebas">Mot de passe</label>
-
-    <div class="password-field-wrap shadow">
-        <input 
-            type="password" 
-            name="_password" 
-            id="password"
-            class="form-control border-0 py-3 px-4 fs-5"
-            autocomplete="current-password" 
-            required
-        >
-        <button
-            type="button"
-            class="password-eye-toggle"
-            id="login-password-toggle"
-            aria-label="Afficher le mot de passe"
-            onclick="togglePasswordField('password', 'login-password-toggle')"
-        >
-            <i class="bi bi-eye"></i>
-        </button>
-    </div>
+    <input
+        type="password"
+        name="_password"
+        id="password"
+        class="form-control border-0 rounded-0 shadow py-3 px-4 fs-5"
+        autocomplete="current-password"
+        required
+    >
 </div>
 
     <input type="hidden" name="_csrf_token"
@@ -124,16 +112,4 @@
 
         </div>
     </div>
-    <script>
-        function togglePasswordField(inputId, buttonId) {
-            const input = document.getElementById(inputId);
-            const button = document.getElementById(buttonId);
-            if (!input || !button) return;
-
-            const isPassword = input.type === 'password';
-            input.type = isPassword ? 'text' : 'password';
-            button.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
-            button.setAttribute('aria-label', isPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
-        }
-    </script>
 {% endblock %}

@@ -1,12 +1,13 @@
 {% set isLeft = index is even %}
 {% set year = roadmap.date ? roadmap.date|date('Y') : 'Date manquante' %}
+{% set canManageRoadmap = is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR') %}
 
 <article
     class="roadmap-event {{ isLeft ? 'roadmap-event-left' : 'roadmap-event-right' }}"
     data-roadmap-id="{{ roadmap.id }}"
     data-roadmap-date="{{ roadmap.date ? roadmap.date|date('Y-m-d') : '' }}"
     data-roadmap-amount="{{ roadmap.estimatedAmount ?? 0 }}"
-    draggable="true"
+    draggable="{{ canManageRoadmap ? 'true' : 'false' }}"
 >
     <div class="roadmap-event-marker">
         <span class="roadmap-event-dot"></span>
@@ -15,7 +16,9 @@
     <div class="roadmap-event-card shadow-sm">
         <div class="roadmap-event-topline">
             <div class="d-flex align-items-center gap-2">
-                <span class="roadmap-drag-handle" title="Déplacer la timeline" aria-hidden="true">⋮⋮</span>
+                {% if canManageRoadmap %}
+                    <span class="roadmap-drag-handle" title="Déplacer la timeline" aria-hidden="true">⋮⋮</span>
+                {% endif %}
                 <span class="roadmap-year">{{ year }}</span>
             </div>
             <span class="roadmap-quarter">{{ quarter }}</span>
@@ -66,7 +69,7 @@
             </div>
         </div>
 
-        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') or is_granted('ROLE_COLLABORATEUR') %}
+        {% if canManageRoadmap %}
             <div class="roadmap-event-actions">
                 <div class="roadmap-event-action-group">
                     <button

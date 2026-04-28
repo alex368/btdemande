@@ -18,14 +18,19 @@
 
 
 		<div class="container ">
-			<div class="text-end mb-3">
-				<a href="{{path('app_funding_request',{id:campanies.id, user:user})}}" class="btn btn-warning rounded-0">
-					Nouvelle demande
-				</a>
-				<a href="{{path('app_chat_customer',{id:campanies.id, user:user})}}" class="btn btn-warning rounded-0">
-					Lucy Folder
-				</a>
-			</div>
+			{% set canManageCampany = is_granted('ROLE_ADMIN') or is_granted('ROLE_COLLABORATOR') %}
+			{% set canRequestDeletion = canManageCampany %}
+
+			{% if canManageCampany %}
+				<div class="text-end mb-3">
+					<a href="{{path('app_funding_request',{id:campanies.id, user:user})}}" class="btn btn-warning rounded-0">
+						Nouvelle demande
+					</a>
+					<a href="{{path('app_chat_customer',{id:campanies.id, user:user})}}" class="btn btn-warning rounded-0">
+						Lucy Folder
+					</a>
+				</div>
+			{% endif %}
 
 			<nav aria-label="breadcrumb">
 				<ol class="breadcrumb">
@@ -43,11 +48,13 @@
 						{% endfor %} #}
 
 			<div class="card shadow-sm rounded-0 border-0 p-4 text-center" style="max-width: 1200px;">
-				<a href="{{path('app_campany_edit',{id:campanies.id})}}"
-				     class="btn btn-roadmap fw-bold px-5 py-2 shadow-sm rounded-0 position-absolute top-0 end-0 m-3"
-				     style="background-color:#FBBB3B; color:#fff;">
-				    Modifier
-				  </a>  
+				{% if canManageCampany %}
+					<a href="{{path('app_campany_edit',{id:campanies.id})}}"
+					     class="btn btn-roadmap fw-bold px-5 py-2 shadow-sm rounded-0 position-absolute top-0 end-0 m-3"
+					     style="background-color:#FBBB3B; color:#fff;">
+					    Modifier
+					  </a>
+				{% endif %}
 
 				<!-- Logo -->
 					<div class="mb-3 text-center"> <img src="{{ asset('uploads/logos/' ~ campanies.logo) }}" alt="Logo Entreprise" width="90" class="company-logo rounded bg-white">
@@ -139,21 +146,23 @@
 										{% endif %}
 									</td>
 									<td class="text-center">
-										{% if pendingDelete %}
-											<button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Demande en attente">
-												<i class="bi bi-trash"></i>
-											</button>
-										{% else %}
-											<button
-												type="button"
-												class="btn btn-outline-danger btn-sm btn-request-delete"
-												title="Demander la suppression"
-												data-bs-toggle="modal"
-												data-bs-target="#deleteRequestModal"
-												data-request-id="{{ requestDemand.id }}"
-											>
-												<i class="bi bi-trash"></i>
-											</button>
+										{% if canRequestDeletion %}
+											{% if pendingDelete %}
+												<button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Demande en attente">
+													<i class="bi bi-trash"></i>
+												</button>
+											{% else %}
+												<button
+													type="button"
+													class="btn btn-outline-danger btn-sm btn-request-delete"
+													title="Demander la suppression"
+													data-bs-toggle="modal"
+													data-bs-target="#deleteRequestModal"
+													data-request-id="{{ requestDemand.id }}"
+												>
+													<i class="bi bi-trash"></i>
+												</button>
+											{% endif %}
 										{% endif %}
 										<a href="{{path('app_document_index',{id:requestDemand.id, user:user})}}" class="btn btn-outline-primary btn-sm ms-1" title="Voir">
 											<i class="bi bi-chevron-right"></i>
@@ -171,30 +180,32 @@
 			</div>
 		</div>
 
-		<div class="modal fade" id="deleteRequestModal" tabindex="-1" aria-labelledby="deleteRequestModalLabel" aria-hidden="true">
-			<div class="modal-dialog">
-				<div class="modal-content rounded-0">
-					<form method="post" action="{{ path('app_campany_deletion_request', {id: campanies.id, user: user}) }}" id="deleteRequestForm">
-						<div class="modal-header">
-							<h5 class="modal-title" id="deleteRequestModalLabel">Demander une suppression (validation admin obligatoire)</h5>
-							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-						</div>
-						<div class="modal-body">
-							<input type="hidden" name="_token" value="{{ csrf_token('campany-deletion-request-' ~ campanies.id) }}">
-							<div id="deleteRequestIdsContainer"></div>
-							<div class="mb-2">
-								<label class="form-label fw-semibold">Motif (optionnel)</label>
-								<textarea name="reason" class="form-control" rows="3" placeholder="Motif (optionnel)"></textarea>
+		{% if canRequestDeletion %}
+			<div class="modal fade" id="deleteRequestModal" tabindex="-1" aria-labelledby="deleteRequestModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content rounded-0">
+						<form method="post" action="{{ path('app_campany_deletion_request', {id: campanies.id, user: user}) }}" id="deleteRequestForm">
+							<div class="modal-header">
+								<h5 class="modal-title" id="deleteRequestModalLabel">Demander une suppression (validation admin obligatoire)</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
 							</div>
-						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-outline-secondary rounded-0" data-bs-dismiss="modal">Retour</button>
-							<button type="submit" class="btn btn-danger rounded-0">Envoyer la demande de suppression</button>
-						</div>
-					</form>
+							<div class="modal-body">
+								<input type="hidden" name="_token" value="{{ csrf_token('campany-deletion-request-' ~ campanies.id) }}">
+								<div id="deleteRequestIdsContainer"></div>
+								<div class="mb-2">
+									<label class="form-label fw-semibold">Motif (optionnel)</label>
+									<textarea name="reason" class="form-control" rows="3" placeholder="Motif (optionnel)"></textarea>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-outline-secondary rounded-0" data-bs-dismiss="modal">Retour</button>
+								<button type="submit" class="btn btn-danger rounded-0">Envoyer la demande de suppression</button>
+							</div>
+						</form>
+					</div>
 				</div>
 			</div>
-		</div>
+		{% endif %}
 
 
 	</main>

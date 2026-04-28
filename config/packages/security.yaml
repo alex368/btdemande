@@ -54,6 +54,11 @@ security:
         - { path: ^/api/login_check, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/track/event, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/funder(/|$), roles: [ROLE_ADMIN, ROLE_SUPER_ADMIN, ROLE_COLLABORATOR, ROLE_COLLABORATEUR] }
+        - { path: ^/contact(/|$), roles: [ROLE_ADMIN, ROLE_SUPER_ADMIN, ROLE_COLLABORATOR, ROLE_COLLABORATEUR] }
+        - { path: ^/partnership(/|$), roles: [ROLE_ADMIN, ROLE_SUPER_ADMIN, ROLE_COLLABORATOR, ROLE_COLLABORATEUR] }
+        - { path: ^/partnerships/import(/|$), roles: [ROLE_ADMIN, ROLE_SUPER_ADMIN, ROLE_COLLABORATOR, ROLE_COLLABORATEUR] }
+        - { path: ^/contacts/import(/|$), roles: [ROLE_ADMIN, ROLE_SUPER_ADMIN, ROLE_COLLABORATOR, ROLE_COLLABORATEUR] }
         - { path: ^/(roadmap|product|event|partnership|funder)(/|$), roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/adminz, roles: ROLE_ADMIN }

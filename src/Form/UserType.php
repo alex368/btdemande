@@ -8,7 +8,7 @@ use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\Extension\Core\Type\{
-    TextType, EmailType, PasswordType, TelType, ChoiceType
+    TextType, EmailType, PasswordType, ChoiceType
 };
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Validator\Constraints\{
@@ -52,17 +52,6 @@ class UserType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'L’email est requis.'),
                     new EmailConstraint(message: 'Email invalide.')
-                ],
-            ])
-            ->add('number', TelType::class, [
-                'label' => 'Numéro',
-                'attr' => [
-                    'class' => 'form-control border-0 rounded-0 shadow py-3 px-4 fs-5 mb-3',
-                    'autocomplete' => 'tel',
-                ],
-                'constraints' => [
-                    new NotBlank(message: 'Le numéro est requis.'),
-                    new Regex(pattern: '/^0[1-9](\d{2}){4}$/', message: 'Numéro invalide (format FR attendu).')
                 ],
             ]);
 

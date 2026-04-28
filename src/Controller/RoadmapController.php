@@ -14,9 +14,26 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 final class RoadmapController extends AbstractController
 {
+    #[Route('/customer/roadmaps', name: 'app_customer_roadmaps', methods: ['GET'])]
+    public function customerRoadmaps(): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_CUSTOMER');
+
+        $currentUser = $this->getUser();
+        if (!is_object($currentUser) || !method_exists($currentUser, 'getCampanies')) {
+            throw $this->createAccessDeniedException('Utilisateur invalide.');
+        }
+
+        return $this->render('roadmap/customer_list.html.twig', [
+            'campanies' => $currentUser->getCampanies()->toArray(),
+            'userId' => method_exists($currentUser, 'getId') ? (int) $currentUser->getId() : 0,
+        ]);
+    }
+
     #[Route('/roadmap/{id}/{user}', name: 'app_roadmap', requirements: ['id' => Requirement::DIGITS, 'user' => Requirement::DIGITS])]
     public function index(EntityManagerInterface $em, QuarterService $quarterService, int $id, int $user): Response
     {
@@ -25,6 +42,8 @@ final class RoadmapController extends AbstractController
         if (!$campany) {
             throw $this->createNotFoundException("Entreprise #{$id} introuvable.");
         }
+
+        $this->denyRoadmapAccessForCurrentUser($campany);
 
         $this->synchronizeValidatedFundingRequestsToRoadmap($em, $campany);
 
@@ -446,6 +465,22 @@ final class RoadmapController extends AbstractController
     {
         if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('ROLE_COLLABORATOR') && !$this->isGranted('ROLE_COLLABORATEUR')) {
             throw $this->createAccessDeniedException();
+        }
+    }
+
+    private function denyRoadmapAccessForCurrentUser(Campany $campany): void
+    {
+        if (!$this->isGranted('ROLE_CUSTOMER')) {
+            return;
+        }
+
+        $currentUser = $this->getUser();
+        if (!is_object($currentUser)) {
+            throw new AccessDeniedException('Accès refusé.');
+        }
+
+        if (!$campany->getCustomer()->contains($currentUser)) {
+            throw new AccessDeniedException('Vous ne pouvez pas consulter cette roadmap.');
         }
     }
 }

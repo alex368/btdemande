@@ -291,6 +291,16 @@ thead {
   outline: none;
 }
 
+.password-eye-toggle svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .required-asterisk {
   color: #dc3545;
   margin-left: 0.2rem;
@@ -414,6 +424,8 @@ thead {
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const enhancePasswordFields = () => {
+            const eyeOpenSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+            const eyeClosedSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 10.6a3 3 0 0 0 4.2 4.2"></path><path d="M9.9 5.1A11.2 11.2 0 0 1 12 5c6.5 0 10 7 10 7a16.2 16.2 0 0 1-4.1 4.9"></path><path d="M6.6 6.6C4 8.4 2 12 2 12a16.7 16.7 0 0 0 7.5 6.3"></path></svg>';
             const passwordInputs = document.querySelectorAll('input[type="password"]');
 
             passwordInputs.forEach((input, index) => {
@@ -426,27 +438,33 @@ thead {
                     return;
                 }
 
-                const wrapper = document.createElement('div');
-                wrapper.className = 'password-field-wrap';
-
-                const parent = input.parentNode;
-                if (!parent) {
+                const parent = input.parentElement;
+                if (parent && parent.querySelector(':scope > .password-eye-toggle')) {
+                    input.dataset.passwordEyeReady = '1';
                     return;
                 }
 
-                parent.insertBefore(wrapper, input);
+                const wrapper = document.createElement('div');
+                wrapper.className = 'password-field-wrap';
+
+                const host = input.parentNode;
+                if (!host) {
+                    return;
+                }
+
+                host.insertBefore(wrapper, input);
                 wrapper.appendChild(input);
 
                 const toggle = document.createElement('button');
                 toggle.type = 'button';
                 toggle.className = 'password-eye-toggle';
                 toggle.setAttribute('aria-label', 'Afficher le mot de passe');
-                toggle.innerHTML = '<i class="bi bi-eye"></i>';
+                toggle.innerHTML = eyeOpenSvg;
 
                 toggle.addEventListener('click', () => {
                     const isPassword = input.type === 'password';
                     input.type = isPassword ? 'text' : 'password';
-                    toggle.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+                    toggle.innerHTML = isPassword ? eyeClosedSvg : eyeOpenSvg;
                     toggle.setAttribute('aria-label', isPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
                 });
 

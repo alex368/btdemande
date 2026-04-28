@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes roadmaps{% endblock %}
+
+{% block body %}
+<main class="col-md-12 col-lg-12 p-2">
+    <h1 class="form-label text-center bebas text-color-blue mb-5 mt-5">MES ROADMAPS</h1>
+
+    <div class="container">
+        <div class="card shadow-sm rounded-0 border-0 p-4">
+            {% if campanies is empty %}
+                <p class="text-muted mb-0">Aucune entreprise liée à votre compte.</p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-primary text-white">
+                            <tr>
+                                <th>Entreprise</th>
+                                <th>Projet</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for campany in campanies %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-color-blue">{{ campany.legalName }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge text-bg-light rounded-0 px-3 py-2">{{ campany.projetName ?: 'Sans projet' }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ path('app_roadmap', { id: campany.id, user: userId }) }}" class="btn btn-outline-primary rounded-0 d-inline-flex align-items-center gap-2">
+                                            Voir
+                                            <i class="bi bi-arrow-right"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}
